@@ -1,38 +1,117 @@
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { usePaystackPayment } from 'react-paystack';
 import { useApp } from '../App';
+
+interface CheckoutFormData {
+  email: string;
+  firstName: string;
+  lastName: string;
+  address: string;
+  apartment: string;
+  city: string;
+  state: string;
+  zipCode: string;
+  phone: string;
+}
 
 const Checkout: React.FC = () => {
   const { cart, clearCart } = useApp();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [step, setStep] = useState(1);
+  const [formData, setFormData] = useState<CheckoutFormData>({
+    email: '',
+    firstName: '',
+    lastName: '',
+    address: '',
+    apartment: '',
+    city: '',
+    state: '',
+    zipCode: '',
+    phone: ''
+  });
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal >= 200 ? 0 : 15.0;
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
+  // Paystack configuration
+  const paystackConfig = {
+    reference: `CI-${new Date().getTime()}`,
+    email: formData.email,
+    amount: Math.round(total * 100), // Convert to pesewas (smallest currency unit)
+    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_', // Add your Paystack public key
+    metadata: {
+      custom_fields: [
+        {
+          display_name: "Customer Name",
+          variable_name: "customer_name",
+          value: `${formData.firstName} ${formData.lastName}`
+        },
+        {
+          display_name: "Phone Number",
+          variable_name: "phone_number",
+          value: formData.phone
+        }
+      ]
+    }
+  };
+
+  const initializePayment = usePaystackPayment(paystackConfig);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
+  const onPaymentSuccess = (reference: any) => {
+    // Save order to localStorage
+    const orderSummary = {
+      orderId: paystackConfig.reference,
+      transactionReference: reference.reference,
+      items: [...cart],
+      subtotal,
+      shipping,
+      tax,
+      total,
+      date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+      customerInfo: { ...formData },
+      paymentStatus: 'Successful'
+    };
+
+    // Save to localStorage
+    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+    localStorage.setItem('orders', JSON.stringify([...existingOrders, orderSummary]));
+
+    clearCart();
+    navigate('/order-confirmation', { state: { orderSummary } });
+  };
+
+  const onPaymentClose = () => {
+    setIsProcessing(false);
+    alert('Payment was cancelled. You can try again when ready.');
+  };
+
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!formData.email || !formData.firstName || !formData.lastName) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
     setIsProcessing(true);
 
-    // Simulate luxury processing delay
-    setTimeout(() => {
-      const orderSummary = {
-        orderId: `CI-${Math.floor(100000 + Math.random() * 900000)}`,
-        items: [...cart],
-        subtotal,
-        shipping,
-        tax,
-        total,
-        date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
-      };
-
-      setIsProcessing(false);
-      clearCart();
-      navigate('/order-confirmation', { state: { orderSummary } });
-    }, 2500);
+    // Initialize Paystack payment
+    initializePayment({
+      onSuccess: onPaymentSuccess,
+      onClose: onPaymentClose
+    });
   };
 
   if (cart.length === 0) {
@@ -48,12 +127,12 @@ const Checkout: React.FC = () => {
     <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="mb-12 flex flex-col items-center">
         <h1 className="font-display text-4xl md:text-5xl text-secondary dark:text-white mb-4 uppercase tracking-[0.2em]">Checkout</h1>
-        <nav className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.3em] opacity-40">
-          <span className="text-primary">Information</span>
-          <span className="material-icons text-[12px]">chevron_right</span>
-          <span>Shipping</span>
-          <span className="material-icons text-[12px]">chevron_right</span>
-          <span>Payment</span>
+        <nav className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.3em]">
+          <span className={step >= 1 ? "text-primary cursor-pointer" : "opacity-40"}>Information</span>
+          <span className="material-icons text-[12px] opacity-40">chevron_right</span>
+          <span className={step >= 2 ? "text-primary cursor-pointer" : "opacity-40"}>Shipping</span>
+          <span className="material-icons text-[12px] opacity-40">chevron_right</span>
+          <span className={step >= 3 ? "text-primary" : "opacity-40"}>Payment</span>
         </nav>
       </div>
 
@@ -62,112 +141,270 @@ const Checkout: React.FC = () => {
         <div className="lg:col-span-7">
           <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-12">
 
-            {/* Contact Information */}
-            <section>
-              <div className="flex justify-between items-baseline mb-6 border-b border-primary/10 pb-2">
-                <h3 className="text-xs font-black uppercase tracking-[0.2em]">Contact Information</h3>
-                <Link to="/profile" className="text-[10px] font-bold text-primary">Already have an account?</Link>
-              </div>
-              <div className="space-y-4">
-                <input
-                  required
-                  type="email"
-                  placeholder="Email Address for Order Updates"
-                  className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
-                />
-                <label className="flex items-center gap-3 cursor-pointer group">
-                  <input type="checkbox" className="rounded text-primary focus:ring-accent w-4 h-4" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100">Keep me updated on exclusive rituals and previews</span>
-                </label>
-              </div>
-            </section>
+            {/* Step 1: Information */}
+            {step === 1 && (
+              <div className="animate-in slide-in-from-right duration-500">
+                {/* Contact Information */}
+                <section className="mb-10">
+                  <div className="flex justify-between items-baseline mb-6 border-b border-primary/10 pb-2">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em]">Contact Information</h3>
+                    <Link to="/profile" className="text-[10px] font-bold text-primary">Already have an account?</Link>
+                  </div>
+                  <div className="space-y-4">
+                    <input
+                      required
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Email Address for Order Updates"
+                      className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                    <input
+                      required
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Phone Number (e.g. +233 XX XXX XXXX)"
+                      className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                      <input type="checkbox" className="rounded text-primary focus:ring-accent w-4 h-4" />
+                      <span className="text-[10px] font-bold uppercase tracking-widest opacity-60 group-hover:opacity-100">Keep me updated on exclusive rituals and previews</span>
+                    </label>
+                  </div>
+                </section>
 
-            {/* Shipping Address */}
-            <section>
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 border-b border-primary/10 pb-2">Shipping Ritual</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <input required placeholder="First Name" className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                <input required placeholder="Last Name" className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                <input required placeholder="Address" className="w-full md:col-span-2 bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                <input placeholder="Apartment, suite, etc. (optional)" className="w-full md:col-span-2 bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                <input required placeholder="City" className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                <div className="grid grid-cols-2 gap-4">
-                  <input required placeholder="State" className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                  <input required placeholder="ZIP Code" className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                </div>
-              </div>
-            </section>
-
-            {/* Shipping Method */}
-            <section>
-              <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 border-b border-primary/10 pb-2">Shipping Method</h3>
-              <div className="space-y-3">
-                <label className="flex items-center justify-between p-4 border border-accent rounded bg-accent/5 cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <input type="radio" name="shipping" defaultChecked className="text-accent focus:ring-accent" />
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest">Luxury Ground Shipping</p>
-                      <p className="text-[10px] opacity-60">3-5 Business Days</p>
+                {/* Shipping Address */}
+                <section>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 border-b border-primary/10 pb-2">Shipping Ritual</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      required
+                      name="firstName"
+                      value={formData.firstName}
+                      onChange={handleInputChange}
+                      placeholder="First Name"
+                      className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                    <input
+                      required
+                      name="lastName"
+                      value={formData.lastName}
+                      onChange={handleInputChange}
+                      placeholder="Last Name"
+                      className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                    <input
+                      required
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Address"
+                      className="w-full md:col-span-2 bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                    <input
+                      name="apartment"
+                      value={formData.apartment}
+                      onChange={handleInputChange}
+                      placeholder="Apartment, suite, etc. (optional)"
+                      className="w-full md:col-span-2 bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                    <input
+                      required
+                      name="city"
+                      value={formData.city}
+                      onChange={handleInputChange}
+                      placeholder="City"
+                      className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                      <input
+                        required
+                        name="state"
+                        value={formData.state}
+                        onChange={handleInputChange}
+                        placeholder="Region"
+                        className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                      />
+                      <input
+                        name="zipCode"
+                        value={formData.zipCode}
+                        onChange={handleInputChange}
+                        placeholder="Postal Code"
+                        className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                      />
                     </div>
                   </div>
-                  <span className="text-xs font-bold uppercase">{shipping === 0 ? 'FREE' : `GH₵${shipping.toFixed(2)}`}</span>
-                </label>
-                <label className="flex items-center justify-between p-4 border border-primary/10 rounded hover:bg-primary/5 cursor-pointer">
-                  <div className="flex items-center gap-3">
-                    <input type="radio" name="shipping" className="text-accent focus:ring-accent" />
-                    <div>
-                      <p className="text-xs font-bold uppercase tracking-widest">Concierge Express</p>
-                      <p className="text-[10px] opacity-60">Next Business Day</p>
+                </section>
+
+                <div className="pt-8 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.email && formData.firstName && formData.lastName && formData.address && formData.city && formData.state) {
+                        setStep(2);
+                        window.scrollTo(0, 0);
+                      } else {
+                        alert('Please fill in all required fields.');
+                      }
+                    }}
+                    className="bg-primary text-white py-4 px-8 rounded font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg hover:brightness-110 transition-all flex items-center gap-2"
+                  >
+                    Continue to Shipping
+                    <span className="material-icons text-[12px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 2: Shipping Method */}
+            {step === 2 && (
+              <div className="animate-in slide-in-from-right duration-500">
+                {/* Summary of Step 1 */}
+                <div className="border border-primary/10 rounded-lg p-4 mb-8 text-[11px] space-y-2">
+                  <div className="flex justify-between border-b border-primary/5 pb-2">
+                    <span className="opacity-60">Contact</span>
+                    <span className="font-medium text-right">{formData.email}</span>
+                    <button type="button" onClick={() => setStep(1)} className="text-primary font-bold hover:underline">Change</button>
+                  </div>
+                  <div className="flex justify-between pt-1">
+                    <span className="opacity-60">Ship to</span>
+                    <span className="font-medium text-right truncate max-w-[200px]">{formData.address}, {formData.city}, {formData.state} {formData.zipCode}</span>
+                    <button type="button" onClick={() => setStep(1)} className="text-primary font-bold hover:underline">Change</button>
+                  </div>
+                </div>
+
+                <section>
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-6 border-b border-primary/10 pb-2">Shipping Method</h3>
+                  <div className="space-y-3">
+                    <label className="flex items-center justify-between p-4 border border-accent rounded bg-accent/5 cursor-pointer">
+                      <div className="flex items-center gap-3">
+                        <input type="radio" name="shipping" checked={shipping === 0} onChange={() => { }} className="text-accent focus:ring-accent" />
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest">Luxury Ground Shipping</p>
+                          <p className="text-[10px] opacity-60">3-5 Business Days</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold uppercase">{shipping === 0 ? 'FREE' : `GH₵${shipping.toFixed(2)}`}</span>
+                    </label>
+                    <label className="flex items-center justify-between p-4 border border-primary/10 rounded hover:bg-primary/5 cursor-pointer opacity-50">
+                      <div className="flex items-center gap-3">
+                        <input type="radio" name="shipping" disabled checked={false} className="text-accent focus:ring-accent" />
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest">Concierge Express</p>
+                          <p className="text-[10px] opacity-60">Next Business Day (Coming Soon)</p>
+                        </div>
+                      </div>
+                      <span className="text-xs font-bold uppercase">GH₵35.00</span>
+                    </label>
+                  </div>
+                </section>
+
+                <div className="pt-8 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="text-primary font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 hover:opacity-70"
+                  >
+                    <span className="material-icons text-[12px]">arrow_back</span>
+                    Return to Information
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setStep(3);
+                      window.scrollTo(0, 0);
+                    }}
+                    className="bg-primary text-white py-4 px-8 rounded font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg hover:brightness-110 transition-all flex items-center gap-2"
+                  >
+                    Continue to Payment
+                    <span className="material-icons text-[12px]">arrow_forward</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3: Payment */}
+            {step === 3 && (
+              <div className="animate-in slide-in-from-right duration-500">
+                {/* Summary of Step 1 & 2 */}
+                <div className="border border-primary/10 rounded-lg p-4 mb-8 text-[11px] space-y-2">
+                  <div className="flex justify-between border-b border-primary/5 pb-2">
+                    <span className="opacity-60">Contact</span>
+                    <span className="font-medium text-right">{formData.email}</span>
+                    <button type="button" onClick={() => setStep(1)} className="text-primary font-bold hover:underline">Change</button>
+                  </div>
+                  <div className="flex justify-between border-b border-primary/5 pb-2 pt-1">
+                    <span className="opacity-60">Ship to</span>
+                    <span className="font-medium text-right truncate max-w-[200px]">{formData.address}, {formData.city}, {formData.state} {formData.zipCode}</span>
+                    <button type="button" onClick={() => setStep(1)} className="text-primary font-bold hover:underline">Change</button>
+                  </div>
+                  <div className="flex justify-between pt-1">
+                    <span className="opacity-60">Method</span>
+                    <span className="font-medium text-right">{shipping === 0 ? 'Luxury Ground Shipping (Free)' : 'Concierge Express'}</span>
+                    <button type="button" onClick={() => setStep(2)} className="text-primary font-bold hover:underline">Change</button>
+                  </div>
+                </div>
+
+                {/* Payment with Paystack */}
+                <section>
+                  <div className="flex justify-between items-center mb-6 border-b border-primary/10 pb-2">
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em]">Secure Payment via Paystack</h3>
+                    <div className="flex gap-2">
+                      <img src="https://paystack.com/assets/img/paystack-icon.png" alt="Paystack" className="h-6" />
                     </div>
                   </div>
-                  <span className="text-xs font-bold uppercase">GH₵35.00</span>
-                </label>
-              </div>
-            </section>
+                  <div className="p-6 bg-primary/5 rounded-lg border border-primary/10">
+                    <div className="flex items-start gap-3 mb-4">
+                      <span className="material-symbols-outlined text-primary">lock</span>
+                      <div>
+                        <p className="text-sm font-bold mb-1">Secure Payment Processing</p>
+                        <p className="text-xs opacity-70">You'll be redirected to Paystack's secure payment page to complete your purchase. We accept cards, mobile money, and bank transfers.</p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Visa</span>
+                      <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Mastercard</span>
+                      <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">MTN Mobile Money</span>
+                      <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Vodafone Cash</span>
+                    </div>
+                  </div>
+                </section>
 
-            {/* Payment Information */}
-            <section>
-              <div className="flex justify-between items-center mb-6 border-b border-primary/10 pb-2">
-                <h3 className="text-xs font-black uppercase tracking-[0.2em]">Secure Payment</h3>
-                <div className="flex gap-2 opacity-40 grayscale">
-                  <span className="material-icons text-xl">payments</span>
-                  <span className="material-icons text-xl">credit_card</span>
+                <div className="pt-8 flex justify-between items-center">
+                  <button
+                    type="button"
+                    onClick={() => setStep(2)}
+                    className="text-primary font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 hover:opacity-70"
+                  >
+                    <span className="material-icons text-[12px]">arrow_back</span>
+                    Return to Shipping
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isProcessing}
+                    className="bg-gold-gradient text-white py-5 px-10 rounded font-bold uppercase tracking-[0.3em] text-xs shadow-2xl hover:brightness-110 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
+                  >
+                    {isProcessing ? (
+                      <>
+                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                        Processing...
+                      </>
+                    ) : (
+                      <>
+                        Pay GH₵{total.toFixed(2)}
+                      </>
+                    )}
+                  </button>
                 </div>
+                <p className="text-center mt-4 text-[9px] font-bold uppercase tracking-[0.2em] opacity-40">
+                  <span className="material-icons text-[12px] align-middle mr-1">verified_user</span>
+                  Secured by Paystack • 256-bit SSL Encryption
+                </p>
               </div>
-              <div className="space-y-4">
-                <div className="relative">
-                  <input required placeholder="Card Number" className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                  <span className="absolute right-4 top-4 material-symbols-outlined opacity-30">lock</span>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <input required placeholder="Expiry (MM/YY)" className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                  <input required placeholder="CVC" className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200" />
-                </div>
-              </div>
-            </section>
-
-            <div className="pt-8">
-              <button
-                type="submit"
-                disabled={isProcessing}
-                className="w-full bg-gold-gradient text-white py-5 rounded font-bold uppercase tracking-[0.3em] text-xs shadow-2xl hover:brightness-110 transition-all active:scale-[0.98] flex items-center justify-center gap-3"
-              >
-                {isProcessing ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                    Finalizing Ritual...
-                  </>
-                ) : (
-                  <>
-                    Complete Order • GH₵{total.toFixed(2)}
-                  </>
-                )}
-              </button>
-              <p className="text-center mt-4 text-[9px] font-bold uppercase tracking-[0.2em] opacity-40">
-                <span className="material-icons text-[12px] align-middle mr-1">verified_user</span>
-                Encrypted & Secure Transaction guaranteed by CI concierge
-              </p>
-            </div>
+            )}
           </form>
         </div>
 
@@ -196,15 +433,15 @@ const Checkout: React.FC = () => {
             <div className="space-y-3 pt-6 border-t border-primary/10 text-stone-800 dark:text-stone-200">
               <div className="flex justify-between text-xs font-medium uppercase tracking-widest">
                 <span className="opacity-60">Subtotal</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>GH₵{subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-xs font-medium uppercase tracking-widest">
                 <span className="opacity-60">Shipping</span>
-                <span className="text-primary">{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+                <span className="text-primary">{shipping === 0 ? 'FREE' : `GH₵${shipping.toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between text-xs font-medium uppercase tracking-widest">
                 <span className="opacity-60">Estimated Taxes</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>GH₵{tax.toFixed(2)}</span>
               </div>
               <div className="pt-6 mt-3 border-t border-primary/20 flex justify-between items-center">
                 <span className="text-sm font-black uppercase tracking-[0.2em]">Total Ritual</span>

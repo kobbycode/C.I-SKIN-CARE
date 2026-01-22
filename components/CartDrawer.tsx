@@ -131,10 +131,14 @@ const CartDrawer: React.FC = () => {
               <span className="opacity-60">Estimated Shipping</span>
               <span className="font-bold text-primary">{subtotal >= freeShippingThreshold ? 'FREE' : 'GH₵15.00'}</span>
             </div>
+            <div className="flex justify-between text-sm">
+              <span className="opacity-60">Estimated Tax (8%)</span>
+              <span className="font-bold">GH₵{(subtotal * 0.08).toFixed(2)}</span>
+            </div>
             <div className="pt-3 border-t border-primary/5 flex justify-between items-center">
               <span className="text-lg font-display font-bold">Total</span>
               <span className="text-xl font-bold text-primary">
-                GH₵{(subtotal + (subtotal >= freeShippingThreshold ? 0 : 15)).toFixed(2)}
+                GH₵{(subtotal + (subtotal >= freeShippingThreshold ? 0 : 15) + (subtotal * 0.08)).toFixed(2)}
               </span>
             </div>
           </div>

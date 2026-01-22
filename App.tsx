@@ -1,34 +1,43 @@
 
-import React, { useState, createContext, useContext, useEffect } from 'react';
+import React, { useState, createContext, useContext, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { CartItem, Product } from './types';
-import Home from './pages/Home';
-import Shop from './pages/Shop';
-import Search from './pages/Search';
-import ProductDetail from './pages/ProductDetail';
-import Contact from './pages/Contact';
-import Reviews from './pages/Reviews';
-import FAQ from './pages/FAQ';
-import Profile from './pages/Profile';
-import Checkout from './pages/Checkout';
-import OrderConfirmation from './pages/OrderConfirmation';
-import Story from './pages/Story';
-import Journal from './pages/Journal';
-import Loyalty from './pages/Loyalty';
-import SkinQuiz from './pages/SkinQuiz';
-import RitualGuide from './pages/RitualGuide';
-import Dashboard from './pages/Admin/Dashboard';
-import Inventory from './pages/Admin/Inventory';
-import Customers from './pages/Admin/Customers';
-import Orders from './pages/Admin/Orders';
-import CMSSettings from './pages/Admin/CMSSettings';
-import AdminReviews from './pages/Admin/Reviews';
-import AddProduct from './pages/Admin/AddProduct';
-import Categories from './pages/Admin/Categories';
-import FAQManager from './pages/Admin/FAQManager';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+
+// Lazy load pages
+const Home = lazy(() => import('./pages/Home'));
+const Shop = lazy(() => import('./pages/Shop'));
+const Search = lazy(() => import('./pages/Search'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Reviews = lazy(() => import('./pages/Reviews'));
+const FAQ = lazy(() => import('./pages/FAQ'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Checkout = lazy(() => import('./pages/Checkout'));
+const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
+const Story = lazy(() => import('./pages/Story'));
+const Journal = lazy(() => import('./pages/Journal'));
+const Loyalty = lazy(() => import('./pages/Loyalty'));
+const SkinQuiz = lazy(() => import('./pages/SkinQuiz'));
+const RitualGuide = lazy(() => import('./pages/RitualGuide'));
+const Dashboard = lazy(() => import('./pages/Admin/Dashboard'));
+const Inventory = lazy(() => import('./pages/Admin/Inventory'));
+const Customers = lazy(() => import('./pages/Admin/Customers'));
+const Orders = lazy(() => import('./pages/Admin/Orders'));
+const CMSSettings = lazy(() => import('./pages/Admin/CMSSettings'));
+const AdminReviews = lazy(() => import('./pages/Admin/Reviews'));
+const AddProduct = lazy(() => import('./pages/Admin/AddProduct'));
+const Categories = lazy(() => import('./pages/Admin/Categories'));
+const FAQManager = lazy(() => import('./pages/Admin/FAQManager'));
+
+// Component for Suspense fallback
+const PageLoader = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+  </div>
+);
 
 // Context for global state
 interface AppContextType {
@@ -136,7 +145,9 @@ const App: React.FC = () => {
     }}>
       <BrowserRouter>
         <ScrollToTop />
-        <MainLayout />
+        <Suspense fallback={<PageLoader />}>
+          <MainLayout />
+        </Suspense>
       </BrowserRouter>
     </AppContext.Provider>
   );
