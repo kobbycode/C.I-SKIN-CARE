@@ -30,13 +30,13 @@ const Home: React.FC = () => {
           />
           <div className="absolute inset-0 bg-black/35"></div>
         </div>
-        <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-center items-start px-4 sm:px-6 lg:px-8 pt-20">
+        <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-center items-start px-4 sm:px-6 lg:px-8 pt-32 lg:pt-20">
           <div className="max-w-2xl text-white">
-            <h2 className="font-display text-lg tracking-widest mb-4 opacity-90 uppercase animate-in fade-in slide-in-from-left duration-1000">Pure Luxury, Pure Results</h2>
-            <h1 className="text-5xl md:text-7xl font-display mb-8 leading-tight animate-in fade-in slide-in-from-left duration-1000 delay-200">
+            <h2 className="font-display text-sm md:text-lg tracking-widest mb-4 opacity-90 uppercase animate-in fade-in slide-in-from-left duration-1000">Pure Luxury, Pure Results</h2>
+            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display mb-6 md:mb-8 leading-tight animate-in fade-in slide-in-from-left duration-1000 delay-200">
               Timeless beauty <br /><span className="italic font-light">bottled.</span>
             </h1>
-            <p className="text-lg md:text-xl mb-10 font-light max-w-lg leading-relaxed opacity-90 animate-in fade-in slide-in-from-left duration-1000 delay-300">
+            <p className="text-base md:text-xl mb-8 md:mb-10 font-light max-w-lg leading-relaxed opacity-90 animate-in fade-in slide-in-from-left duration-1000 delay-300">
               Experience the intersection of nature and science with our dermatologist-approved formulations for radiant, youthful skin.
             </p>
             <div className="flex space-x-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
