@@ -1,0 +1,221 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import UserGallery from '../components/UserGallery';
+
+const Home: React.FC = () => {
+  const [email, setEmail] = React.useState('');
+  const [isSubscribing, setIsSubscribing] = React.useState(false);
+  const [isSubscribed, setIsSubscribed] = React.useState(false);
+
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    setIsSubscribing(true);
+    setTimeout(() => {
+      setIsSubscribing(false);
+      setIsSubscribed(true);
+      setEmail('');
+    }, 1500);
+  };
+
+  return (
+    <div className="overflow-x-hidden bg-background-light dark:bg-background-dark">
+      {/* Hero Section */}
+      <header className="relative h-[80vh] lg:h-screen overflow-hidden">
+        <div className="absolute inset-0">
+          <img
+            alt="Beautiful glowing skin with serum texture"
+            className="w-full h-full object-cover object-[center_25%]"
+            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAboFWaO4tGfvMQ6x8YVJhB4MsX9dAZvyVpImJ-E-HQ5E0T6G3kprf7DBc12UgFaVPuHeEOkebv_0CJBJ_wQ4VbOtkKjBYLJ_dF_vQOsq9jMlTOLcKsMyexRCotCfntLS2pyoB4LRlymwjKRwEg4dgR7SJCdOC_JztikGLdytoTpzKHG-0hClG3QDNBaSwD3QxxksB6ZJ4NhHGCpAdfx3Y2ICUr635Lbhmi0u3gMw2mEeFkH8-ZukAvPyJRQjCEZgE6nmgU6H2u__Y"
+          />
+          <div className="absolute inset-0 bg-black/35"></div>
+        </div>
+        <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-center items-start px-4 sm:px-6 lg:px-8 pt-20">
+          <div className="max-w-2xl text-white">
+            <h2 className="font-display text-lg tracking-widest mb-4 opacity-90 uppercase animate-in fade-in slide-in-from-left duration-1000">Pure Luxury, Pure Results</h2>
+            <h1 className="text-5xl md:text-7xl font-display mb-8 leading-tight animate-in fade-in slide-in-from-left duration-1000 delay-200">
+              Timeless beauty <br /><span className="italic font-light">bottled.</span>
+            </h1>
+            <p className="text-lg md:text-xl mb-10 font-light max-w-lg leading-relaxed opacity-90 animate-in fade-in slide-in-from-left duration-1000 delay-300">
+              Experience the intersection of nature and science with our dermatologist-approved formulations for radiant, youthful skin.
+            </p>
+            <div className="flex space-x-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
+              <Link to="/shop" className="bg-white text-primary px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-gold hover:text-white transition-all duration-300 hover:scale-105 active:scale-95">
+                Shop Now
+              </Link>
+              <Link to="/shop" className="border border-white text-white px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-white/10 transition-all duration-300">
+                Explore Collections
+              </Link>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* The Collections Section */}
+      <section className="py-24 bg-white dark:bg-stone-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="font-display text-3xl md:text-4xl mb-4 text-stone-800 dark:text-stone-100">The Collections</h2>
+            <div className="w-20 h-1 bg-gold mx-auto mb-6"></div>
+            <p className="text-stone-500 dark:text-stone-400 max-w-xl mx-auto italic">Curated essentials for your daily ritual.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              {
+                title: 'Cleanse & Prep',
+                img: '/products/spa-gels.jpg'
+              },
+              {
+                title: 'Target & Treat',
+                img: '/products/5d-gluta-miracle.jpg'
+              },
+              {
+                title: 'Hydrate & Glow',
+                img: '/products/bel-eclat-hero.jpg'
+              }
+            ].map((col, i) => (
+              <div key={i} className="group cursor-pointer hero-zoom">
+                <div className="relative h-[500px] overflow-hidden">
+                  <img src={col.img} alt={col.title} className="w-full h-full object-cover transition-transform duration-700" />
+                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all"></div>
+                  <div className="absolute bottom-10 left-10 text-white">
+                    <h3 className="font-display text-2xl mb-2">{col.title}</h3>
+                    <Link to="/shop" className="text-xs tracking-widest uppercase border-b border-white pb-1 block w-max hover:text-gold hover:border-gold transition-colors">
+                      Shop Collection
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Philosophy Section */}
+      <section className="py-24 bg-background-light dark:bg-background-dark">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col lg:flex-row items-center gap-16">
+            <div className="lg:w-1/2">
+              <img
+                alt="Laboratory bottles and plants"
+                className="shadow-2xl grayscale-[20%] w-full rounded-2xl"
+                src="/products/bel-eclat-tumericSet.jpg"
+              />
+            </div>
+            <div className="lg:w-1/2">
+              <h2 className="font-display text-3xl md:text-4xl mb-8 leading-tight">
+                The Philosophy of <br /><span className="gold-gradient italic">C.I SKIN CARE</span>
+              </h2>
+              <p className="text-stone-600 dark:text-stone-400 mb-10 leading-relaxed">
+                We believe that luxury should never compromise integrity. Our formulations are crafted with botanical extracts and clinical actives to deliver transformative results you can see and feel.
+              </p>
+              <div className="space-y-8">
+                {[
+                  { icon: 'eco', title: 'Botanically Sourced', desc: 'Harnessing the power of organic ingredients from around the world.' },
+                  { icon: 'science', title: 'Scientifically Proven', desc: 'Dermatologist tested and approved for all skin types, including sensitive skin.' },
+                  { icon: 'cruelty_free', title: 'Ethically Crafted', desc: '100% Cruelty-free and sustainably packaged for a better planet.' }
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start">
+                    <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-full mr-4">
+                      <span className="material-icons-outlined text-primary">{item.icon}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1 tracking-wide">{item.title}</h4>
+                      <p className="text-sm text-stone-500 dark:text-stone-400">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Community Gallery */}
+      <UserGallery />
+
+      {/* Testimonial Section */}
+      <section className="py-24 bg-stone-100 dark:bg-stone-800/50">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <span className="material-icons-outlined text-gold text-5xl mb-6">format_quote</span>
+          <div className="mb-12">
+            <p className="text-2xl md:text-3xl font-display leading-snug mb-8 italic">
+              "My skin has never felt more alive. The Radiance Serum is my holy grail. It's not just skincare, it's a daily ritual of self-love."
+            </p>
+            <div className="flex flex-col items-center">
+              <img
+                alt="Customer Portrait"
+                className="w-16 h-16 rounded-full object-cover mb-4"
+                src="/assets/customer-portrait.png"
+              />
+              <p className="font-semibold tracking-widest uppercase text-xs">Elena V. — Verified Buyer</p>
+            </div>
+          </div>
+          <div className="flex justify-center space-x-2">
+            <span className="w-2 h-2 rounded-full bg-gold"></span>
+            <span className="w-2 h-2 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+            <span className="w-2 h-2 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+          </div>
+        </div>
+      </section>
+
+      {/* Newsletter Section */}
+      <section className="py-24 relative overflow-hidden bg-primary dark:bg-stone-900">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <img
+            alt="Logo Watermark"
+            className="w-full h-full object-contain scale-150"
+            src="/logo.jpg"
+          />
+        </div>
+        <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
+          <h2 className="font-display text-3xl md:text-4xl mb-6">Join the Inner Circle</h2>
+          <p className="text-stone-100 mb-10 opacity-80">
+            Subscribe to receive exclusive beauty rituals, early access to new launches, and a 15% welcome gift on your first order.
+          </p>
+
+          {isSubscribed ? (
+            <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-xl animate-in fade-in zoom-in duration-500 max-w-lg mx-auto">
+              <span className="material-symbols-outlined text-4xl mb-2">mark_email_read</span>
+              <h3 className="font-display text-2xl mb-2">Welcome to the Circle</h3>
+              <p className="text-sm opacity-80">Check your inbox for your exclusive welcome gift.</p>
+              <button
+                onClick={() => setIsSubscribed(false)}
+                className="mt-6 text-[10px] font-bold uppercase tracking-widest border-b border-white/40 pb-1 hover:text-gold hover:border-gold transition-all"
+              >
+                Subscribe another email
+              </button>
+            </div>
+          ) : (
+            <form className="flex flex-col md:flex-row gap-4 max-w-lg mx-auto" onSubmit={handleSubscribe}>
+              <input
+                className="flex-grow bg-white/10 border border-white/20 text-white placeholder:text-white/60 px-6 py-4 focus:outline-none focus:ring-1 focus:ring-gold focus:border-gold disabled:opacity-50"
+                placeholder="Your Email Address"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={isSubscribing}
+                required
+              />
+              <button
+                className="bg-gold hover:bg-white hover:text-primary px-8 py-4 font-semibold tracking-widest uppercase transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed min-w-[140px] flex justify-center items-center"
+                type="submit"
+                disabled={isSubscribing}
+              >
+                {isSubscribing ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                ) : 'Subscribe'}
+              </button>
+            </form>
+          )}
+
+          {!isSubscribed && (
+            <p className="mt-6 text-[10px] uppercase tracking-widest opacity-60">By subscribing, you agree to our privacy policy.</p>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+export default Home;

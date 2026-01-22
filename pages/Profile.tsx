@@ -1,0 +1,160 @@
+
+import React from 'react';
+import { useApp } from '../App';
+import LoyaltyPortal from '../components/LoyaltyPortal';
+
+const Profile: React.FC = () => {
+  const { toggleDarkMode, isDarkMode } = useApp();
+
+  return (
+    <main className="pt-40 pb-24 px-10 bg-background-light dark:bg-background-dark min-h-screen">
+      <div className="max-w-[1200px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
+
+        {/* Sidebar Nav */}
+        <aside className="lg:col-span-3 space-y-12">
+          <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
+            <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-accent mb-6 flex items-center justify-center overflow-hidden">
+              <span className="material-symbols-outlined text-5xl text-accent font-light">account_circle</span>
+            </div>
+            <h1 className="font-display text-2xl text-secondary dark:text-white mb-1">Elena Rossi</h1>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">Muse Status Since 2022</p>
+          </div>
+
+          <nav className="space-y-6">
+            <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-secondary/30 dark:text-primary/30 border-b border-primary/10 pb-2">Account Rituals</h5>
+            <ul className="space-y-4 text-xs font-medium uppercase tracking-[0.2em] text-secondary/70 dark:text-primary/70">
+              <li className="text-accent cursor-pointer flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                My Orders
+              </li>
+              <li className="hover:text-accent cursor-pointer transition-colors flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                Skin Profile
+              </li>
+              <li className="hover:text-accent cursor-pointer transition-colors flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                Favorites
+              </li>
+              <li className="hover:text-accent cursor-pointer transition-colors flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                Addresses
+              </li>
+              <li className="hover:text-accent cursor-pointer transition-colors flex items-center gap-3">
+                <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+                Preferences
+              </li>
+            </ul>
+          </nav>
+
+          <div className="pt-10">
+            <button
+              onClick={toggleDarkMode}
+              className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-secondary/40 hover:text-accent transition-colors"
+            >
+              <span className="material-symbols-outlined text-sm">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
+              Toggle Interface: {isDarkMode ? 'Luminous' : 'Nocturnal'}
+            </button>
+            <button className="mt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-red-400 hover:text-red-500 transition-colors">
+              <span className="material-symbols-outlined text-sm">logout</span>
+              Sign Out
+            </button>
+          </div>
+        </aside>
+
+        {/* Content Area */}
+        <section className="lg:col-span-9 space-y-16">
+
+          {/* Loyalty Portal */}
+          <LoyaltyPortal />
+
+          {/* Recent Orders */}
+          <div className="pt-8">
+            <div className="flex justify-between items-end mb-10">
+              <div>
+                <h2 className="font-display text-3xl text-secondary dark:text-white mb-2">My Orders</h2>
+                <p className="text-xs font-light opacity-60">Tracking your journey to radiance.</p>
+              </div>
+              <button className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary/20 pb-1 hover:text-accent transition-colors">
+                View All History
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {[
+                { id: '#CI-92841', date: 'Oct 12, 2023', status: 'Delivered', total: 'GH₵274.00', items: 2 },
+                { id: '#CI-85123', date: 'Aug 05, 2023', status: 'Delivered', total: 'GH₵148.00', items: 1 }
+              ].map(order => (
+                <div key={order.id} className="bg-white dark:bg-stone-900 border border-primary/5 p-8 rounded-xl flex flex-col md:flex-row justify-between items-center gap-8 group hover:border-accent/20 transition-all">
+                  <div className="flex flex-col md:flex-row gap-8 items-center">
+                    <div className="w-16 h-16 bg-primary/5 rounded flex items-center justify-center">
+                      <span className="material-symbols-outlined text-accent text-3xl font-light">package_2</span>
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm tracking-widest uppercase mb-1">{order.id}</h4>
+                      <p className="text-[10px] opacity-40 uppercase tracking-widest">{order.date} • {order.items} Items</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center md:items-end">
+                    <span className="px-3 py-1 bg-green-500/10 text-green-600 text-[9px] font-black uppercase tracking-widest rounded-full mb-2">
+                      {order.status}
+                    </span>
+                    <p className="font-display text-xl text-secondary dark:text-white">{order.total}</p>
+                  </div>
+                  <button className="material-symbols-outlined text-stone-300 hover:text-accent transition-colors">chevron_right</button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Skin Profile Highlights */}
+          <div className="bg-primary/5 border border-primary/10 p-12 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div className="text-center md:text-left">
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4 block">Skin Type</span>
+              <h3 className="font-display text-2xl text-secondary dark:text-white">Combination</h3>
+              <p className="text-xs opacity-50 mt-2">Sensitive t-zone, balanced cheeks.</p>
+            </div>
+            <div className="text-center md:text-left">
+              <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4 block">Focus Ritual</span>
+              <h3 className="font-display text-2xl text-secondary dark:text-white">Radiance Boost</h3>
+              <p className="text-xs opacity-50 mt-2">Vitamin C and light hydration.</p>
+            </div>
+            <div className="text-center md:flex md:items-center md:justify-end">
+              <button className="bg-white dark:bg-stone-800 text-secondary dark:text-primary px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest border border-primary/10 hover:bg-primary hover:text-white transition-all">
+                Update Profile
+              </button>
+            </div>
+          </div>
+
+          {/* Recommended for You */}
+          <div>
+            <h2 className="font-display text-2xl text-secondary dark:text-white mb-8">Personalized for Elena</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+              <div className="flex gap-6 items-center p-6 bg-white dark:bg-stone-950 border border-primary/5 rounded-2xl group hover:shadow-xl transition-all cursor-pointer">
+                <div className="w-24 h-24 rounded-lg bg-primary/5 overflow-hidden shrink-0">
+                  <img src="/products/gluta-master-set.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                </div>
+                <div>
+                  <h4 className="font-display text-lg mb-1">Gluta Master Set</h4>
+                  <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-2">GH₵280.00</p>
+                  <span className="text-[9px] uppercase tracking-widest opacity-40 font-bold border-b border-primary/20 pb-0.5">Perfect for Mid-day Hydration</span>
+                </div>
+              </div>
+              <div className="flex gap-6 items-center p-6 bg-white dark:bg-stone-950 border border-primary/5 rounded-2xl group hover:shadow-xl transition-all cursor-pointer">
+                <div className="w-24 h-24 rounded-lg bg-primary/5 overflow-hidden shrink-0">
+                  <img src="/products/5d-gluta-diamond-box.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                </div>
+                <div>
+                  <h4 className="font-display text-lg mb-1">Diamond Facial Ritual</h4>
+                  <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-2">GH₵92.00</p>
+                  <span className="text-[9px] uppercase tracking-widest opacity-40 font-bold border-b border-primary/20 pb-0.5">Targets Early Fatigue</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+  );
+};
+
+export default Profile;
