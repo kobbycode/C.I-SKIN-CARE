@@ -99,7 +99,7 @@ const CMSSettings: React.FC = () => {
                             <h3 className="text-xl font-bold text-[#221C1D]">Main Navigation</h3>
                         </div>
                         <div className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 space-y-4">
-                            {formData.navLinks.map((link, i) => (
+                            {(formData.navLinks || []).map((link, i) => (
                                 <div key={i} className="flex gap-4 items-center">
                                     <input
                                         value={link.name}
@@ -149,7 +149,7 @@ const CMSSettings: React.FC = () => {
                             <button className="text-[10px] font-bold text-[#F2A600] uppercase tracking-wider hover:underline">Add Slide</button>
                         </div>
                         <div className="space-y-4">
-                            {formData.heroBanners.map((hero, i) => (
+                            {(formData.heroBanners || []).map((hero, i) => (
                                 <div key={i} className="group relative h-48 md:h-64 rounded-2xl overflow-hidden border border-stone-100 shadow-sm">
                                     <img src={hero.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={hero.title} />
                                     <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/70 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8">
@@ -187,7 +187,7 @@ const CMSSettings: React.FC = () => {
                     <section>
                         <h3 className="text-xl font-bold text-[#221C1D] mb-6">Active Frontpage Sections</h3>
                         <div className="bg-white border border-stone-100 rounded-2xl p-2 md:p-4 space-y-1">
-                            {formData.homeSections.map((section, i) => (
+                            {(formData.homeSections || []).map((section, i) => (
                                 <div key={i} className="flex items-center justify-between p-4 hover:bg-stone-50 rounded-xl transition-colors cursor-move group">
                                     <div className="flex items-center gap-3 md:gap-4 overflow-hidden">
                                         <span className="material-symbols-outlined text-stone-300 group-hover:text-stone-400">drag_indicator</span>
@@ -241,7 +241,7 @@ const CMSSettings: React.FC = () => {
                                     <button className="text-[10px] font-bold text-[#F2A600] uppercase hover:underline">+ Add</button>
                                 </div>
                                 <div className="space-y-4">
-                                    {formData.testimonials.map((t, i) => (
+                                    {(formData.testimonials || []).map((t, i) => (
                                         <div key={i} className="p-4 bg-stone-50 border border-stone-100 rounded-xl flex flex-col gap-3 group hover:bg-white hover:shadow-sm transition-all duration-300">
                                             <input
                                                 value={t.author}
@@ -267,7 +267,7 @@ const CMSSettings: React.FC = () => {
                     <section>
                         <h3 className="text-xl font-bold text-[#221C1D] mb-6">Ritual Guides</h3>
                         <div className="space-y-6">
-                            {formData.ritualGuide.map((ritual, rIdx) => (
+                            {(formData.ritualGuide || []).map((ritual, rIdx) => (
                                 <div key={rIdx} className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 space-y-6">
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                         <input
@@ -285,7 +285,7 @@ const CMSSettings: React.FC = () => {
                                     </div>
                                     <div className="space-y-4">
                                         <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Ritual Steps</p>
-                                        {ritual.steps.map((step, sIdx) => (
+                                        {(ritual.steps || []).map((step, sIdx) => (
                                             <div key={sIdx} className="flex gap-4 items-start bg-stone-50 p-4 rounded-xl">
                                                 <span className="w-6 h-6 rounded-full bg-luxury-brown text-gold flex items-center justify-center text-[10px] flex-shrink-0 mt-1">{sIdx + 1}</span>
                                                 <div className="flex-1 space-y-2">
@@ -381,11 +381,11 @@ const CMSSettings: React.FC = () => {
                     <section>
                         <h3 className="text-xl font-bold text-[#221C1D] mb-6">Footer Links</h3>
                         <div className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 space-y-8">
-                            {formData.footerSections.map((section, sIndex) => (
+                            {(formData.footerSections || []).map((section, sIndex) => (
                                 <div key={sIndex}>
                                     <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">{section.title}</p>
                                     <div className="space-y-3">
-                                        {section.links.map((link, lIndex) => (
+                                        {(section.links || []).map((link, lIndex) => (
                                             <div key={lIndex} className="flex gap-2">
                                                 <input
                                                     value={link.name}
@@ -442,7 +442,7 @@ const CMSSettings: React.FC = () => {
                             <div>
                                 <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-4">Digital Footprint</p>
                                 <div className="space-y-3">
-                                    {formData.socialLinks.map((social, i) => (
+                                    {(formData.socialLinks || []).map((social, i) => (
                                         <div key={social.platform} className="flex items-center gap-3">
                                             <div className="w-9 h-9 bg-stone-50 rounded-lg flex items-center justify-center border border-stone-100 flex-shrink-0 text-stone-400">
                                                 <SocialIcon platform={social.platform} className="w-4 h-4" />
