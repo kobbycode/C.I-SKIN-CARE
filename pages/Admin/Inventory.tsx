@@ -1,9 +1,23 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/AdminLayout';
-import { MOCK_PRODUCTS } from '../../constants';
+import { useProducts } from '../../context/ProductContext';
+import { useNotification } from '../../context/NotificationContext';
 
 const Inventory: React.FC = () => {
+  const { products, deleteProduct } = useProducts();
+  const { showNotification } = useNotification();
+
+  const handleDelete = async (id: string, name: string) => {
+    if (window.confirm(`Are you sure you want to delete ${name}?`)) {
+      try {
+        await deleteProduct(id);
+        showNotification('Product deleted successfully', 'success');
+      } catch (error) {
+        showNotification('Failed to delete product', 'error');
+      }
+    }
+  };
   return (
     <AdminLayout>
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
@@ -26,10 +40,10 @@ const Inventory: React.FC = () => {
       {/* Inventory Stats - Scalable Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
         {[
-          { label: 'Total Products', value: '1,240', trend: '+4%', trendUp: true },
-          { label: 'Low Stock Items', value: '12', trend: '+2', trendUp: false },
-          { label: 'Active Listings', value: '1,150', trend: '0%', trendUp: true },
-          { label: 'Total Value', value: 'GH₵142,500', trend: '+12%', trendUp: true }
+          { label: 'Total Products', value: products.length.toString(), trend: '+4%', trendUp: true },
+          { label: 'Low Stock Items', value: products.filter(p => (p.stock || 0) < 10).length.toString(), trend: '+2', trendUp: false },
+          { label: 'Active Listings', value: products.filter(p => p.status === 'Active').length.toString(), trend: '0%', trendUp: true },
+          { label: 'Total Value', value: 'GH₵' + products.reduce((sum, p) => sum + (p.price * (p.stock || 0)), 0).toLocaleString(), trend: '+12%', trendUp: true }
         ].map((stat, i) => (
           <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
             <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mb-2">{stat.label}</p>
@@ -40,7 +54,8 @@ const Inventory: React.FC = () => {
               </span>
             </div>
           </div>
-        ))}
+        ))
+        }
       </div>
 
       {/* Table Area */}
@@ -67,16 +82,21 @@ const Inventory: React.FC = () => {
         </div>
 
         <div className="md:hidden divide-y divide-stone-50">
-          {MOCK_PRODUCTS.map((p) => (
+          {products.map((p) => (
             <div key={p.id} className="p-6 space-y-4">
               <div className="flex gap-4">
                 <img src={p.image} className="w-20 h-20 rounded-lg object-cover flex-shrink-0" alt={p.name} />
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex justify-between items-start gap-2">
                     <h5 className="text-sm font-bold text-[#221C1D] break-words">{p.name}</h5>
-                    <button className="p-1 text-stone-300 hover:text-stone-600 transition-colors flex-shrink-0">
-                      <span className="material-symbols-outlined text-lg">edit</span>
-                    </button>
+                    <div className="flex gap-1">
+                      <Link to={`/admin/inventory/edit/${p.id}`} className="p-1 text-stone-300 hover:text-stone-600 transition-colors flex-shrink-0">
+                        <span className="material-symbols-outlined text-lg">edit</span>
+                      </Link>
+                      <button onClick={() => handleDelete(p.id, p.name)} className="p-1 text-stone-300 hover:text-red-600 transition-colors flex-shrink-0">
+                        <span className="material-symbols-outlined text-lg">delete</span>
+                      </button>
+                    </div>
                   </div>
                   <p className="text-[10px] text-stone-400 font-medium uppercase tracking-wider mb-2">{p.category}</p>
                   <span className={`w-fit px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.status === 'Active' ? 'bg-green-50 text-green-600' : 'bg-stone-50 text-stone-400'}`}>
@@ -123,7 +143,7 @@ const Inventory: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
-              {MOCK_PRODUCTS.map((p) => (
+              {products.map((p) => (
                 <tr key={p.id} className="hover:bg-stone-50/30 transition-colors">
                   <td className="px-4 md:px-6 py-5 w-10 text-center"><input type="checkbox" className="rounded border-stone-300" /></td>
                   <td className="px-4 md:px-6 py-5">
@@ -154,7 +174,10 @@ const Inventory: React.FC = () => {
                     </span>
                   </td>
                   <td className="px-4 md:px-6 py-5 text-right">
-                    <button className="p-2 text-stone-300 hover:text-stone-600 transition-colors"><span className="material-symbols-outlined">edit</span></button>
+                    <div className="flex justify-end gap-2">
+                      <Link to={`/admin/inventory/edit/${p.id}`} className="p-2 text-stone-300 hover:text-stone-600 transition-colors"><span className="material-symbols-outlined">edit</span></Link>
+                      <button onClick={() => handleDelete(p.id, p.name)} className="p-2 text-stone-300 hover:text-red-600 transition-colors"><span className="material-symbols-outlined">delete</span></button>
+                    </div>
                   </td>
                 </tr>
               ))}

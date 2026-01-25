@@ -1,12 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, doc, writeBatch, getDocs, query } from 'firebase/firestore';
+import { collection, onSnapshot, doc, writeBatch, getDocs, query, setDoc, deleteDoc } from 'firebase/firestore';
 import { Product } from '../types';
 import { MOCK_PRODUCTS } from '../constants';
 
 interface ProductContextType {
     products: Product[];
     loading: boolean;
+    addProduct: (product: Omit<Product, 'id'>) => Promise<string>;
+    updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
+    deleteProduct: (id: string) => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -57,8 +60,41 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return () => unsubscribe();
     }, []);
 
+    const addProduct = async (product: Omit<Product, 'id'>) => {
+        try {
+            const productsRef = collection(db, 'products');
+            const docRef = doc(productsRef); // Generate ID
+            const newProduct = { ...product, id: docRef.id };
+            await setDoc(docRef, newProduct);
+            return docRef.id;
+        } catch (error) {
+            console.error("Error adding product:", error);
+            throw error;
+        }
+    };
+
+    const updateProduct = async (id: string, updates: Partial<Product>) => {
+        try {
+            const productRef = doc(db, 'products', id);
+            await setDoc(productRef, updates, { merge: true });
+        } catch (error) {
+            console.error("Error updating product:", error);
+            throw error;
+        }
+    };
+
+    const deleteProduct = async (id: string) => {
+        try {
+            const productRef = doc(db, 'products', id);
+            await deleteDoc(productRef);
+        } catch (error) {
+            console.error("Error deleting product:", error);
+            throw error;
+        }
+    };
+
     return (
-        <ProductContext.Provider value={{ products, loading }}>
+        <ProductContext.Provider value={{ products, loading, addProduct, updateProduct, deleteProduct }}>
             {children}
         </ProductContext.Provider>
     );

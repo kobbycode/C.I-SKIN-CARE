@@ -1,19 +1,95 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/AdminLayout';
+import { db, storage } from '../../firebaseConfig';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { collection, doc, setDoc } from 'firebase/firestore';
+import { useProducts } from '../../context/ProductContext';
+import { useNotification } from '../../context/NotificationContext';
+import { Product } from '../../types';
 
 const AddProduct: React.FC = () => {
     const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const { addProduct, updateProduct, products } = useProducts();
+    const { showNotification } = useNotification();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const [formData, setFormData] = useState<Partial<Product>>({
+        name: '',
+        description: '',
+        category: 'Cleansers',
+        brand: 'C.I Skin Care',
+        price: 0,
+        sku: '',
+        stock: 0,
+        image: '/products/placeholder.jpg',
+        skinTypes: [],
+        concerns: [],
+        status: 'Draft',
+        tags: []
+    });
+
+    useEffect(() => {
+        if (id && products.length > 0) {
+            const product = products.find(p => p.id === id);
+            if (product) {
+                setFormData(product);
+            }
+        }
+    }, [id, products]);
+
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-        // Simulate luxury API delay
-        setTimeout(() => {
-            setIsSubmitting(false);
+        try {
+            if (id) {
+                await updateProduct(id, formData);
+                showNotification('Product updated successfully', 'success');
+            } else {
+                await addProduct(formData as Omit<Product, 'id'>);
+                showNotification('Product created successfully', 'success');
+            }
             navigate('/admin/inventory');
-        }, 1500);
+        } catch (error) {
+            console.error(error);
+            showNotification('Operation failed. Please try again.', 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleChange = (field: keyof Product, value: any) => {
+        setFormData(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsSubmitting(true);
+        try {
+            const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            handleChange('image', downloadURL);
+            showNotification('Image uploaded successfully', 'success');
+        } catch (error) {
+            console.error("Upload error:", error);
+            showNotification('Failed to upload image', 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const toggleArrayItem = (field: 'skinTypes' | 'concerns', item: string) => {
+        setFormData(prev => {
+            const array = prev[field] || [];
+            if (array.includes(item)) {
+                return { ...prev, [field]: array.filter(i => i !== item) };
+            }
+            return { ...prev, [field]: [...array, item] };
+        });
     };
 
     return (
@@ -24,8 +100,8 @@ const AddProduct: React.FC = () => {
                         <span className="material-symbols-outlined text-stone-400">arrow_back</span>
                     </Link>
                     <div>
-                        <h2 className="text-3xl font-bold text-[#221C1D]">New Formulation</h2>
-                        <p className="text-stone-500">Add a new clinical-grade botanical to the collection.</p>
+                        <h2 className="text-3xl font-bold text-[#221C1D]">{id ? 'Edit Formulation' : 'New Formulation'}</h2>
+                        <p className="text-stone-500">{id ? 'Refine an existing clinical-grade botanical.' : 'Add a new clinical-grade botanical to the collection.'}</p>
                     </div>
                 </div>
             </header>
@@ -42,6 +118,8 @@ const AddProduct: React.FC = () => {
                                 <input
                                     required
                                     type="text"
+                                    value={formData.name}
+                                    onChange={(e) => handleChange('name', e.target.value)}
                                     placeholder="e.g. Midnight Radiance Elixir"
                                     className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all placeholder:text-stone-300"
                                 />
@@ -52,6 +130,8 @@ const AddProduct: React.FC = () => {
                                 <textarea
                                     required
                                     rows={5}
+                                    value={formData.description}
+                                    onChange={(e) => handleChange('description', e.target.value)}
                                     placeholder="Describe the formulation's purpose, key benefits, and sensory experience..."
                                     className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all placeholder:text-stone-300 resize-none"
                                 ></textarea>
@@ -60,20 +140,32 @@ const AddProduct: React.FC = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D]">Category</label>
-                                    <select className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all appearance-none cursor-pointer">
+                                    <select
+                                        value={formData.category}
+                                        onChange={(e) => handleChange('category', e.target.value)}
+                                        className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all appearance-none cursor-pointer"
+                                    >
                                         <option>Cleansers</option>
                                         <option>Serums & Elixirs</option>
                                         <option>Moisturizers</option>
                                         <option>Treatments</option>
                                         <option>Collections</option>
+                                        <option>Body Care</option>
                                     </select>
                                 </div>
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D]">Brand Line</label>
-                                    <select className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all appearance-none cursor-pointer">
-                                        <option>Botanical Line</option>
-                                        <option>Clinical Series</option>
-                                        <option>Essential Collection</option>
+                                    <select
+                                        value={formData.brand}
+                                        onChange={(e) => handleChange('brand', e.target.value)}
+                                        className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all appearance-none cursor-pointer"
+                                    >
+                                        <option>C.I Skin Care</option>
+                                        <option>BEL ECLAT</option>
+                                        <option>Gluta Master</option>
+                                        <option>5D Gluta</option>
+                                        <option>SPA Rituals</option>
+                                        <option>Pomegranate Line</option>
                                     </select>
                                 </div>
                             </div>
@@ -89,6 +181,8 @@ const AddProduct: React.FC = () => {
                                         required
                                         type="number"
                                         step="0.01"
+                                        value={formData.price}
+                                        onChange={(e) => handleChange('price', parseFloat(e.target.value))}
                                         placeholder="0.00"
                                         className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all placeholder:text-stone-300"
                                     />
@@ -98,6 +192,8 @@ const AddProduct: React.FC = () => {
                                     <input
                                         required
                                         type="text"
+                                        value={formData.sku}
+                                        onChange={(e) => handleChange('sku', e.target.value)}
                                         placeholder="CI-XXXX-XX"
                                         className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all placeholder:text-stone-300 uppercase"
                                     />
@@ -107,6 +203,8 @@ const AddProduct: React.FC = () => {
                                     <input
                                         required
                                         type="number"
+                                        value={formData.stock}
+                                        onChange={(e) => handleChange('stock', parseInt(e.target.value))}
                                         placeholder="0"
                                         className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all placeholder:text-stone-300"
                                     />
@@ -122,7 +220,15 @@ const AddProduct: React.FC = () => {
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Target Skin Types</p>
                                     <div className="flex flex-wrap gap-3">
                                         {['All Skin Types', 'Dry & Dehydrated', 'Oily & Acne-Prone', 'Mature Skin', 'Sensitive', 'Normal'].map(type => (
-                                            <button key={type} type="button" className="px-5 py-2 rounded-full border border-stone-100 text-[10px] font-bold uppercase tracking-wider hover:border-[#F2A600] hover:text-[#F2A600] transition-all">
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => toggleArrayItem('skinTypes', type)}
+                                                className={`px-5 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all ${formData.skinTypes?.includes(type)
+                                                    ? 'bg-[#F2A600] text-black border-[#F2A600]'
+                                                    : 'border-stone-100 hover:border-[#F2A600] hover:text-[#F2A600]'
+                                                    }`}
+                                            >
                                                 {type}
                                             </button>
                                         ))}
@@ -133,7 +239,15 @@ const AddProduct: React.FC = () => {
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">Primary Skin Concerns</p>
                                     <div className="flex flex-wrap gap-3">
                                         {['Aging', 'Dullness', 'Dehydration', 'Dryness', 'Dark Circles', 'Fine Lines', 'Congestion'].map(concern => (
-                                            <button key={concern} type="button" className="px-5 py-2 rounded-full border border-stone-100 text-[10px] font-bold uppercase tracking-wider hover:border-[#F2A600] hover:text-[#F2A600] transition-all">
+                                            <button
+                                                key={concern}
+                                                type="button"
+                                                onClick={() => toggleArrayItem('concerns', concern)}
+                                                className={`px-5 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all ${formData.concerns?.includes(concern)
+                                                    ? 'bg-[#F2A600] text-black border-[#F2A600]'
+                                                    : 'border-stone-100 hover:border-[#F2A600] hover:text-[#F2A600]'
+                                                    }`}
+                                            >
                                                 {concern}
                                             </button>
                                         ))}
@@ -149,10 +263,31 @@ const AddProduct: React.FC = () => {
                             <h3 className="text-xs font-black uppercase tracking-[0.2em] border-b border-stone-50 pb-4 mb-6">Visual Identity</h3>
 
                             <div className="space-y-4">
-                                <div className="aspect-[4/5] bg-[#FDFCFB] border-2 border-dashed border-stone-100 rounded-xl flex flex-col items-center justify-center text-center p-6 group hover:border-[#F2A600]/30 transition-all cursor-pointer">
-                                    <span className="material-symbols-outlined text-4xl text-stone-200 mb-2 group-hover:text-[#F2A600]/30">image</span>
-                                    <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 group-hover:text-[#221C1D]">Upload Product Imagery</p>
-                                    <p className="text-[8px] text-stone-300 mt-1 uppercase">JPG, PNG, WEBP (Min 1000x1250px)</p>
+                                <label className="aspect-[4/5] bg-[#FDFCFB] border-2 border-dashed border-stone-100 rounded-xl flex flex-col items-center justify-center text-center p-6 group hover:border-[#F2A600]/30 transition-all cursor-pointer relative overflow-hidden">
+                                    {formData.image && formData.image !== '/products/placeholder.jpg' ? (
+                                        <img src={formData.image} alt="Preview" className="absolute inset-0 w-full h-full object-cover opacity-50" />
+                                    ) : null}
+                                    <span className="material-symbols-outlined text-4xl text-stone-200 mb-2 group-hover:text-[#F2A600]/30 relative z-10">image</span>
+                                    <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400 group-hover:text-[#221C1D] relative z-10">
+                                        {formData.image ? 'Change Product Imagery' : 'Upload Product Imagery'}
+                                    </p>
+                                    <p className="text-[8px] text-stone-300 mt-1 uppercase relative z-10">JPG, PNG, WEBP (Min 1000x1250px)</p>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                    />
+                                </label>
+                                <div className="space-y-1">
+                                    <label className="text-[9px] font-bold uppercase tracking-widest text-stone-400">Or Image URL</label>
+                                    <input
+                                        type="text"
+                                        value={formData.image}
+                                        onChange={(e) => handleChange('image', e.target.value)}
+                                        className="w-full bg-[#FDFCFB] border border-stone-100 rounded px-2 py-2 text-xs"
+                                        placeholder="https://..."
+                                    />
                                 </div>
                                 <div className="grid grid-cols-3 gap-3">
                                     {[1, 2, 3].map(i => (
@@ -178,7 +313,15 @@ const AddProduct: React.FC = () => {
                                 </div>
                                 <div className="flex items-center justify-between">
                                     <p className="text-xs font-bold uppercase tracking-widest">Status</p>
-                                    <span className="text-[10px] font-bold bg-[#F2A600] text-[#221C1D] px-3 py-1 rounded-full uppercase tracking-widest">Draft</span>
+                                    <select
+                                        value={formData.status}
+                                        onChange={(e) => handleChange('status', e.target.value)}
+                                        className="bg-transparent border-none focus:ring-0 text-[#F2A600] text-xs font-bold uppercase tracking-widest cursor-pointer"
+                                    >
+                                        <option value="Active">Active</option>
+                                        <option value="Draft">Draft</option>
+                                        <option value="Archived">Archived</option>
+                                    </select>
                                 </div>
                             </div>
 

@@ -201,6 +201,7 @@ const MainLayout: React.FC = () => {
           <Route path="/admin/reviews" element={<AdminReviews />} />
           <Route path="/admin/settings" element={<CMSSettings />} />
           <Route path="/admin/inventory/add" element={<AddProduct />} />
+          <Route path="/admin/inventory/edit/:id" element={<AddProduct />} />
           <Route path="/admin/categories" element={<Categories />} />
           <Route path="/admin/faqs" element={<FAQManager />} />
         </Routes>
