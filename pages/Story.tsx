@@ -48,7 +48,7 @@ const Story: React.FC = () => {
                     </h2>
                     <div className="w-24 h-px bg-primary mx-auto mb-10"></div>
                     <p className="text-stone-400 font-light max-w-2xl mx-auto leading-relaxed">
-                        We are committed to meeting and exceeding the expectations of all our customers by selling and distributing only the highest quality and safest skincare solutions.
+                        {story.visionSub}
                     </p>
                 </div>
                 <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />

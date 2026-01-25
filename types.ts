@@ -9,7 +9,7 @@ export interface Product {
   tags: string[];
   sku?: string;
   stock?: number;
-  status?: 'Active' | 'Draft' | 'Low Stock' | 'Out of Stock';
+  status?: 'Active' | 'Draft' | 'Low Stock' | 'Out of Stock' | 'Archived';
   brand?: string;
   skinTypes?: string[];
   concerns?: string[];

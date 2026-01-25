@@ -4,7 +4,7 @@ import { useLocation, Link, Navigate } from 'react-router-dom';
 import { CartItem } from '../types';
 
 interface OrderSummary {
-  orderId: string;
+  id: string;
   items: CartItem[];
   subtotal: number;
   shipping: number;
@@ -30,7 +30,7 @@ const OrderConfirmation: React.FC = () => {
         </div>
         <h1 className="font-display text-4xl md:text-5xl text-secondary dark:text-white mb-4 uppercase tracking-[0.2em]">Ritual Confirmed</h1>
         <p className="text-stone-500 dark:text-stone-400 font-light text-sm tracking-widest uppercase">
-          Order {summary.orderId} • {summary.date}
+          Order {summary.id} • {summary.date}
         </p>
       </div>
 

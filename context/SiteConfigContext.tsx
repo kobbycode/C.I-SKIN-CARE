@@ -70,6 +70,7 @@ export interface StoryContent {
     aboutText: string;
     mission: string;
     vision: string;
+    visionSub: string;
     founderTitle: string;
     founderText: string[];
     coreValues: CoreValue[];
@@ -197,6 +198,7 @@ const defaultStory: StoryContent = {
     aboutText: "Confidence emanates from practicing self-care that makes you feel and look good. At C.I Skin Care, our passion for quality, efficacy, and safety drives our product formulation in body care to give you the confidence you need to take on the world.",
     mission: "To beautify and inspire our valued consumers and customers to feel confident in their own skin by using our products.",
     vision: "To be the best customer oriented skincare company in Ghana and across Africa delivering safe, quality, and affordable products.",
+    visionSub: "We are committed to meeting and exceeding the expectations of all our customers by selling and distributing only the highest quality and safest skincare solutions.",
     founderTitle: "Authenticity in Every Drop",
     founderText: [
         "When I started C.I Skin Care, my vision was simple: to create a brand that doesn't just sell products, but offers a sanctuary of confidence for every individual.",

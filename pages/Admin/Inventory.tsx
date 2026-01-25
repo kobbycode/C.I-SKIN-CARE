@@ -5,7 +5,7 @@ import { useProducts } from '../../context/ProductContext';
 import { useNotification } from '../../context/NotificationContext';
 
 const Inventory: React.FC = () => {
-  const { products, deleteProduct, bulkDeleteProducts, addProduct } = useProducts();
+  const { products, deleteProduct, bulkDeleteProducts, addProduct, updateProduct } = useProducts();
   const { showNotification } = useNotification();
   const [activeTab, setActiveTab] = React.useState('All Products');
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
@@ -17,6 +17,12 @@ const Inventory: React.FC = () => {
     // Status Filter
     if (activeTab === 'Active') result = result.filter(p => p.status === 'Active');
     if (activeTab === 'Draft') result = result.filter(p => !p.status || p.status === 'Draft');
+    if (activeTab === 'Archived') result = result.filter(p => p.status === 'Archived');
+
+    // Filter out Archived from other tabs
+    if (activeTab !== 'Archived') {
+      result = result.filter(p => p.status !== 'Archived');
+    }
 
     // Search Filter
     if (searchQuery) {
@@ -30,12 +36,24 @@ const Inventory: React.FC = () => {
   }, [products, activeTab, searchQuery]);
 
   const handleDelete = async (id: string, name: string) => {
-    if (window.confirm(`Are you sure you want to delete ${name}?`)) {
+    if (window.confirm(`Are you sure you want to delete ${name}? This will permanently remove its clinical record.`)) {
       try {
         await deleteProduct(id);
-        showNotification('Product deleted successfully', 'success');
+        showNotification('Product purged from database', 'success');
       } catch (error) {
         showNotification('Failed to delete product', 'error');
+      }
+    }
+  };
+
+  const handleArchive = async (id: string, name: string, isArchived: boolean) => {
+    const action = isArchived ? 'Restore' : 'Archive';
+    if (window.confirm(`${action} "${name}"? ${isArchived ? 'It will return to Draft status.' : 'It will be hidden from the storefront and management views.'}`)) {
+      try {
+        await updateProduct(id, { status: isArchived ? 'Draft' : 'Archived' });
+        showNotification(`Product ${isArchived ? 'restored' : 'archived'} successfully`, 'success');
+      } catch (error) {
+        showNotification(`Failed to ${action.toLowerCase()} product`, 'error');
       }
     }
   };
@@ -144,7 +162,7 @@ const Inventory: React.FC = () => {
       <div className="bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden">
         <div className="p-6 border-b border-stone-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex gap-6 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-            {['All Products', 'Active', 'Draft'].map((tab) => (
+            {['All Products', 'Active', 'Draft', 'Archived'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -204,8 +222,8 @@ const Inventory: React.FC = () => {
                   <div className="flex justify-between items-start gap-2">
                     <h5 className="text-sm font-bold text-[#221C1D] break-words">{p.name}</h5>
                     <div className="flex gap-1">
-                      <button onClick={() => handleCopyProduct(p)} className="p-1 text-stone-300 hover:text-[#F2A600] transition-colors flex-shrink-0">
-                        <span className="material-symbols-outlined text-lg">content_copy</span>
+                      <button onClick={() => handleArchive(p.id, p.name, p.status === 'Archived')} className="p-1 text-stone-300 hover:text-amber-600 transition-colors flex-shrink-0" title={p.status === 'Archived' ? 'Restore' : 'Archive'}>
+                        <span className="material-symbols-outlined text-lg">{p.status === 'Archived' ? 'unarchive' : 'archive'}</span>
                       </button>
                       <Link to={`/admin/inventory/edit/${p.id}`} className="p-1 text-stone-300 hover:text-stone-600 transition-colors flex-shrink-0">
                         <span className="material-symbols-outlined text-lg">edit</span>
@@ -216,7 +234,7 @@ const Inventory: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-[10px] text-stone-400 font-medium uppercase tracking-wider mb-2">{p.category}</p>
-                  <span className={`w-fit px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.status === 'Active' ? 'bg-green-50 text-green-600' : 'bg-stone-50 text-stone-400'}`}>
+                  <span className={`w-fit px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.status === 'Active' ? 'bg-green-50 text-green-600' : p.status === 'Archived' ? 'bg-stone-800 text-white' : 'bg-stone-50 text-stone-400'}`}>
                     {p.status || (p.stock && p.stock > 0 ? 'ACTIVE' : 'DRAFT')}
                   </span>
                 </div>
@@ -299,14 +317,14 @@ const Inventory: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-4 md:px-6 py-5">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${p.status === 'Active' ? 'bg-green-50 text-green-600' : 'bg-stone-50 text-stone-400'
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${p.status === 'Active' ? 'bg-green-50 text-green-600' : p.status === 'Archived' ? 'bg-stone-800 text-white' : 'bg-stone-50 text-stone-400'
                       }`}>
                       {p.status || (p.stock && p.stock > 0 ? 'ACTIVE' : 'DRAFT')}
                     </span>
                   </td>
                   <td className="px-4 md:px-6 py-5 text-right">
                     <div className="flex justify-end gap-2">
-                      <button onClick={() => handleCopyProduct(p)} className="p-2 text-stone-300 hover:text-[#F2A600] transition-colors" title="Copy Product"><span className="material-symbols-outlined">content_copy</span></button>
+                      <button onClick={() => handleArchive(p.id, p.name, p.status === 'Archived')} className="p-2 text-stone-300 hover:text-amber-600 transition-colors" title={p.status === 'Archived' ? 'Restore' : 'Archive'}><span className="material-symbols-outlined">{p.status === 'Archived' ? 'unarchive' : 'archive'}</span></button>
                       <Link to={`/admin/inventory/edit/${p.id}`} className="p-2 text-stone-300 hover:text-stone-600 transition-colors" title="Edit Product"><span className="material-symbols-outlined">edit</span></Link>
                       <button onClick={() => handleDelete(p.id, p.name)} className="p-2 text-stone-300 hover:text-red-600 transition-colors" title="Delete Product"><span className="material-symbols-outlined">delete</span></button>
                     </div>
