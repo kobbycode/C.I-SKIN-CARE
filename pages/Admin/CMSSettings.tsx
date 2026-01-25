@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useSiteConfig, SiteConfig } from '../../context/SiteConfigContext';
+import { useNotification } from '../../context/NotificationContext';
 
 const CMSSettings: React.FC = () => {
     const { siteConfig, updateSiteConfig } = useSiteConfig();
+    const { showNotification } = useNotification();
     const [formData, setFormData] = useState<SiteConfig>(siteConfig);
     const [isDirty, setIsDirty] = useState(false);
 
@@ -40,7 +42,7 @@ const CMSSettings: React.FC = () => {
     const handleSave = () => {
         updateSiteConfig(formData);
         setIsDirty(false);
-        alert('Changes published successfully!');
+        showNotification('Site configuration published successfully!', 'success');
     };
 
     return (
