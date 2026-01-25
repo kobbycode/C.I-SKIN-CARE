@@ -10,6 +10,8 @@ const Inventory: React.FC = () => {
   const [activeTab, setActiveTab] = React.useState('All Products');
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
   const [searchQuery, setSearchQuery] = React.useState('');
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 10;
 
   const filteredProducts = React.useMemo(() => {
     let result = products;
@@ -34,6 +36,16 @@ const Inventory: React.FC = () => {
 
     return result;
   }, [products, activeTab, searchQuery]);
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const paginatedProducts = React.useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredProducts.slice(start, start + itemsPerPage);
+  }, [filteredProducts, currentPage]);
+
+  const totalInventoryValue = React.useMemo(() => {
+    return products.reduce((sum, p) => sum + ((p.cost || p.price || 0) * (p.stock || 0)), 0);
+  }, [products]);
 
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete ${name}? This will permanently remove its clinical record.`)) {
@@ -106,10 +118,10 @@ const Inventory: React.FC = () => {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === filteredProducts.length) {
+    if (selectedIds.length === paginatedProducts.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filteredProducts.map(p => p.id));
+      setSelectedIds(paginatedProducts.map(p => p.id));
     }
   };
 
@@ -143,7 +155,7 @@ const Inventory: React.FC = () => {
           { label: 'Total Products', value: products.length.toString(), trend: '0%', trendUp: true, sub: 'All items' },
           { label: 'Low Stock Items', value: products.filter(p => (p.stock || 0) < 10).length.toString(), trend: 'Active', trendUp: false, sub: 'Below 10 units' },
           { label: 'Active Listings', value: products.filter(p => p.status === 'Active').length.toString(), trend: 'Live', trendUp: true, sub: 'Shown to public' },
-          { label: 'Total Value', value: 'GH₵' + products.reduce((sum, p) => sum + (p.price * (p.stock || 0)), 0).toLocaleString(), trend: '0%', trendUp: true, sub: 'Inventory worth' }
+          { label: 'Total Value', value: 'GH₵' + totalInventoryValue.toLocaleString(), trend: '0%', trendUp: true, sub: 'Inventory worth (Cost)' }
         ].map((stat, i) => (
           <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
             <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mb-2">{stat.label}</p>
@@ -208,7 +220,7 @@ const Inventory: React.FC = () => {
         </div>
 
         <div className="md:hidden divide-y divide-stone-50">
-          {filteredProducts.map((p) => (
+          {paginatedProducts.length > 0 ? paginatedProducts.map((p) => (
             <div key={p.id} className="p-6 space-y-4">
               <div className="flex gap-4">
                 <input
@@ -261,7 +273,9 @@ const Inventory: React.FC = () => {
                 </div>
               </div>
             </div>
-          ))}
+          )) : (
+            <div className="p-12 text-center text-stone-400 font-bold uppercase text-[10px] tracking-widest">No clinical botanicals found.</div>
+          )}
         </div>
 
         <div className="hidden md:block overflow-x-auto">
@@ -273,7 +287,7 @@ const Inventory: React.FC = () => {
                     type="checkbox"
                     className="rounded border-stone-300"
                     onChange={toggleSelectAll}
-                    checked={filteredProducts.length > 0 && selectedIds.length === filteredProducts.length}
+                    checked={paginatedProducts.length > 0 && selectedIds.length === paginatedProducts.length}
                   />
                 </th>
                 <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Product</th>
@@ -285,7 +299,7 @@ const Inventory: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
-              {filteredProducts.map((p) => (
+              {paginatedProducts.length > 0 ? paginatedProducts.map((p) => (
                 <tr key={p.id} className="hover:bg-stone-50/30 transition-colors">
                   <td className="px-4 md:px-6 py-5 w-10 text-center">
                     <input
@@ -330,25 +344,45 @@ const Inventory: React.FC = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
+              )) : (
+                <tr>
+                  <td colSpan={7} className="px-6 py-12 text-center text-stone-400 font-bold uppercase text-[10px] tracking-widest">No clinical botanicals found.</td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
 
         <div className="p-6 md:p-8 border-t border-stone-50 flex flex-col md:flex-row justify-between items-center gap-4 text-stone-400">
-          <span className="text-xs font-medium">Showing {filteredProducts.length} entries</span>
+          <span className="text-xs font-medium">Showing {Math.min(filteredProducts.length, itemsPerPage)} of {filteredProducts.length} entries</span>
           <div className="flex gap-2">
-            <button className="w-8 h-8 flex items-center justify-center border border-stone-100 rounded-md hover:bg-stone-50 transition-colors"><span className="material-symbols-outlined text-sm">chevron_left</span></button>
-            {[1, 2, 3, '...', 124].map((n, i) => (
-              <button key={i} className={`w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-md transition-colors ${n === 1 ? 'bg-[#F2A600] text-white' : 'hover:bg-stone-50'}`}>
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(prev => prev - 1)}
+              className={`w-8 h-8 flex items-center justify-center border border-stone-100 rounded-md transition-colors ${currentPage === 1 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-stone-50'}`}
+            >
+              <span className="material-symbols-outlined text-sm">chevron_left</span>
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                onClick={() => setCurrentPage(n)}
+                className={`w-8 h-8 flex items-center justify-center text-[10px] font-bold rounded-md transition-colors ${n === currentPage ? 'bg-[#F2A600] text-white' : 'hover:bg-stone-50'}`}
+              >
                 {n}
               </button>
             ))}
-            <button className="w-8 h-8 flex items-center justify-center border border-stone-100 rounded-md hover:bg-stone-50 transition-colors"><span className="material-symbols-outlined text-sm">chevron_right</span></button>
+            <button
+              disabled={currentPage === totalPages || totalPages === 0}
+              onClick={() => setCurrentPage(prev => prev + 1)}
+              className={`w-8 h-8 flex items-center justify-center border border-stone-100 rounded-md transition-colors ${currentPage === totalPages || totalPages === 0 ? 'opacity-30 cursor-not-allowed' : 'hover:bg-stone-50'}`}
+            >
+              <span className="material-symbols-outlined text-sm">chevron_right</span>
+            </button>
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </AdminLayout >
   );
 };
 

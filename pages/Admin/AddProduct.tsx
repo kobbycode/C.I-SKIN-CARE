@@ -184,7 +184,7 @@ const AddProduct: React.FC = () => {
                         <section className="bg-white border border-stone-100 rounded-2xl p-8 space-y-6 shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
                             <h3 className="text-xs font-black uppercase tracking-[0.2em] border-b border-stone-50 pb-4 mb-6">Inventory & Pricing</h3>
 
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D]">Base Price (GH₵)</label>
                                     <input
@@ -193,6 +193,17 @@ const AddProduct: React.FC = () => {
                                         step="0.01"
                                         value={formData.price}
                                         onChange={(e) => handleChange('price', parseFloat(e.target.value))}
+                                        placeholder="0.00"
+                                        className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all placeholder:text-stone-300"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D]">Unit Cost (GH₵)</label>
+                                    <input
+                                        type="number"
+                                        step="0.01"
+                                        value={formData.cost || 0}
+                                        onChange={(e) => handleChange('cost', parseFloat(e.target.value))}
                                         placeholder="0.00"
                                         className="w-full bg-[#FDFCFB] border border-stone-100 focus:border-[#F2A600] focus:ring-1 focus:ring-[#F2A600] rounded-lg px-4 py-4 outline-none transition-all placeholder:text-stone-300"
                                     />

@@ -13,6 +13,7 @@ export interface Product {
   brand?: string;
   skinTypes?: string[];
   concerns?: string[];
+  cost?: number;
 }
 
 export interface CartItem extends Product {
