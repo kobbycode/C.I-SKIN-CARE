@@ -7,6 +7,7 @@ import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import { SiteConfigProvider } from './context/SiteConfigContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ProductProvider } from './context/ProductContext';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
@@ -147,12 +148,14 @@ const App: React.FC = () => {
     }}>
       <SiteConfigProvider>
         <NotificationProvider>
-          <BrowserRouter>
-            <ScrollToTop />
-            <Suspense fallback={<PageLoader />}>
-              <MainLayout />
-            </Suspense>
-          </BrowserRouter>
+          <ProductProvider>
+            <BrowserRouter>
+              <ScrollToTop />
+              <Suspense fallback={<PageLoader />}>
+                <MainLayout />
+              </Suspense>
+            </BrowserRouter>
+          </ProductProvider>
         </NotificationProvider>
       </SiteConfigProvider>
     </AppContext.Provider>

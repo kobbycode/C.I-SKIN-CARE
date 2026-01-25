@@ -2,10 +2,11 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../App';
-import { MOCK_PRODUCTS } from '../constants';
+import { useProducts } from '../context/ProductContext';
 
 const Shop: React.FC = () => {
   const { addToCart } = useApp();
+  const { products, loading } = useProducts();
   const [searchParams] = useSearchParams();
 
   // Filtering States
@@ -29,7 +30,7 @@ const Shop: React.FC = () => {
   const brands = ['All', 'BEL ECLAT', 'Gluta Master', '5D Gluta', 'C.I Skin Care', 'SPA Rituals', 'Pomegranate Line', 'Bismid Cosmetics'];
 
   const filteredProducts = useMemo(() => {
-    return MOCK_PRODUCTS.filter(p => {
+    return products.filter(p => {
       const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
       const matchesSkinType = activeSkinType === 'All' || p.skinTypes?.includes(activeSkinType);
       const matchesConcern = activeConcern === 'All' || p.concerns?.includes(activeConcern);
@@ -163,7 +164,11 @@ const Shop: React.FC = () => {
 
         {/* Product Grid */}
         <div className="flex-1">
-          {filteredProducts.length === 0 ? (
+          {loading ? (
+            <div className="h-[60vh] flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="text-center py-24 opacity-40">
               <span className="material-symbols-outlined text-6xl mb-4 font-light">search_off</span>
               <p className="text-xl font-display italic">We couldn't find any products matching your selection.</p>

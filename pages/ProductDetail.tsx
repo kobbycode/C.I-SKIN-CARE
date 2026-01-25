@@ -2,22 +2,24 @@
 import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../App';
-import { MOCK_PRODUCTS, MOCK_REVIEWS } from '../constants';
+import { useProducts } from '../context/ProductContext';
+import { MOCK_REVIEWS } from '../constants';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, toggleWishlist, isInWishlist } = useApp();
+  const { products } = useProducts();
   const [qty, setQty] = useState(1);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
 
-  const product = MOCK_PRODUCTS.find(p => p.id === id);
+  const product = products.find(p => p.id === id);
 
   // Logic for related products
   const relatedProducts = useMemo(() => {
     if (!product) return [];
-    return MOCK_PRODUCTS
+    return products
       .filter(p => p.id !== product.id) // Exclude current product
       .filter(p =>
         p.category === product.category ||

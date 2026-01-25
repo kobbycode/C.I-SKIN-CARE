@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { db } from '../firebaseConfig';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 
 export interface NavLink {
     name: string;
@@ -148,34 +150,78 @@ const defaultSiteConfig: SiteConfig = {
     testimonials: defaultTestimonials
 };
 
+
+
 const SiteConfigContext = createContext<SiteConfigContextType | undefined>(undefined);
 
 export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [siteConfig, setSiteConfig] = useState<SiteConfig>(() => {
-        try {
-            const savedConfig = localStorage.getItem('siteConfig_v2');
-            return savedConfig ? JSON.parse(savedConfig) : defaultSiteConfig;
-        } catch (error) {
-            console.error("Failed to load site config from local storage", error);
-            return defaultSiteConfig;
-        }
-    });
+    const [siteConfig, setSiteConfig] = useState<SiteConfig>(defaultSiteConfig);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const configRef = doc(db, 'settings', 'siteConfig');
+
+        const unsubscribe = onSnapshot(configRef, (docSnap) => {
+            if (docSnap.exists()) {
+                setSiteConfig(docSnap.data() as SiteConfig);
+                setLoading(false);
+            } else {
+                // Migration: Check local storage or use defaults
+                let initialConfig = defaultSiteConfig;
+                try {
+                    const localData = localStorage.getItem('siteConfig_v2');
+                    if (localData) {
+                        initialConfig = { ...defaultSiteConfig, ...JSON.parse(localData) };
+                    }
+                } catch (e) {
+                    console.error("Local storage error", e);
+                }
+
+                // Initialize Firestore
+                setDoc(configRef, initialConfig).then(() => {
+                    setSiteConfig(initialConfig);
+                    setLoading(false);
+                });
+            }
+        });
+
+        return () => unsubscribe();
+    }, []);
+
+    const updateSiteConfig = async (newConfig: Partial<SiteConfig>) => {
+        // Optimistic update
+        const updated = { ...siteConfig, ...newConfig };
+        setSiteConfig(updated);
+
         try {
-            localStorage.setItem('siteConfig_v2', JSON.stringify(siteConfig));
+            const configRef = doc(db, 'settings', 'siteConfig');
+            await setDoc(configRef, updated, { merge: true });
         } catch (error) {
-            console.error("Failed to save site config to local storage", error);
+            console.error("Failed to update site config in Firestore", error);
+            // Revert? For now, simplistic handling.
         }
-    }, [siteConfig]);
-
-    const updateSiteConfig = (newConfig: Partial<SiteConfig>) => {
-        setSiteConfig(prev => ({ ...prev, ...newConfig }));
     };
 
-    const resetToDefaults = () => {
+    const resetToDefaults = async () => {
         setSiteConfig(defaultSiteConfig);
+        try {
+            const configRef = doc(db, 'settings', 'siteConfig');
+            await setDoc(configRef, defaultSiteConfig);
+        } catch (error) {
+            console.error("Failed to reset site config", error);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#FDFCFB]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-2 border-[#E5D3B3] border-t-[#A68966] rounded-full animate-spin"></div>
+                    <div className="text-[10px] uppercase tracking-[0.4em] text-[#A68966] font-bold animate-pulse">Initializing Boutique</div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <SiteConfigContext.Provider value={{ siteConfig, updateSiteConfig, resetToDefaults }}>
