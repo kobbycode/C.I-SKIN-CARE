@@ -1,11 +1,27 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import UserGallery from '../components/UserGallery';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 const Home: React.FC = () => {
+  const { siteConfig } = useSiteConfig();
   const [email, setEmail] = React.useState('');
   const [isSubscribing, setIsSubscribing] = React.useState(false);
   const [isSubscribed, setIsSubscribed] = React.useState(false);
+
+  const activeHero = useMemo(() => {
+    return siteConfig.heroBanners.find(h => h.status === 'Live') || siteConfig.heroBanners[0];
+  }, [siteConfig.heroBanners]);
+
+  const isSectionActive = (name: string) => {
+    // Mapping section names from CMSSettings to Home components
+    // 'Featured Products Grid' -> Collections
+    // 'Philosophy Quote' -> Philosophy
+    // 'Instagram Feed' -> UserGallery (Community Gallery)
+    // 'Typography Block' -> Testimonials (Approximation as it's text heavy)
+    const section = siteConfig.homeSections.find(s => s.name === name);
+    return section ? section.active : true;
+  };
 
   const handleSubscribe = (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,17 +40,17 @@ const Home: React.FC = () => {
       <header className="relative h-[80vh] lg:h-screen overflow-hidden">
         <div className="absolute inset-0">
           <img
-            alt="Beautiful glowing skin with serum texture"
+            alt={activeHero?.title || "Beautiful glowing skin"}
             className="w-full h-full object-cover object-[center_25%]"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuAboFWaO4tGfvMQ6x8YVJhB4MsX9dAZvyVpImJ-E-HQ5E0T6G3kprf7DBc12UgFaVPuHeEOkebv_0CJBJ_wQ4VbOtkKjBYLJ_dF_vQOsq9jMlTOLcKsMyexRCotCfntLS2pyoB4LRlymwjKRwEg4dgR7SJCdOC_JztikGLdytoTpzKHG-0hClG3QDNBaSwD3QxxksB6ZJ4NhHGCpAdfx3Y2ICUr635Lbhmi0u3gMw2mEeFkH8-ZukAvPyJRQjCEZgE6nmgU6H2u__Y"
+            src={activeHero?.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuAboFWaO4tGfvMQ6x8YVJhB4MsX9dAZvyVpImJ-E-HQ5E0T6G3kprf7DBc12UgFaVPuHeEOkebv_0CJBJ_wQ4VbOtkKjBYLJ_dF_vQOsq9jMlTOLcKsMyexRCotCfntLS2pyoB4LRlymwjKRwEg4dgR7SJCdOC_JztikGLdytoTpzKHG-0hClG3QDNBaSwD3QxxksB6ZJ4NhHGCpAdfx3Y2ICUr635Lbhmi0u3gMw2mEeFkH8-ZukAvPyJRQjCEZgE6nmgU6H2u__Y"}
           />
           <div className="absolute inset-0 bg-black/35"></div>
         </div>
         <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-center items-start px-4 sm:px-6 lg:px-8 pt-32 lg:pt-20">
           <div className="max-w-2xl text-white">
-            <h2 className="font-display text-sm md:text-lg tracking-widest mb-4 opacity-90 uppercase animate-in fade-in slide-in-from-left duration-1000">Pure Luxury, Pure Results</h2>
+            <h2 className="font-display text-sm md:text-lg tracking-widest mb-4 opacity-90 uppercase animate-in fade-in slide-in-from-left duration-1000">{activeHero?.sub}</h2>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-display mb-6 md:mb-8 leading-tight animate-in fade-in slide-in-from-left duration-1000 delay-200">
-              Timeless beauty <br /><span className="italic font-light">bottled.</span>
+              {activeHero?.title}
             </h1>
             <p className="text-base md:text-xl mb-8 md:mb-10 font-light max-w-lg leading-relaxed opacity-90 animate-in fade-in slide-in-from-left duration-1000 delay-300">
               Experience the intersection of nature and science with our dermatologist-approved formulations for radiant, youthful skin.
@@ -52,87 +68,94 @@ const Home: React.FC = () => {
       </header>
 
       {/* The Collections Section */}
-      <section className="py-24 bg-white dark:bg-stone-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="font-display text-3xl md:text-4xl mb-4 text-stone-800 dark:text-stone-100">The Collections</h2>
-            <div className="w-20 h-1 bg-gold mx-auto mb-6"></div>
-            <p className="text-stone-500 dark:text-stone-400 max-w-xl mx-auto italic">Curated essentials for your daily ritual.</p>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {[
-              {
-                title: 'Cleanse & Prep',
-                img: '/products/spa-gels.jpg'
-              },
-              {
-                title: 'Target & Treat',
-                img: '/products/5d-gluta-miracle.jpg'
-              },
-              {
-                title: 'Hydrate & Glow',
-                img: '/products/bel-eclat-hero.jpg'
-              }
-            ].map((col, i) => (
-              <div key={i} className="group cursor-pointer hero-zoom">
-                <div className="relative h-[500px] overflow-hidden">
-                  <img src={col.img} alt={col.title} className="w-full h-full object-cover transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all"></div>
-                  <div className="absolute bottom-10 left-10 text-white">
-                    <h3 className="font-display text-2xl mb-2">{col.title}</h3>
-                    <Link to="/shop" className="text-xs tracking-widest uppercase border-b border-white pb-1 block w-max hover:text-gold hover:border-gold transition-colors">
-                      Shop Collection
-                    </Link>
+      {isSectionActive('Featured Products Grid') && (
+        <section className="py-24 bg-white dark:bg-stone-900">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-16">
+              <h2 className="font-display text-3xl md:text-4xl mb-4 text-stone-800 dark:text-stone-100">The Collections</h2>
+              <div className="w-20 h-1 bg-gold mx-auto mb-6"></div>
+              <p className="text-stone-500 dark:text-stone-400 max-w-xl mx-auto italic">Curated essentials for your daily ritual.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {[
+                {
+                  title: 'Cleanse & Prep',
+                  img: '/products/spa-gels.jpg'
+                },
+                {
+                  title: 'Target & Treat',
+                  img: '/products/5d-gluta-miracle.jpg'
+                },
+                {
+                  title: 'Hydrate & Glow',
+                  img: '/products/bel-eclat-hero.jpg'
+                }
+              ].map((col, i) => (
+                <div key={i} className="group cursor-pointer hero-zoom">
+                  <div className="relative h-[500px] overflow-hidden">
+                    <img src={col.img} alt={col.title} className="w-full h-full object-cover transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all"></div>
+                    <div className="absolute bottom-10 left-10 text-white">
+                      <h3 className="font-display text-2xl mb-2">{col.title}</h3>
+                      <Link to="/shop" className="text-xs tracking-widest uppercase border-b border-white pb-1 block w-max hover:text-gold hover:border-gold transition-colors">
+                        Shop Collection
+                      </Link>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Philosophy Section */}
-      <section className="py-24 bg-background-light dark:bg-background-dark">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col lg:flex-row items-center gap-16">
-            <div className="lg:w-1/2">
-              <img
-                alt="Laboratory bottles and plants"
-                className="shadow-2xl grayscale-[20%] w-full rounded-2xl"
-                src="/products/bel-eclat-tumericSet.jpg"
-              />
-            </div>
-            <div className="lg:w-1/2">
-              <h2 className="font-display text-3xl md:text-4xl mb-8 leading-tight">
-                The Philosophy of <br /><span className="gold-gradient italic">C.I SKIN CARE</span>
-              </h2>
-              <p className="text-stone-600 dark:text-stone-400 mb-10 leading-relaxed">
-                We believe that luxury should never compromise integrity. Our formulations are crafted with botanical extracts and clinical actives to deliver transformative results you can see and feel.
-              </p>
-              <div className="space-y-8">
-                {[
-                  { icon: 'eco', title: 'Botanically Sourced', desc: 'Harnessing the power of organic ingredients from around the world.' },
-                  { icon: 'science', title: 'Scientifically Proven', desc: 'Dermatologist tested and approved for all skin types, including sensitive skin.' },
-                  { icon: 'cruelty_free', title: 'Ethically Crafted', desc: '100% Cruelty-free and sustainably packaged for a better planet.' }
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start">
-                    <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-full mr-4">
-                      <span className="material-icons-outlined text-primary">{item.icon}</span>
+      {isSectionActive('Philosophy Quote') && (
+        <section className="py-24 bg-background-light dark:bg-background-dark">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-col lg:flex-row items-center gap-16">
+              <div className="lg:w-1/2">
+                <img
+                  alt="Laboratory bottles and plants"
+                  className="shadow-2xl grayscale-[20%] w-full rounded-2xl"
+                  src="/products/bel-eclat-tumericSet.jpg"
+                />
+              </div>
+              <div className="lg:w-1/2">
+                <h2 className="font-display text-3xl md:text-4xl mb-8 leading-tight">
+                  {siteConfig.philosophy?.title || "The Philosophy of"} <br />
+                  <span className="gold-gradient italic">C.I SKIN CARE</span>
+                </h2>
+                <p className="text-stone-600 dark:text-stone-400 mb-10 leading-relaxed">
+                  {siteConfig.philosophy?.content || "We believe that luxury should never compromise integrity."}
+                </p>
+                <div className="space-y-8">
+                  {[
+                    { icon: 'eco', title: 'Botanically Sourced', desc: 'Harnessing the power of organic ingredients from around the world.' },
+                    { icon: 'science', title: 'Scientifically Proven', desc: 'Dermatologist tested and approved for all skin types, including sensitive skin.' },
+                    { icon: 'cruelty_free', title: 'Ethically Crafted', desc: '100% Cruelty-free and sustainably packaged for a better planet.' }
+                  ].map((item, i) => (
+                    <div key={i} className="flex items-start">
+                      <div className="bg-primary/10 dark:bg-primary/20 p-3 rounded-full mr-4">
+                        <span className="material-icons-outlined text-primary">{item.icon}</span>
+                      </div>
+                      <div>
+                        <h4 className="font-semibold mb-1 tracking-wide">{item.title}</h4>
+                        <p className="text-sm text-stone-500 dark:text-stone-400">{item.desc}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-semibold mb-1 tracking-wide">{item.title}</h4>
-                      <p className="text-sm text-stone-500 dark:text-stone-400">{item.desc}</p>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Community Gallery */}
-      <UserGallery />
+      {isSectionActive('Instagram Feed') && (
+        <UserGallery />
+      )}
 
       {/* Testimonial Section */}
       <section className="py-24 bg-stone-100 dark:bg-stone-800/50">
@@ -140,7 +163,7 @@ const Home: React.FC = () => {
           <span className="material-icons-outlined text-gold text-5xl mb-6">format_quote</span>
           <div className="mb-12">
             <p className="text-2xl md:text-3xl font-display leading-snug mb-8 italic">
-              "My skin has never felt more alive. The Radiance Serum is my holy grail. It's not just skincare, it's a daily ritual of self-love."
+              "{siteConfig.testimonials[0]?.quote || "My skin has never felt more alive."}"
             </p>
             <div className="flex flex-col items-center">
               <img
@@ -148,13 +171,13 @@ const Home: React.FC = () => {
                 className="w-16 h-16 rounded-full object-cover mb-4"
                 src="/assets/customer-portrait.png"
               />
-              <p className="font-semibold tracking-widest uppercase text-xs">Elena V. — Verified Buyer</p>
+              <p className="font-semibold tracking-widest uppercase text-xs">{siteConfig.testimonials[0]?.author || "Elena V."} — Verified Buyer</p>
             </div>
           </div>
           <div className="flex justify-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-gold"></span>
-            <span className="w-2 h-2 rounded-full bg-stone-300 dark:bg-stone-600"></span>
-            <span className="w-2 h-2 rounded-full bg-stone-300 dark:bg-stone-600"></span>
+            {siteConfig.testimonials.map((_, i) => (
+              <span key={i} className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-gold' : 'bg-stone-300 dark:bg-stone-600'}`}></span>
+            ))}
           </div>
         </div>
       </section>

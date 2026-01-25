@@ -1,7 +1,8 @@
-
 import React, { useState } from 'react';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 const Contact: React.FC = () => {
+  const { siteConfig } = useSiteConfig();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -12,6 +13,16 @@ const Contact: React.FC = () => {
       setIsSubmitting(false);
       setIsSubmitted(true);
     }, 1500);
+  };
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'facebook': return 'facebook';
+      case 'instagram': return 'photo_camera';
+      case 'twitter': return 'flutter_dash';
+      case 'youtube': return 'play_circle';
+      default: return 'link';
+    }
   };
 
   return (
@@ -143,17 +154,17 @@ const Contact: React.FC = () => {
                 {
                   icon: 'location_on',
                   label: 'Our Location',
-                  text: 'Audiomate Center, Market St,\nAccra, GA-222-2148, Ghana'
+                  text: siteConfig.contactInfo.address
                 },
                 {
                   icon: 'mail',
                   label: 'Email Us',
-                  text: 'concierge@ciskincare.com\npress@ciskincare.com'
+                  text: siteConfig.contactInfo.email
                 },
                 {
                   icon: 'phone_iphone',
                   label: 'Call Us',
-                  text: '+233 (0) 555-SKIN-GH\nMon-Sat, 9am - 7pm GMT'
+                  text: siteConfig.contactInfo.phone
                 }
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-8 group">
@@ -198,13 +209,16 @@ const Contact: React.FC = () => {
               Follow Our Journey
             </h4>
             <div className="flex gap-4">
-              {['facebook', 'photo_camera', 'alternate_email', 'play_circle'].map(icon => (
-                <button
-                  key={icon}
+              {siteConfig.socialLinks.filter(s => s.url).map(social => (
+                <a
+                  key={social.platform}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
                   className="w-12 h-12 border border-stone-200 rounded-full flex items-center justify-center text-[#A68966] hover:border-[#A68966] hover:bg-[#A68966]/5 transition-all duration-300"
                 >
-                  <span className="material-symbols-outlined text-xl">{icon}</span>
-                </button>
+                  <span className="material-symbols-outlined text-xl">{getSocialIcon(social.platform)}</span>
+                </a>
               ))}
             </div>
           </div>

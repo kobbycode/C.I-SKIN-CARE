@@ -2,19 +2,15 @@
 import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../App';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 const Header: React.FC = () => {
+  const { siteConfig } = useSiteConfig();
   const { cart, setCartOpen } = useApp();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const cartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
-  const navLinks = [
-    { name: 'Shop All', path: '/shop' },
-    { name: 'Our Story', path: '/story' },
-    { name: 'Skin Journal', path: '/journal' },
-    { name: 'Skin Quiz', path: '/quiz' },
-    { name: 'Contact', path: '/contact' },
-  ];
+  const navLinks = siteConfig.navLinks;
 
   return (
     <>

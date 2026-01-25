@@ -1,10 +1,21 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../App';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 const Footer: React.FC = () => {
   const { toggleDarkMode, isDarkMode } = useApp();
+  const { siteConfig } = useSiteConfig();
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'facebook': return 'facebook';
+      case 'instagram': return 'photo_camera';
+      case 'twitter': return 'flutter_dash'; // or a generic icon
+      case 'youtube': return 'smart_display';
+      default: return 'link';
+    }
+  };
 
   return (
     <footer className="bg-secondary text-white py-24 px-6 border-t border-primary/10">
@@ -24,43 +35,34 @@ const Footer: React.FC = () => {
               Crafting premium skincare solutions that merge scientific precision with the healing essence of botanical wisdom. Born in Ghana, refined for the world.
             </p>
             <div className="flex gap-4">
-              {['facebook', 'photo_camera', 'alternate_email'].map(icon => (
-                <button key={icon} className="w-10 h-10 border border-primary/20 rounded-full flex items-center justify-center text-primary/60 hover:border-primary hover:text-primary transition-all duration-500 transform hover:-translate-y-1">
-                  <span className="material-symbols-outlined text-[18px]">{icon}</span>
-                </button>
+              {siteConfig.socialLinks.filter(s => s.url).map(social => (
+                <a
+                  key={social.platform}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 border border-primary/20 rounded-full flex items-center justify-center text-primary/60 hover:border-primary hover:text-primary transition-all duration-500 transform hover:-translate-y-1"
+                >
+                  <span className="material-symbols-outlined text-[18px]">{getSocialIcon(social.platform)}</span>
+                </a>
               ))}
             </div>
           </div>
 
           {/* Links Grid */}
           <div className="col-span-1 lg:col-span-2 grid grid-cols-2 sm:grid-cols-3 gap-12">
-            <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-8">The Collection</h4>
-              <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest text-primary/40">
-                <li className="hover:text-primary transition-colors cursor-pointer"><Link to="/shop">Shop All</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer"><Link to="/shop?q=Cleansers">Cleansers</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer"><Link to="/shop?q=Serums">Serums</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer"><Link to="/loyalty">Loyalty Ritual</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-8">The Brand</h4>
-              <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest text-primary/40">
-                <li className="hover:text-primary transition-colors cursor-pointer"><Link to="/story">Our Story</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer"><Link to="/journal">Skin Journal</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer"><Link to="/contact">Contact</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer"><Link to="/faq">Skin Quiz</Link></li>
-              </ul>
-            </div>
-            <div className="hidden sm:block">
-              <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-8">Concierge</h4>
-              <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest text-primary/40 text-left">
-                <li className="hover:text-primary transition-colors cursor-pointer text-left"><Link to="/faq">Shipping</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer text-left"><Link to="/faq">Returns</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer text-left"><Link to="/faq">Privacy</Link></li>
-                <li className="hover:text-primary transition-colors cursor-pointer text-left"><Link to="/faq">FAQ</Link></li>
-              </ul>
-            </div>
+            {siteConfig.footerSections.slice(0, 3).map((section, idx) => (
+              <div key={section.title} className={idx === 2 ? 'hidden sm:block' : ''}>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-8">{section.title}</h4>
+                <ul className="space-y-4 text-[11px] font-bold uppercase tracking-widest text-primary/40">
+                  {section.links.map(link => (
+                    <li key={link.name} className="hover:text-primary transition-colors cursor-pointer text-left">
+                      <Link to={link.path}>{link.name}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
           {/* Newsletter Col */}

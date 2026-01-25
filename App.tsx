@@ -5,6 +5,7 @@ import { CartItem, Product } from './types';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
+import { SiteConfigProvider } from './context/SiteConfigContext';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
@@ -143,12 +144,14 @@ const App: React.FC = () => {
       isDarkMode, toggleDarkMode,
       wishlist, toggleWishlist, isInWishlist, clearCart
     }}>
-      <BrowserRouter>
-        <ScrollToTop />
-        <Suspense fallback={<PageLoader />}>
-          <MainLayout />
-        </Suspense>
-      </BrowserRouter>
+      <SiteConfigProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Suspense fallback={<PageLoader />}>
+            <MainLayout />
+          </Suspense>
+        </BrowserRouter>
+      </SiteConfigProvider>
     </AppContext.Provider>
   );
 };
