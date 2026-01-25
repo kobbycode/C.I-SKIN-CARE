@@ -131,9 +131,18 @@ const CMSSettings: React.FC = () => {
                                 <div key={i} className="group relative h-48 md:h-64 rounded-2xl overflow-hidden border border-stone-100 shadow-sm">
                                     <img src={hero.img} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt={hero.title} />
                                     <div className="absolute inset-0 bg-gradient-to-t md:bg-gradient-to-r from-black/70 via-black/40 to-transparent flex flex-col justify-end p-6 md:p-8">
-                                        <span className={`absolute top-4 right-4 md:top-6 md:right-6 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${hero.status === 'Live' ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'}`}>
-                                            {hero.status}
-                                        </span>
+                                        <div className={`absolute top-4 right-4 md:top-6 md:right-6 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${hero.status === 'Live' ? 'bg-green-500 text-white' : 'bg-amber-500 text-white'} flex items-center`}>
+                                            <select
+                                                value={hero.status}
+                                                onChange={(e) => handleNestedChange('heroBanners', i, 'status', e.target.value)}
+                                                className="bg-transparent border-none text-white focus:ring-0 cursor-pointer appearance-none pr-1 outline-none"
+                                            >
+                                                <option value="Live" className="text-black">Live</option>
+                                                <option value="Scheduled" className="text-black">Scheduled</option>
+                                                <option value="Draft" className="text-black">Draft</option>
+                                            </select>
+                                            <span className="material-symbols-outlined text-[10px] ml-1 pointer-events-none">expand_more</span>
+                                        </div>
                                         <div className="flex flex-col gap-2 mb-4">
                                             <input
                                                 value={hero.sub}
