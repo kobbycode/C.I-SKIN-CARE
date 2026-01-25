@@ -194,6 +194,7 @@ export const MOCK_PRODUCTS: Product[] = [
 export const MOCK_REVIEWS: Review[] = [
   {
     id: 'r1',
+    productId: 'p1',
     author: 'Sophia R.',
     rating: 5,
     date: '2 days ago',
@@ -203,26 +204,31 @@ export const MOCK_REVIEWS: Review[] = [
     images: [
       '/assets/review-1.png',
       '/assets/review-2.png'
-    ]
+    ],
+    status: 'Approved'
   },
   {
     id: 'r2',
+    productId: 'p2',
     author: 'Marcus L.',
     rating: 5,
     date: '1 week ago',
     title: 'Worth every single penny',
     content: "The packaging alone is a masterpiece, but the products inside are what matter. The moisturizer is thick and rich yet absorbs perfectly. My dry patches have completely disappeared. It's the ultimate luxury self-care.",
     verified: true,
-    images: ['/assets/review-3.png']
+    images: ['/assets/review-3.png'],
+    status: 'Approved'
   },
   {
     id: 'r3',
+    productId: 'p3',
     author: 'Elena V.',
     rating: 4,
     date: '2 weeks ago',
     title: 'Great for sensitivity',
     content: 'I have very reactive skin, and usually "luxury" means "lots of perfume." This brand actually cares. The cleanser is gentle but effective. Only 4 stars because the shipping took a day longer than expected.',
-    verified: true
+    verified: true,
+    status: 'Approved'
   }
 ];
 

@@ -1,10 +1,22 @@
-
-import React from 'react';
 import { useApp } from '../App';
 import LoyaltyPortal from '../components/LoyaltyPortal';
+import { useUser } from '../context/UserContext';
+import { useOrders } from '../context/OrderContext';
 
 const Profile: React.FC = () => {
   const { toggleDarkMode, isDarkMode } = useApp();
+  const { currentUser, loading: userLoading } = useUser();
+  const { orders, loading: ordersLoading } = useOrders();
+
+  const loading = userLoading || ordersLoading;
+
+  const userOrders = orders.filter(o => o.customerEmail === currentUser?.email);
+
+  if (loading || !currentUser) return (
+    <div className="pt-40 text-center uppercase tracking-widest opacity-30 font-display">
+      Opening Personal Archives...
+    </div>
+  );
 
   return (
     <main className="pt-40 pb-24 px-10 bg-background-light dark:bg-background-dark min-h-screen">
@@ -16,8 +28,8 @@ const Profile: React.FC = () => {
             <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-accent mb-6 flex items-center justify-center overflow-hidden">
               <span className="material-symbols-outlined text-5xl text-accent font-light">account_circle</span>
             </div>
-            <h1 className="font-display text-2xl text-secondary dark:text-white mb-1">Elena Rossi</h1>
-            <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">Muse Status Since 2022</p>
+            <h1 className="font-display text-2xl text-secondary dark:text-white mb-1">{currentUser.fullName}</h1>
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">{currentUser.statusLabel}</p>
           </div>
 
           <nav className="space-y-6">
@@ -80,29 +92,31 @@ const Profile: React.FC = () => {
             </div>
 
             <div className="space-y-6">
-              {[
-                { id: '#CI-92841', date: 'Oct 12, 2023', status: 'Delivered', total: 'GH₵274.00', items: 2 },
-                { id: '#CI-85123', date: 'Aug 05, 2023', status: 'Delivered', total: 'GH₵148.00', items: 1 }
-              ].map(order => (
+              {userOrders.length > 0 ? userOrders.map(order => (
                 <div key={order.id} className="bg-white dark:bg-stone-900 border border-primary/5 p-8 rounded-xl flex flex-col md:flex-row justify-between items-center gap-8 group hover:border-accent/20 transition-all">
                   <div className="flex flex-col md:flex-row gap-8 items-center">
                     <div className="w-16 h-16 bg-primary/5 rounded flex items-center justify-center">
                       <span className="material-symbols-outlined text-accent text-3xl font-light">package_2</span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-sm tracking-widest uppercase mb-1">{order.id}</h4>
-                      <p className="text-[10px] opacity-40 uppercase tracking-widest">{order.date} • {order.items} Items</p>
+                      <h4 className="font-bold text-sm tracking-widest uppercase mb-1">{order.id.slice(-6).toUpperCase()}</h4>
+                      <p className="text-[10px] opacity-40 uppercase tracking-widest">{order.date} • {order.items.length} Items</p>
                     </div>
                   </div>
                   <div className="flex flex-col items-center md:items-end">
-                    <span className="px-3 py-1 bg-green-500/10 text-green-600 text-[9px] font-black uppercase tracking-widest rounded-full mb-2">
+                    <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full mb-2 ${order.status === 'Delivered' ? 'bg-green-500/10 text-green-600' : 'bg-orange-500/10 text-orange-600'
+                      }`}>
                       {order.status}
                     </span>
-                    <p className="font-display text-xl text-secondary dark:text-white">{order.total}</p>
+                    <p className="font-display text-xl text-secondary dark:text-white">GH₵{order.total.toFixed(2)}</p>
                   </div>
                   <button className="material-symbols-outlined text-stone-300 hover:text-accent transition-colors">chevron_right</button>
                 </div>
-              ))}
+              )) : (
+                <div className="p-12 text-center opacity-30 italic uppercase tracking-widest border border-dashed border-primary/10 rounded-2xl">
+                  No rituals ordered yet.
+                </div>
+              )}
             </div>
           </div>
 
@@ -110,13 +124,13 @@ const Profile: React.FC = () => {
           <div className="bg-primary/5 border border-primary/10 p-12 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="text-center md:text-left">
               <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4 block">Skin Type</span>
-              <h3 className="font-display text-2xl text-secondary dark:text-white">Combination</h3>
-              <p className="text-xs opacity-50 mt-2">Sensitive t-zone, balanced cheeks.</p>
+              <h3 className="font-display text-2xl text-secondary dark:text-white">{currentUser.skinType}</h3>
+              <p className="text-xs opacity-50 mt-2">{currentUser.skinTypeDetail}</p>
             </div>
             <div className="text-center md:text-left">
               <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4 block">Focus Ritual</span>
-              <h3 className="font-display text-2xl text-secondary dark:text-white">Radiance Boost</h3>
-              <p className="text-xs opacity-50 mt-2">Vitamin C and light hydration.</p>
+              <h3 className="font-display text-2xl text-secondary dark:text-white">{currentUser.focusRitual}</h3>
+              <p className="text-xs opacity-50 mt-2">{currentUser.focusRitualDetail}</p>
             </div>
             <div className="text-center md:flex md:items-center md:justify-end">
               <button className="bg-white dark:bg-stone-800 text-secondary dark:text-primary px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest border border-primary/10 hover:bg-primary hover:text-white transition-all">
@@ -127,7 +141,7 @@ const Profile: React.FC = () => {
 
           {/* Recommended for You */}
           <div>
-            <h2 className="font-display text-2xl text-secondary dark:text-white mb-8">Personalized for Elena</h2>
+            <h2 className="font-display text-2xl text-secondary dark:text-white mb-8">Personalized for {currentUser.fullName.split(' ')[0]}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
               <div className="flex gap-6 items-center p-6 bg-white dark:bg-stone-950 border border-primary/5 rounded-2xl group hover:shadow-xl transition-all cursor-pointer">
                 <div className="w-24 h-24 rounded-lg bg-primary/5 overflow-hidden shrink-0">

@@ -40,6 +40,25 @@ const CMSSettings: React.FC = () => {
         setIsDirty(true);
     };
 
+    const handleRitualStepChange = (ritualIndex: number, stepIndex: number, field: string, value: any) => {
+        setFormData(prev => {
+            const newList = [...prev.ritualGuide];
+            const newSteps = [...newList[ritualIndex].steps];
+            newSteps[stepIndex] = { ...newSteps[stepIndex], [field]: value };
+            newList[ritualIndex] = { ...newList[ritualIndex], steps: newSteps };
+            return { ...prev, ritualGuide: newList };
+        });
+        setIsDirty(true);
+    };
+
+    const handleStoryChange = (field: string, value: any) => {
+        setFormData(prev => ({
+            ...prev,
+            story: { ...prev.story, [field]: value }
+        }));
+        setIsDirty(true);
+    };
+
     const handleSave = () => {
         updateSiteConfig(formData);
         setIsDirty(false);
@@ -240,6 +259,117 @@ const CMSSettings: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    {/* Ritual Guide Management */}
+                    <section>
+                        <h3 className="text-xl font-bold text-[#221C1D] mb-6">Ritual Guides</h3>
+                        <div className="space-y-6">
+                            {formData.ritualGuide.map((ritual, rIdx) => (
+                                <div key={rIdx} className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 space-y-6">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <input
+                                            value={ritual.title}
+                                            onChange={(e) => handleNestedChange('ritualGuide', rIdx, 'title', e.target.value)}
+                                            className="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm font-bold text-[#221C1D]"
+                                            placeholder="Ritual Title"
+                                        />
+                                        <input
+                                            value={ritual.collection}
+                                            onChange={(e) => handleNestedChange('ritualGuide', rIdx, 'collection', e.target.value)}
+                                            className="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm text-stone-600"
+                                            placeholder="Collection Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-4">
+                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Ritual Steps</p>
+                                        {ritual.steps.map((step, sIdx) => (
+                                            <div key={sIdx} className="flex gap-4 items-start bg-stone-50 p-4 rounded-xl">
+                                                <span className="w-6 h-6 rounded-full bg-luxury-brown text-gold flex items-center justify-center text-[10px] flex-shrink-0 mt-1">{sIdx + 1}</span>
+                                                <div className="flex-1 space-y-2">
+                                                    <input
+                                                        value={step.name}
+                                                        onChange={(e) => handleRitualStepChange(rIdx, sIdx, 'name', e.target.value)}
+                                                        className="w-full bg-transparent border-b border-stone-200 text-xs font-bold focus:outline-none focus:border-gold"
+                                                        placeholder="Step Name"
+                                                    />
+                                                    <textarea
+                                                        value={step.desc}
+                                                        onChange={(e) => handleRitualStepChange(rIdx, sIdx, 'desc', e.target.value)}
+                                                        className="w-full bg-transparent border-none text-[10px] text-stone-500 italic resize-none focus:outline-none"
+                                                        rows={2}
+                                                        placeholder="Step Description"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+
+                    {/* Story Content Management */}
+                    <section>
+                        <h3 className="text-xl font-bold text-[#221C1D] mb-6">Our Story Content</h3>
+                        <div className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 space-y-8">
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">About Section</label>
+                                <input
+                                    value={formData.story.aboutTitle}
+                                    onChange={(e) => handleStoryChange('aboutTitle', e.target.value)}
+                                    className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm font-bold"
+                                    placeholder="About Us Title"
+                                />
+                                <textarea
+                                    value={formData.story.aboutText}
+                                    onChange={(e) => handleStoryChange('aboutText', e.target.value)}
+                                    className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm text-stone-600 min-h-[100px]"
+                                    placeholder="About Us Text"
+                                />
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-stone-50">
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Mission Statement</label>
+                                    <textarea
+                                        value={formData.story.mission}
+                                        onChange={(e) => handleStoryChange('mission', e.target.value)}
+                                        className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-xs italic"
+                                        rows={3}
+                                    />
+                                </div>
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Vision Statement</label>
+                                    <textarea
+                                        value={formData.story.vision}
+                                        onChange={(e) => handleStoryChange('vision', e.target.value)}
+                                        className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-xs italic"
+                                        rows={3}
+                                    />
+                                </div>
+                            </div>
+                            <div className="space-y-4 pt-8 border-t border-stone-50">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Founder's Note</label>
+                                <input
+                                    value={formData.story.founderTitle}
+                                    onChange={(e) => handleStoryChange('founderTitle', e.target.value)}
+                                    className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm font-bold"
+                                />
+                                {formData.story.founderText.map((para, pIdx) => (
+                                    <textarea
+                                        key={pIdx}
+                                        value={para}
+                                        onChange={(e) => {
+                                            const newText = [...formData.story.founderText];
+                                            newText[pIdx] = e.target.value;
+                                            handleStoryChange('founderText', newText);
+                                        }}
+                                        className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-xs text-stone-600"
+                                        rows={3}
+                                    />
+                                ))}
                             </div>
                         </div>
                     </section>

@@ -1,4 +1,4 @@
-
+import { Link } from 'react-router-dom';
 import React from 'react';
 import { LOYALTY_TIERS } from '../constants';
 
@@ -93,9 +93,9 @@ const Loyalty: React.FC = () => {
             {/* FAQ Link */}
             <section className="text-center px-6">
                 <p className="text-stone-400 font-light italic mb-8">Questions about your status?</p>
-                <a href="/faq" className="text-[10px] font-black uppercase tracking-[0.4em] text-secondary dark:text-primary border-b-2 border-primary pb-2 hover:opacity-70 transition-all">
+                <Link to="/faq" className="text-[10px] font-black uppercase tracking-[0.4em] text-secondary dark:text-primary border-b-2 border-primary pb-2 hover:opacity-70 transition-all">
                     View Loyalty FAQ
-                </a>
+                </Link>
             </section>
         </main>
     );

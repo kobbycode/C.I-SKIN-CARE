@@ -47,6 +47,34 @@ export interface Testimonial {
     quote: string;
 }
 
+export interface RitualStep {
+    name: string;
+    desc: string;
+}
+
+export interface Ritual {
+    title: string;
+    collection: string;
+    image: string;
+    steps: RitualStep[];
+}
+
+export interface CoreValue {
+    title: string;
+    desc: string;
+    icon: string;
+}
+
+export interface StoryContent {
+    aboutTitle: string;
+    aboutText: string;
+    mission: string;
+    vision: string;
+    founderTitle: string;
+    founderText: string[];
+    coreValues: CoreValue[];
+}
+
 export interface SiteConfig {
     navLinks: NavLink[];
     footerSections: FooterSection[];
@@ -56,6 +84,8 @@ export interface SiteConfig {
     heroBanners: HeroBanner[];
     philosophy: Philosophy;
     testimonials: Testimonial[];
+    ritualGuide: Ritual[];
+    story: StoryContent;
 }
 
 interface SiteConfigContextType {
@@ -139,6 +169,47 @@ const defaultTestimonials: Testimonial[] = [
     { author: 'Sophia R.', quote: 'A literal game changer for my morning routine. I have never seen such fast results.' }
 ];
 
+const defaultRitualGuide: Ritual[] = [
+    {
+        title: "The 5D Gluta Luminescence Ritual",
+        collection: "5D Gluta Miracle",
+        image: "/products/5d-gluta-diamond-box.jpg",
+        steps: [
+            { name: "Double Cleanse", desc: "Start with the SPA Exfoliating Gel to remove impurities and prep the canvas." },
+            { name: "The Miracle Base", desc: "Apply 3-4 drops of the 5D Gluta Serum to damp skin, pressing gently into the face." },
+            { name: "Seal the Glow", desc: "Layer with the 5D Gluta Moisturizer to lock in active whitening agents and hydration." }
+        ]
+    },
+    {
+        title: "The Bel Eclat Golden Hour",
+        collection: "BEL ECLAT Tumeric",
+        image: "/products/bel-eclat-hero.jpg",
+        steps: [
+            { name: "Prep & Calm", desc: "Use the Tumeric Cleanser to soothe inflammation and even skin tone." },
+            { name: "Hydrate & Tint", desc: "Apply the Tumeric Face Cream for a natural, sun-kissed radiance." },
+            { name: "Protect", desc: "Finish with the Bel Eclat Body Lotion for full-body luminescence." }
+        ]
+    }
+];
+
+const defaultStory: StoryContent = {
+    aboutTitle: "Beauty is Confidence",
+    aboutText: "Confidence emanates from practicing self-care that makes you feel and look good. At C.I Skin Care, our passion for quality, efficacy, and safety drives our product formulation in body care to give you the confidence you need to take on the world.",
+    mission: "To beautify and inspire our valued consumers and customers to feel confident in their own skin by using our products.",
+    vision: "To be the best customer oriented skincare company in Ghana and across Africa delivering safe, quality, and affordable products.",
+    founderTitle: "Authenticity in Every Drop",
+    founderText: [
+        "When I started C.I Skin Care, my vision was simple: to create a brand that doesn't just sell products, but offers a sanctuary of confidence for every individual.",
+        "Every formulation we release is a result of years of research and a deep commitment to safety. We believe that luxury is not just a price point, but a promise of quality and a celebration of your natural beauty."
+    ],
+    coreValues: [
+        { title: 'Customer Oriented', desc: 'We prioritize customer satisfaction and their wellbeing above all else.', icon: 'person_heart' },
+        { title: 'Integrity', desc: 'We comply with skincare guidelines and are transparent in our operations.', icon: 'verified_user' },
+        { title: 'Quality', desc: 'We do not compromise and are consistent in our product quality from raw material to finish.', icon: 'high_quality' },
+        { title: 'Teamwork', desc: 'Our synergy is our strength. We encourage open communication and mutual respect.', icon: 'group' }
+    ]
+};
+
 const defaultSiteConfig: SiteConfig = {
     navLinks: defaultNavLinks,
     footerSections: defaultFooterSections,
@@ -147,7 +218,9 @@ const defaultSiteConfig: SiteConfig = {
     homeSections: defaultHomeSections,
     heroBanners: defaultHeroBanners,
     philosophy: defaultPhilosophy,
-    testimonials: defaultTestimonials
+    testimonials: defaultTestimonials,
+    ritualGuide: defaultRitualGuide,
+    story: defaultStory
 };
 
 

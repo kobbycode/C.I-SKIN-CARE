@@ -1,32 +1,11 @@
 
-import React from 'react';
-import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-
-const RITUALS = [
-    {
-        title: "The 5D Gluta Luminescence Ritual",
-        collection: "5D Gluta Miracle",
-        image: "/products/5d-gluta-diamond-box.jpg",
-        steps: [
-            { name: "Double Cleanse", desc: "Start with the SPA Exfoliating Gel to remove impurities and prep the canvas." },
-            { name: "The Miracle Base", desc: "Apply 3-4 drops of the 5D Gluta Serum to damp skin, pressing gently into the face." },
-            { name: "Seal the Glow", desc: "Layer with the 5D Gluta Moisturizer to lock in active whitening agents and hydration." }
-        ]
-    },
-    {
-        title: "The Bel Eclat Golden Hour",
-        collection: "BEL ECLAT Tumeric",
-        image: "/products/bel-eclat-hero.jpg",
-        steps: [
-            { name: "Prep & Calm", desc: "Use the Tumeric Cleanser to soothe inflammation and even skin tone." },
-            { name: "Hydrate & Tint", desc: "Apply the Tumeric Face Cream for a natural, sun-kissed radiance." },
-            { name: "Protect", desc: "Finish with the Bel Eclat Body Lotion for full-body luminescence." }
-        ]
-    }
-];
+import { motion } from 'framer-motion';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 const RitualGuide: React.FC = () => {
+    const { siteConfig } = useSiteConfig();
+    const rituals = siteConfig.ritualGuide;
     return (
         <main className="min-h-screen pt-32 pb-24 bg-background-light dark:bg-background-dark px-6">
             <div className="max-w-7xl mx-auto">
@@ -41,7 +20,7 @@ const RitualGuide: React.FC = () => {
                 </div>
 
                 <div className="space-y-32">
-                    {RITUALS.map((ritual, idx) => (
+                    {rituals.map((ritual, idx) => (
                         <section key={idx} className={`flex flex-col lg:flex-row gap-16 items-center ${idx % 2 === 1 ? 'lg:flex-row-reverse' : ''}`}>
                             <div className="lg:w-1/2">
                                 <div className="relative group overflow-hidden rounded-3xl">

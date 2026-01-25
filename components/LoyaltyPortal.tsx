@@ -1,14 +1,17 @@
-
-import React from 'react';
 import { motion } from 'framer-motion';
+import { useUser } from '../context/UserContext';
+
 
 const LoyaltyPortal: React.FC = () => {
-    // Mock user loyalty data
+    const { currentUser, loading } = useUser();
+
+    if (loading || !currentUser) return null;
+
     const userLoyalty = {
-        points: 850,
-        tier: "Muse",
-        nextTier: "Icon",
-        pointsToNext: 150,
+        points: currentUser.points,
+        tier: currentUser.pointsTier,
+        nextTier: currentUser.pointsTier === 'Gold Ritual' ? 'Platinum Ritual' : 'Icon',
+        pointsToNext: currentUser.pointsToNextTier,
         history: [
             { id: 1, action: "Order #4521", points: +450, date: "Jan 15, 2026" },
             { id: 2, action: "Social Share", points: +50, date: "Jan 12, 2026" },

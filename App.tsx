@@ -13,6 +13,7 @@ import { OrderProvider } from './context/OrderContext';
 import { JournalProvider } from './context/JournalContext';
 import { FAQProvider } from './context/FAQContext';
 import { CategoryProvider } from './context/CategoryContext';
+import { UserProvider } from './context/UserContext';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
@@ -36,6 +37,7 @@ const Customers = lazy(() => import('./pages/Admin/Customers'));
 const Orders = lazy(() => import('./pages/Admin/Orders'));
 const CMSSettings = lazy(() => import('./pages/Admin/CMSSettings'));
 const AdminReviews = lazy(() => import('./pages/Admin/Reviews'));
+const JournalManager = lazy(() => import('@/pages/Admin/JournalManager'));
 const AddProduct = lazy(() => import('./pages/Admin/AddProduct'));
 const Categories = lazy(() => import('./pages/Admin/Categories'));
 const FAQManager = lazy(() => import('./pages/Admin/FAQManager'));
@@ -159,12 +161,14 @@ const App: React.FC = () => {
                 <JournalProvider>
                   <FAQProvider>
                     <CategoryProvider>
-                      <BrowserRouter>
-                        <ScrollToTop />
-                        <Suspense fallback={<PageLoader />}>
-                          <MainLayout />
-                        </Suspense>
-                      </BrowserRouter>
+                      <UserProvider>
+                        <BrowserRouter>
+                          <ScrollToTop />
+                          <Suspense fallback={<PageLoader />}>
+                            <MainLayout />
+                          </Suspense>
+                        </BrowserRouter>
+                      </UserProvider>
                     </CategoryProvider>
                   </FAQProvider>
                 </JournalProvider>
@@ -214,6 +218,7 @@ const MainLayout: React.FC = () => {
           <Route path="/admin/customers" element={<Customers />} />
           <Route path="/admin/orders" element={<Orders />} />
           <Route path="/admin/reviews" element={<AdminReviews />} />
+          <Route path="/admin/journal" element={<JournalManager />} />
           <Route path="/admin/settings" element={<CMSSettings />} />
           <Route path="/admin/inventory/add" element={<AddProduct />} />
           <Route path="/admin/inventory/edit/:id" element={<AddProduct />} />

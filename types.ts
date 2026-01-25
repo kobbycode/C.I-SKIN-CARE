@@ -50,3 +50,19 @@ export interface Category {
   status: 'Active' | 'Seasonal' | 'Draft';
   displayOrder?: number;
 }
+
+export interface UserProfile {
+  id: string;
+  fullName: string;
+  email: string;
+  statusLabel: string;
+  skinType: string;
+  skinTypeDetail: string;
+  focusRitual: string;
+  focusRitualDetail: string;
+  points: number;
+  pointsTier: string;
+  pointsToNextTier: number;
+  joinedDate: string;
+  avatar?: string;
+}

@@ -3,10 +3,13 @@ import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../App';
 import { useProducts } from '../context/ProductContext';
+import { useCategories } from '../context/CategoryContext';
 
 const Shop: React.FC = () => {
   const { addToCart } = useApp();
-  const { products, loading } = useProducts();
+  const { products, loading: productsLoading } = useProducts();
+  const { categories: dynamicCategories, loading: categoriesLoading } = useCategories();
+  const loading = productsLoading || categoriesLoading;
   const [searchParams] = useSearchParams();
 
   // Filtering States
@@ -24,7 +27,9 @@ const Shop: React.FC = () => {
   const observerTarget = useRef<HTMLDivElement>(null);
 
   // Filter Options
-  const categories = ['All', 'Cleansers', 'Serums & Elixirs', 'Moisturizers', 'Treatments', 'Body Care', 'Bundles & Sets'];
+  const categories = useMemo(() => ['All', ...dynamicCategories
+    .filter(c => c.status !== 'Draft')
+    .map(c => c.name)], [dynamicCategories]);
   const skinTypes = ['All', 'All Skin Types', 'Dry & Dehydrated', 'Oily & Acne-Prone', 'Mature Skin', 'Sensitive', 'Sensitive Skins'];
   const concerns = ['All', 'Aging', 'Dullness', 'Dehydration', 'Dryness', 'Dark Circles', 'Fine Lines', 'Dark Spots', 'Uneven Tone', 'Redness', 'Facial Burns'];
   const brands = ['All', 'BEL ECLAT', 'Gluta Master', '5D Gluta', 'C.I Skin Care', 'SPA Rituals', 'Pomegranate Line', 'Bismid Cosmetics'];

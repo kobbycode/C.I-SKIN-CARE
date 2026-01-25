@@ -1,16 +1,44 @@
-import React from 'react';
+import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-
-const data = [
-  { name: 'W1', revenue: 40000 },
-  { name: 'W2', revenue: 35000 },
-  { name: 'W3', revenue: 85000 },
-  { name: 'W4', revenue: 60000 },
-];
+import { useOrders } from '../../context/OrderContext';
+import { useUser } from '../../context/UserContext';
+import { useReviews } from '../../context/ReviewContext';
+import { useProducts } from '../../context/ProductContext';
 
 const Dashboard: React.FC = () => {
+  const { orders, loading: ordersLoading } = useOrders();
+  const { allUsers, loading: usersLoading } = useUser();
+  const { reviews, loading: reviewsLoading } = useReviews();
+  const { products, loading: productsLoading } = useProducts();
+
+  const loading = ordersLoading || usersLoading || reviewsLoading || productsLoading;
+
+  const stats = useMemo(() => {
+    const totalRevenue = orders.reduce((sum, o) => sum + o.total, 0);
+    const ordersToday = orders.filter(o => o.date === new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })).length;
+    const pendingReviews = reviews.filter(r => r.status === 'Pending').length;
+
+    return [
+      { label: 'Total Revenue', value: 'GH₵' + totalRevenue.toLocaleString(), trend: '+12.5%', icon: 'payments', trendUp: true },
+      { label: 'Orders (All Time)', value: orders.length.toString(), trend: '+5.2%', icon: 'shopping_bag', trendUp: true },
+      { label: 'Total Customers', value: allUsers.length.toString(), trend: '+3.1%', icon: 'person_add', trendUp: true },
+      { label: 'Pending Reviews', value: pendingReviews.toString(), trend: 'Urgent', icon: 'reviews', trendUp: pendingReviews > 0 }
+    ];
+  }, [orders, allUsers, reviews]);
+
+  const chartData = useMemo(() => {
+    // Group orders by week (simplistic for demo)
+    return [
+      { name: 'W1', revenue: 4200 },
+      { name: 'W2', revenue: 3800 },
+      { name: 'W3', revenue: 5100 },
+      { name: 'W4', revenue: orders.reduce((sum, o) => sum + o.total, 0) / 4 }, // Example trend
+    ];
+  }, [orders]);
+
+  if (loading) return <AdminLayout><div className="p-20 text-center opacity-30">Aggregating Global Metrics...</div></AdminLayout>;
   return (
     <AdminLayout>
       <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
@@ -26,12 +54,7 @@ const Dashboard: React.FC = () => {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-        {[
-          { label: 'Total Revenue', value: 'GH₵128,430', trend: '+12.5%', icon: 'payments', trendUp: true },
-          { label: 'Orders Today', value: '42', trend: '+5.2%', icon: 'shopping_bag', trendUp: true },
-          { label: 'New Customers', value: '12', trend: '+3.1%', icon: 'person_add', trendUp: true },
-          { label: 'Pending Reviews', value: '8', trend: '-2.4%', icon: 'reviews', trendUp: false }
-        ].map((stat, i) => (
+        {stats.map((stat, i) => (
           <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-lg transition-shadow">
             <div className="flex justify-between items-start mb-6">
               <div className="p-2 bg-[#F2A600]/10 rounded-lg text-[#F2A600]">
@@ -57,7 +80,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="h-[250px] md:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={data}>
+              <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#F2A600" stopOpacity={0.1} />
@@ -118,20 +141,16 @@ const Dashboard: React.FC = () => {
             <button className="text-[10px] font-bold text-[#F2A600] uppercase underline tracking-wider">Full Catalog</button>
           </div>
           <div className="space-y-6">
-            {[
-              { name: '5D Gluta Diamond Ritual', qty: 245, revenue: 'GH₵18,450', img: '/products/5d-gluta-diamond-box.jpg', trend: '+18%' },
-              { name: 'Bel Eclat Tumeric Luxe', qty: 182, revenue: 'GH₵12,740', img: '/products/bel-eclat-hero.jpg', trend: '+12%' },
-              { name: 'SPA Exfoliating Gel', qty: 124, revenue: 'GH₵6,200', img: '/products/spa-gels.jpg', trend: '-2%' }
-            ].map((product, i) => (
+            {products.slice(0, 3).map((product, i) => (
               <div key={i} className="flex items-center gap-4 p-4 hover:bg-stone-50 rounded-xl transition-colors">
-                <img src={product.img} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" alt={product.name} />
+                <img src={product.image} className="w-14 h-14 rounded-lg object-cover flex-shrink-0" alt={product.name} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold truncate text-[#221C1D]">{product.name}</p>
-                  <p className="text-[10px] text-stone-400 font-medium uppercase tracking-widest">{product.qty} sold</p>
+                  <p className="text-[10px] text-stone-400 font-medium uppercase tracking-widest">{product.stock} in stock</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-bold text-[#221C1D]">{product.revenue}</p>
-                  <p className={`text-[10px] font-bold ${product.trend.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{product.trend}</p>
+                  <p className="text-sm font-bold text-[#221C1D]">GH₵{product.price.toFixed(2)}</p>
+                  <p className="text-[10px] font-bold text-green-600">Active</p>
                 </div>
               </div>
             ))}
@@ -225,24 +244,22 @@ const Dashboard: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
-              {[
-                { id: '#ORD-9921', customer: 'Julianna Doe', date: 'Oct 24, 2023', amount: 'GH₵425.00', status: 'Delivered' },
-                { id: '#ORD-9918', customer: 'Marcus Knight', date: 'Oct 24, 2023', amount: 'GH₵1,240.00', status: 'Processing' }
-              ].map((order, i) => (
-                <tr key={i} className="hover:bg-stone-50/30 transition-colors">
-                  <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">{order.id}</td>
+              {orders.slice(0, 5).map((order) => (
+                <tr key={order.id} className="hover:bg-stone-50/30 transition-colors">
+                  <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">{order.id.slice(-6).toUpperCase()}</td>
                   <td className="px-4 md:px-6 py-5">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold text-stone-500 flex-shrink-0">
-                        {order.customer.split(' ').map(n => n[0]).join('')}
+                        {order.customerName.split(' ').map(n => n[0]).join('')}
                       </div>
-                      <span className="text-sm font-medium text-stone-600 truncate">{order.customer}</span>
+                      <span className="text-sm font-medium text-stone-600 truncate">{order.customerName}</span>
                     </div>
                   </td>
                   <td className="px-4 md:px-6 py-5 text-sm text-stone-500 whitespace-nowrap">{order.date}</td>
-                  <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">{order.amount}</td>
+                  <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">GH₵{order.total.toFixed(2)}</td>
                   <td className="px-4 md:px-6 py-5">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${order.status === 'Delivered' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${order.status === 'Delivered' ? 'bg-green-50 text-green-600' :
+                        order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
                       }`}>
                       {order.status}
                     </span>

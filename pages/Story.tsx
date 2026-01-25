@@ -1,7 +1,9 @@
 
-import React from 'react';
+import { useSiteConfig } from '../context/SiteConfigContext';
 
 const Story: React.FC = () => {
+    const { siteConfig } = useSiteConfig();
+    const { story } = siteConfig;
     return (
         <main className="min-h-screen bg-background-light dark:bg-background-dark pt-40 pb-24">
             {/* Hero Section - About Us */}
@@ -10,16 +12,16 @@ const Story: React.FC = () => {
                     <div className="order-2 lg:order-1">
                         <span className="text-[10px] uppercase tracking-[0.4em] text-primary mb-6 block font-black">About Us</span>
                         <h1 className="font-display text-5xl md:text-7xl text-secondary dark:text-primary mb-8 leading-[1.1]">
-                            Beauty is <br /> Confidence
+                            {story.aboutTitle}
                         </h1>
                         <p className="text-lg text-stone-500 font-light leading-relaxed mb-8">
-                            Confidence emanates from practicing self-care that makes you feel and look good. At C.I Skin Care, our passion for quality, efficacy, and safety drives our product formulation in body care to give you the confidence you need to take on the world.
+                            {story.aboutText}
                         </p>
                         <div className="flex gap-12 pt-8 border-t border-stone-100 dark:border-zinc-800">
                             <div className="max-w-md">
                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-primary mb-2">Our Mission</h4>
                                 <p className="text-sm font-light text-stone-500 italic">
-                                    "To beautify and inspire our valued consumers and customers to feel confident in their own skin by using our products."
+                                    "{story.mission}"
                                 </p>
                             </div>
                         </div>
@@ -42,7 +44,7 @@ const Story: React.FC = () => {
                 <div className="max-w-5xl mx-auto px-6 text-center relative z-10">
                     <span className="text-[10px] uppercase tracking-[0.5em] text-primary mb-10 block font-black">Our Vision</span>
                     <h2 className="font-display text-4xl md:text-5xl mb-12 italic leading-relaxed text-white">
-                        "To be the best customer oriented skincare company in Ghana and across Africa delivering safe, quality, and affordable products."
+                        "{story.vision}"
                     </h2>
                     <div className="w-24 h-px bg-primary mx-auto mb-10"></div>
                     <p className="text-stone-400 font-light max-w-2xl mx-auto leading-relaxed">
@@ -60,29 +62,8 @@ const Story: React.FC = () => {
                     <h2 className="font-display text-4xl text-secondary dark:text-primary">Core Values</h2>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {[
-                        {
-                            title: 'Customer Oriented',
-                            desc: 'We prioritize customer satisfaction and their wellbeing above all else.',
-                            icon: 'person_heart'
-                        },
-                        {
-                            title: 'Integrity',
-                            desc: 'We comply with skincare guidelines and are transparent in our operations.',
-                            icon: 'verified_user'
-                        },
-                        {
-                            title: 'Quality',
-                            desc: 'We do not compromise and are consistent in our product quality from raw material to finish.',
-                            icon: 'high_quality'
-                        },
-                        {
-                            title: 'Teamwork',
-                            desc: 'Our synergy is our strength. We encourage open communication and mutual respect.',
-                            icon: 'group'
-                        }
-                    ].map(value => (
-                        <div key={value.title} className="bg-white dark:bg-zinc-900 p-10 rounded-[2rem] border border-stone-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all group">
+                    {story.coreValues.map((value, i) => (
+                        <div key={i} className="bg-white dark:bg-zinc-900 p-10 rounded-[2rem] border border-stone-100 dark:border-zinc-800 shadow-sm hover:shadow-xl transition-all group">
                             <span className="material-symbols-outlined text-primary text-4xl mb-6 font-light group-hover:scale-110 transition-transform">{value.icon}</span>
                             <h4 className="font-display text-xl mb-4 text-secondary dark:text-primary">{value.title}</h4>
                             <p className="text-sm font-light text-stone-500 leading-relaxed">
@@ -99,14 +80,11 @@ const Story: React.FC = () => {
                     <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
                         <div className="order-2 lg:order-1">
                             <span className="text-[10px] uppercase tracking-[0.5em] text-gold mb-8 block font-black">A Personal Note</span>
-                            <h2 className="font-display text-4xl md:text-5xl mb-10 leading-tight">Authenticity in <br /> Every Drop</h2>
+                            <h2 className="font-display text-4xl md:text-5xl mb-10 leading-tight">{story.founderTitle}</h2>
                             <div className="space-y-6 text-stone-300 font-light leading-relaxed text-lg italic">
-                                <p>
-                                    "When I started C.I Skin Care, my vision was simple: to create a brand that doesn't just sell products, but offers a sanctuary of confidence for every individual."
-                                </p>
-                                <p>
-                                    "Every formulation we release is a result of years of research and a deep commitment to safety. We believe that luxury is not just a price point, but a promise of quality and a celebration of your natural beauty."
-                                </p>
+                                {story.founderText.map((text, i) => (
+                                    <p key={i}>"{text}"</p>
+                                ))}
                             </div>
                             <div className="mt-12 pt-8 border-t border-white/10">
                                 <p className="font-display text-2xl text-gold mb-1">Comfort I. <span className="text-stone-400 font-sans text-[10px] uppercase tracking-widest ml-4">Creative Director & Founder</span></p>
