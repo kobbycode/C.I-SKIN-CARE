@@ -19,52 +19,7 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     useEffect(() => {
         const ordersRef = collection(db, 'orders');
 
-        // Check if we need to seed
-        const seedOrders = async () => {
-            try {
-                const snapshot = await getDocs(ordersRef);
-                if (snapshot.empty) {
-                    console.log("Seeding orders to Firestore...");
-                    const batch = writeBatch(db);
 
-                    const mockOrders: Omit<Order, 'id'>[] = [
-                        {
-                            customerName: 'Elena Larsson',
-                            customerEmail: 'elena.l@example.com',
-                            date: 'Oct 24, 2023',
-                            time: '10:45 AM',
-                            status: 'Processing',
-                            total: 458.00,
-                            items: [], // Mock empty for simplicity
-                            shippingAddress: '1245 Strandvägen, Stockholm, 114 56, Sweden',
-                            paymentMethod: 'Credit Card'
-                        },
-                        {
-                            customerName: 'James Whittaker',
-                            customerEmail: 'j.whit@provider.net',
-                            date: 'Oct 23, 2023',
-                            time: '04:12 PM',
-                            status: 'Shipped',
-                            total: 280.00,
-                            items: [],
-                            shippingAddress: 'Regent St, London, UK',
-                            paymentMethod: 'PayPal'
-                        }
-                    ];
-
-                    mockOrders.forEach(o => {
-                        const ref = doc(ordersRef);
-                        batch.set(ref, { ...o, id: ref.id });
-                    });
-
-                    await batch.commit();
-                }
-            } catch (error) {
-                console.error("Error seeding orders:", error);
-            }
-        };
-
-        seedOrders();
 
         const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
             const items: Order[] = [];
