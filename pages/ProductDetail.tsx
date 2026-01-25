@@ -30,6 +30,12 @@ const ProductDetail: React.FC = () => {
   const product = products.find(p => p.id === id);
   const productReviews = useMemo(() => id ? getApprovedReviewsByProduct(id) : [], [id, getApprovedReviewsByProduct]);
 
+  const averageRating = useMemo(() => {
+    if (productReviews.length === 0) return 5.0; // Default for new products or as placeholder
+    const sum = productReviews.reduce((acc, rev) => acc + rev.rating, 0);
+    return (sum / productReviews.length).toFixed(1);
+  }, [productReviews]);
+
   // Logic for related products
   const relatedProducts = useMemo(() => {
     if (!product) return [];
@@ -140,11 +146,14 @@ const ProductDetail: React.FC = () => {
 
           <div className="flex items-center space-x-4 mb-6">
             <div className="flex text-gold">
-              {[1, 2, 3, 4].map(i => <span key={i} className="material-icons text-sm">star</span>)}
-              <span className="material-icons text-sm">star_half</span>
+              {Array.from({ length: 5 }).map((_, i) => (
+                <span key={i} className="material-icons text-sm">
+                  {i < Math.floor(Number(averageRating)) ? 'star' : i < Number(averageRating) ? 'star_half' : 'star_border'}
+                </span>
+              ))}
             </div>
             <a href="#reviews" className="text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-primary transition-colors">
-              ({productReviews.length + 125} Reviews)
+              ({productReviews.length} {productReviews.length === 1 ? 'Review' : 'Reviews'})
             </a>
           </div>
 
@@ -395,14 +404,18 @@ const ProductDetail: React.FC = () => {
             <h2 className="font-display text-4xl text-stone-900 dark:text-white mb-4 uppercase tracking-widest">Ritual Reviews</h2>
             <div className="flex items-center gap-6">
               <div className="flex flex-col">
-                <span className="text-5xl font-black text-primary">4.9</span>
+                <span className="text-5xl font-black text-primary">{averageRating}</span>
                 <div className="flex text-gold mt-1">
-                  {[1, 2, 3, 4, 5].map(i => <span key={i} className="material-icons text-sm">star</span>)}
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <span key={i} className="material-icons text-sm">
+                      {i < Math.floor(Number(averageRating)) ? 'star' : i < Number(averageRating) ? 'star_half' : 'star_border'}
+                    </span>
+                  ))}
                 </div>
               </div>
               <div className="h-12 w-px bg-stone-200 dark:bg-stone-800"></div>
               <p className="text-xs font-light text-stone-500 dark:text-stone-400 leading-relaxed uppercase tracking-widest">
-                Based on 1,240 detailed assessments from our global collective.
+                Based on {productReviews.length} detailed {productReviews.length === 1 ? 'assessment' : 'assessments'} from our ritual community.
               </p>
             </div>
           </div>

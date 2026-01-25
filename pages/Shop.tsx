@@ -48,7 +48,7 @@ const Shop: React.FC = () => {
 
       return matchesCategory && matchesSkinType && matchesConcern && matchesBrand && matchesSearch;
     });
-  }, [activeCategory, activeSkinType, activeConcern, activeBrand, query]);
+  }, [activeCategory, activeSkinType, activeConcern, activeBrand, query, products]);
 
   const visibleProducts = useMemo(() => {
     return filteredProducts.slice(0, displayLimit);
