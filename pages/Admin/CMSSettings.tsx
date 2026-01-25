@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SocialIcon from '../../components/SocialIcon';
 import AdminLayout from '../../components/Admin/AdminLayout';
-import { useSiteConfig, SiteConfig } from '../../context/SiteConfigContext';
+import { useSiteConfig, SiteConfig, HeroBanner } from '../../context/SiteConfigContext';
 import { useNotification } from '../../context/NotificationContext';
 
 const CMSSettings: React.FC = () => {
@@ -297,7 +297,7 @@ const CMSSettings: React.FC = () => {
                             <h3 className="text-xl font-bold text-[#221C1D]">Hero Banners</h3>
                             <button
                                 onClick={() => {
-                                    const newHero = { title: '', sub: '', img: '/products/bel-eclat-hero.jpg', status: 'Draft' };
+                                    const newHero: HeroBanner = { title: '', sub: '', img: '/products/bel-eclat-hero.jpg', status: 'Draft' };
                                     setFormData(prev => ({ ...prev, heroBanners: [...prev.heroBanners, newHero] }));
                                     setActiveModal({ type: 'hero', index: formData.heroBanners.length, data: newHero });
                                 }}
