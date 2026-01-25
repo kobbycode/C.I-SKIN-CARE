@@ -5,8 +5,29 @@ import { useProducts } from '../../context/ProductContext';
 import { useNotification } from '../../context/NotificationContext';
 
 const Inventory: React.FC = () => {
-  const { products, deleteProduct } = useProducts();
+  const { products, deleteProduct, bulkDeleteProducts, addProduct } = useProducts();
   const { showNotification } = useNotification();
+  const [activeTab, setActiveTab] = React.useState('All Products');
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = React.useState('');
+
+  const filteredProducts = React.useMemo(() => {
+    let result = products;
+
+    // Status Filter
+    if (activeTab === 'Active') result = result.filter(p => p.status === 'Active');
+    if (activeTab === 'Draft') result = result.filter(p => !p.status || p.status === 'Draft');
+
+    // Search Filter
+    if (searchQuery) {
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        p.sku?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    return result;
+  }, [products, activeTab, searchQuery]);
 
   const handleDelete = async (id: string, name: string) => {
     if (window.confirm(`Are you sure you want to delete ${name}?`)) {
@@ -17,6 +38,67 @@ const Inventory: React.FC = () => {
         showNotification('Failed to delete product', 'error');
       }
     }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    if (window.confirm(`Are you sure you want to delete ${selectedIds.length} selected products?`)) {
+      try {
+        await bulkDeleteProducts(selectedIds);
+        setSelectedIds([]);
+        showNotification('Products deleted successfully', 'success');
+      } catch (error) {
+        showNotification('Failed to delete products', 'error');
+      }
+    }
+  };
+
+  const handleCopyProduct = async (product: any) => {
+    try {
+      const { id, ...productData } = product;
+      await addProduct({
+        ...productData,
+        name: `${productData.name} (Copy)`,
+        sku: `${productData.sku}-COPY-${Math.floor(Math.random() * 1000)}`
+      });
+      showNotification('Product duplicated successfully', 'success');
+    } catch (error) {
+      showNotification('Failed to duplicate product', 'error');
+    }
+  };
+
+  const handleBulkCopy = async () => {
+    if (selectedIds.length === 0) return;
+    try {
+      showNotification(`Duplicating ${selectedIds.length} products...`, 'info');
+      const productsToCopy = products.filter(p => selectedIds.includes(p.id));
+      for (const p of productsToCopy) {
+        const { id, ...productData } = p;
+        await addProduct({
+          ...productData,
+          name: `${productData.name} (Copy)`,
+          sku: `${productData.sku}-COPY-${Math.floor(Math.random() * 1000)}`
+        });
+      }
+      setSelectedIds([]);
+      showNotification('Products duplicated successfully', 'success');
+    } catch (error) {
+      showNotification('Failed to duplicate some products', 'error');
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === filteredProducts.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filteredProducts.map(p => p.id));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev =>
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
   };
   return (
     <AdminLayout>
@@ -62,34 +144,69 @@ const Inventory: React.FC = () => {
       <div className="bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden">
         <div className="p-6 border-b border-stone-50 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div className="flex gap-6 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
-            {['All Products', 'Active', 'Draft'].map((tab, i) => (
-              <button key={tab} className={`text-[10px] font-bold uppercase tracking-widest whitespace-nowrap pb-1 transition-all ${i === 0 ? 'text-[#221C1D] border-b-2 border-[#F2A600]' : 'text-stone-400 hover:text-stone-600'}`}>
+            {['All Products', 'Active', 'Draft'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`text-[10px] font-bold uppercase tracking-widest whitespace-nowrap pb-1 transition-all ${activeTab === tab ? 'text-[#221C1D] border-b-2 border-[#F2A600]' : 'text-stone-400 hover:text-stone-600'}`}
+              >
                 {tab}
               </button>
             ))}
           </div>
           <div className="flex flex-wrap gap-4 items-center w-full md:w-auto">
-            <button className="flex items-center gap-2 px-4 py-2 border border-stone-100 rounded text-[10px] font-bold text-stone-500 hover:bg-stone-50 transition-colors">
-              <span className="material-symbols-outlined text-lg">filter_list</span>
-              Filter
-            </button>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search SKU or Name..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 pr-4 py-2 border border-stone-100 rounded text-[10px] font-bold text-stone-500 bg-stone-50/50 focus:outline-none focus:border-[#F2A600] transition-colors w-48 md:w-64"
+              />
+              <span className="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-lg text-stone-300">search</span>
+            </div>
             <div className="flex gap-1 text-stone-300 text-[10px] font-bold uppercase tracking-widest items-center ml-auto md:ml-4">
-              <span className="hidden sm:inline">BULK:</span>
-              <button className="p-1 hover:text-stone-600 transition-colors"><span className="material-symbols-outlined text-lg">delete</span></button>
-              <button className="p-1 hover:text-stone-600 transition-colors"><span className="material-symbols-outlined text-lg">content_copy</span></button>
+              <span className={`hidden sm:inline ${selectedIds.length > 0 ? 'text-[#F2A600]' : ''}`}>
+                {selectedIds.length > 0 ? `${selectedIds.length} SELECTED:` : 'BULK:'}
+              </span>
+              <button
+                disabled={selectedIds.length === 0}
+                onClick={handleBulkDelete}
+                className={`p-1 transition-colors ${selectedIds.length > 0 ? 'text-red-400 hover:text-red-600' : 'cursor-not-allowed'}`}
+                title="Bulk Delete"
+              >
+                <span className="material-symbols-outlined text-lg">delete</span>
+              </button>
+              <button
+                disabled={selectedIds.length === 0}
+                onClick={handleBulkCopy}
+                className={`p-1 transition-colors ${selectedIds.length > 0 ? 'text-[#F2A600] hover:text-[#D49100]' : 'cursor-not-allowed'}`}
+                title="Bulk Copy"
+              >
+                <span className="material-symbols-outlined text-lg">content_copy</span>
+              </button>
             </div>
           </div>
         </div>
 
         <div className="md:hidden divide-y divide-stone-50">
-          {products.map((p) => (
+          {filteredProducts.map((p) => (
             <div key={p.id} className="p-6 space-y-4">
               <div className="flex gap-4">
+                <input
+                  type="checkbox"
+                  checked={selectedIds.includes(p.id)}
+                  onChange={() => toggleSelect(p.id)}
+                  className="rounded border-stone-300 mt-2"
+                />
                 <img src={p.image} className="w-20 h-20 rounded-lg object-cover flex-shrink-0" alt={p.name} />
                 <div className="flex-1 flex flex-col justify-center">
                   <div className="flex justify-between items-start gap-2">
                     <h5 className="text-sm font-bold text-[#221C1D] break-words">{p.name}</h5>
                     <div className="flex gap-1">
+                      <button onClick={() => handleCopyProduct(p)} className="p-1 text-stone-300 hover:text-[#F2A600] transition-colors flex-shrink-0">
+                        <span className="material-symbols-outlined text-lg">content_copy</span>
+                      </button>
                       <Link to={`/admin/inventory/edit/${p.id}`} className="p-1 text-stone-300 hover:text-stone-600 transition-colors flex-shrink-0">
                         <span className="material-symbols-outlined text-lg">edit</span>
                       </Link>
@@ -133,7 +250,14 @@ const Inventory: React.FC = () => {
           <table className="w-full text-left">
             <thead>
               <tr className="bg-stone-50/50">
-                <th className="px-4 md:px-6 py-4 w-10 text-center"><input type="checkbox" className="rounded border-stone-300" /></th>
+                <th className="px-4 md:px-6 py-4 w-10 text-center">
+                  <input
+                    type="checkbox"
+                    className="rounded border-stone-300"
+                    onChange={toggleSelectAll}
+                    checked={filteredProducts.length > 0 && selectedIds.length === filteredProducts.length}
+                  />
+                </th>
                 <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Product</th>
                 <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">SKU</th>
                 <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Price</th>
@@ -143,9 +267,16 @@ const Inventory: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-stone-50">
-              {products.map((p) => (
+              {filteredProducts.map((p) => (
                 <tr key={p.id} className="hover:bg-stone-50/30 transition-colors">
-                  <td className="px-4 md:px-6 py-5 w-10 text-center"><input type="checkbox" className="rounded border-stone-300" /></td>
+                  <td className="px-4 md:px-6 py-5 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      className="rounded border-stone-300"
+                      checked={selectedIds.includes(p.id)}
+                      onChange={() => toggleSelect(p.id)}
+                    />
+                  </td>
                   <td className="px-4 md:px-6 py-5">
                     <div className="flex items-center gap-4">
                       <img src={p.image} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" alt={p.name} />
@@ -175,8 +306,9 @@ const Inventory: React.FC = () => {
                   </td>
                   <td className="px-4 md:px-6 py-5 text-right">
                     <div className="flex justify-end gap-2">
-                      <Link to={`/admin/inventory/edit/${p.id}`} className="p-2 text-stone-300 hover:text-stone-600 transition-colors"><span className="material-symbols-outlined">edit</span></Link>
-                      <button onClick={() => handleDelete(p.id, p.name)} className="p-2 text-stone-300 hover:text-red-600 transition-colors"><span className="material-symbols-outlined">delete</span></button>
+                      <button onClick={() => handleCopyProduct(p)} className="p-2 text-stone-300 hover:text-[#F2A600] transition-colors" title="Copy Product"><span className="material-symbols-outlined">content_copy</span></button>
+                      <Link to={`/admin/inventory/edit/${p.id}`} className="p-2 text-stone-300 hover:text-stone-600 transition-colors" title="Edit Product"><span className="material-symbols-outlined">edit</span></Link>
+                      <button onClick={() => handleDelete(p.id, p.name)} className="p-2 text-stone-300 hover:text-red-600 transition-colors" title="Delete Product"><span className="material-symbols-outlined">delete</span></button>
                     </div>
                   </td>
                 </tr>
@@ -186,7 +318,7 @@ const Inventory: React.FC = () => {
         </div>
 
         <div className="p-6 md:p-8 border-t border-stone-50 flex flex-col md:flex-row justify-between items-center gap-4 text-stone-400">
-          <span className="text-xs font-medium">Showing 1 to 10 of 1,240 entries</span>
+          <span className="text-xs font-medium">Showing {filteredProducts.length} entries</span>
           <div className="flex gap-2">
             <button className="w-8 h-8 flex items-center justify-center border border-stone-100 rounded-md hover:bg-stone-50 transition-colors"><span className="material-symbols-outlined text-sm">chevron_left</span></button>
             {[1, 2, 3, '...', 124].map((n, i) => (

@@ -10,6 +10,7 @@ interface ProductContextType {
     addProduct: (product: Omit<Product, 'id'>) => Promise<string>;
     updateProduct: (id: string, updates: Partial<Product>) => Promise<void>;
     deleteProduct: (id: string) => Promise<void>;
+    bulkDeleteProducts: (ids: string[]) => Promise<void>;
 }
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
@@ -93,8 +94,22 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         }
     };
 
+    const bulkDeleteProducts = async (ids: string[]) => {
+        try {
+            const batch = writeBatch(db);
+            ids.forEach(id => {
+                const productRef = doc(db, 'products', id);
+                batch.delete(productRef);
+            });
+            await batch.commit();
+        } catch (error) {
+            console.error("Error bulk deleting products:", error);
+            throw error;
+        }
+    };
+
     return (
-        <ProductContext.Provider value={{ products, loading, addProduct, updateProduct, deleteProduct }}>
+        <ProductContext.Provider value={{ products, loading, addProduct, updateProduct, deleteProduct, bulkDeleteProducts }}>
             {children}
         </ProductContext.Provider>
     );
