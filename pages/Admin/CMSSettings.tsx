@@ -238,23 +238,59 @@ const CMSSettings: React.FC = () => {
                             <div className="space-y-6 pt-10 border-t border-stone-50">
                                 <div className="flex justify-between items-end">
                                     <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Curated Quotes</p>
-                                    <button className="text-[10px] font-bold text-[#F2A600] uppercase hover:underline">+ Add</button>
+                                    <button
+                                        onClick={() => {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                testimonials: [...(prev.testimonials || []), { author: '', quote: '', image: '/assets/customer-portrait.png' }]
+                                            }));
+                                            setIsDirty(true);
+                                        }}
+                                        className="text-[10px] font-bold text-[#F2A600] uppercase hover:underline"
+                                    >
+                                        + Add Quoate
+                                    </button>
                                 </div>
                                 <div className="space-y-4">
                                     {(formData.testimonials || []).map((t, i) => (
-                                        <div key={i} className="p-4 bg-stone-50 border border-stone-100 rounded-xl flex flex-col gap-3 group hover:bg-white hover:shadow-sm transition-all duration-300">
-                                            <input
-                                                value={t.author}
-                                                onChange={(e) => handleNestedChange('testimonials', i, 'author', e.target.value)}
-                                                className="bg-transparent text-xs font-bold text-[#221C1D] focus:outline-none border-b border-transparent focus:border-[#F2A600]"
-                                                placeholder="Author Name"
-                                            />
+                                        <div key={i} className="p-4 bg-stone-50 border border-stone-100 rounded-xl flex flex-col gap-3 group hover:bg-white hover:shadow-sm transition-all duration-300 relative">
+                                            <button
+                                                onClick={() => {
+                                                    setFormData(prev => ({
+                                                        ...prev,
+                                                        testimonials: prev.testimonials.filter((_, idx) => idx !== i)
+                                                    }));
+                                                    setIsDirty(true);
+                                                }}
+                                                className="absolute top-4 right-4 text-stone-300 hover:text-red-500 transition-colors"
+                                            >
+                                                <span className="material-symbols-outlined text-lg">delete</span>
+                                            </button>
+                                            <div className="flex gap-4 items-start">
+                                                <div className="w-12 h-12 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
+                                                    <img src={t.image || '/assets/customer-portrait.png'} className="w-full h-full object-cover" />
+                                                </div>
+                                                <div className="flex-1 space-y-3">
+                                                    <input
+                                                        value={t.author}
+                                                        onChange={(e) => handleNestedChange('testimonials', i, 'author', e.target.value)}
+                                                        className="w-full bg-transparent text-xs font-bold text-[#221C1D] focus:outline-none border-b border-transparent focus:border-[#F2A600]"
+                                                        placeholder="Author Name"
+                                                    />
+                                                    <input
+                                                        value={t.image || ''}
+                                                        onChange={(e) => handleNestedChange('testimonials', i, 'image', e.target.value)}
+                                                        className="w-full bg-transparent text-[8px] text-stone-400 focus:outline-none border-b border-transparent focus:border-[#F2A600]"
+                                                        placeholder="Portrait Image URL"
+                                                    />
+                                                </div>
+                                            </div>
                                             <textarea
                                                 value={t.quote}
                                                 onChange={(e) => handleNestedChange('testimonials', i, 'quote', e.target.value)}
                                                 className="bg-transparent text-[10px] text-stone-500 italic w-full resize-none focus:outline-none border-b border-transparent focus:border-[#F2A600]"
                                                 rows={2}
-                                                placeholder="Quote"
+                                                placeholder="The client's assessment of your ritual..."
                                             />
                                         </div>
                                     ))}

@@ -8,6 +8,7 @@ const Home: React.FC = () => {
   const [email, setEmail] = React.useState('');
   const [isSubscribing, setIsSubscribing] = React.useState(false);
   const [isSubscribed, setIsSubscribed] = React.useState(false);
+  const [activeTestimonial, setActiveTestimonial] = React.useState(0);
 
   const activeHero = useMemo(() => {
     return siteConfig.heroBanners.find(h => h.status === 'Live') || siteConfig.heroBanners[0];
@@ -159,25 +160,38 @@ const Home: React.FC = () => {
 
       {/* Testimonial Section */}
       {siteConfig.testimonials && siteConfig.testimonials.length > 0 && (
-        <section className="py-24 bg-stone-100 dark:bg-stone-800/50">
+        <section className="py-24 bg-stone-100 dark:bg-stone-800/50 overflow-hidden">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <span className="material-icons-outlined text-gold text-5xl mb-6">format_quote</span>
-            <div className="mb-12">
-              <p className="text-2xl md:text-3xl font-display leading-snug mb-8 italic">
-                "{siteConfig.testimonials[0]?.quote}"
-              </p>
-              <div className="flex flex-col items-center">
-                <img
-                  alt="Customer Portrait"
-                  className="w-16 h-16 rounded-full object-cover mb-4"
-                  src="/assets/customer-portrait.png"
-                />
-                <p className="font-semibold tracking-widest uppercase text-xs">{siteConfig.testimonials[0]?.author} — Verified Buyer</p>
-              </div>
+            <div className="relative min-h-[300px]">
+              {siteConfig.testimonials.map((t, i) => (
+                <div
+                  key={i}
+                  className={`transition-all duration-1000 absolute inset-0 flex flex-col items-center justify-center ${i === activeTestimonial ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-12 pointer-events-none'}`}
+                >
+                  <p className="text-2xl md:text-3xl font-display leading-snug mb-8 italic">
+                    "{t.quote}"
+                  </p>
+                  <div className="flex flex-col items-center">
+                    <img
+                      alt={t.author}
+                      className="w-16 h-16 rounded-full object-cover mb-4 border-2 border-gold/20 p-0.5"
+                      src={t.image || "/assets/customer-portrait.png"}
+                    />
+                    <p className="font-semibold tracking-widest uppercase text-xs">{t.author} — Verified Buyer</p>
+                  </div>
+                </div>
+              ))}
             </div>
-            <div className="flex justify-center space-x-2">
+
+            <div className="flex justify-center space-x-3 mt-12">
               {siteConfig.testimonials.map((_, i) => (
-                <span key={i} className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-gold' : 'bg-stone-300 dark:bg-stone-600'}`}></span>
+                <button
+                  key={i}
+                  onClick={() => setActiveTestimonial(i)}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${i === activeTestimonial ? 'bg-gold scale-125' : 'bg-stone-300 dark:bg-stone-600 hover:bg-stone-400'}`}
+                  aria-label={`Go to testimonial ${i + 1}`}
+                />
               ))}
             </div>
           </div>
