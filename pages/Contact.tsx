@@ -1,19 +1,49 @@
 import React, { useState } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useNotification } from '../context/NotificationContext';
 import SocialIcon from '../components/SocialIcon';
+import { collection, addDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 
 const Contact: React.FC = () => {
   const { siteConfig } = useSiteConfig();
+  const { showNotification } = useNotification();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    subject: 'Product Inquiry',
+    message: ''
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+
+    try {
+      await addDoc(collection(db, 'contactSubmissions'), {
+        ...formData,
+        submittedAt: new Date().toISOString(),
+        status: 'New'
+      });
+
       setIsSubmitted(true);
-    }, 1500);
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        subject: 'Product Inquiry',
+        message: ''
+      });
+      showNotification('Message sent successfully!', 'success');
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      showNotification('Failed to send message. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -61,6 +91,8 @@ const Contact: React.FC = () => {
                   </label>
                   <input
                     required
+                    value={formData.firstName}
+                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] transition-all"
                     type="text"
                     placeholder=""
@@ -72,6 +104,8 @@ const Contact: React.FC = () => {
                   </label>
                   <input
                     required
+                    value={formData.lastName}
+                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
                     className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] transition-all"
                     type="text"
                     placeholder=""
@@ -85,6 +119,8 @@ const Contact: React.FC = () => {
                 </label>
                 <input
                   required
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] transition-all"
                   type="email"
                   placeholder=""
@@ -96,7 +132,11 @@ const Contact: React.FC = () => {
                   Subject
                 </label>
                 <div className="relative">
-                  <select className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] appearance-none transition-all">
+                  <select
+                    value={formData.subject}
+                    onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                    className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] appearance-none transition-all"
+                  >
                     <option>Product Inquiry</option>
                     <option>Order Status</option>
                     <option>Skin Consultation</option>
@@ -114,6 +154,8 @@ const Contact: React.FC = () => {
                 </label>
                 <textarea
                   required
+                  value={formData.message}
+                  onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                   className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] min-h-[160px] resize-none text-sm text-[#221C1D] transition-all"
                   placeholder=""
                 ></textarea>

@@ -1,10 +1,20 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useReviews } from '../context/ReviewContext';
+import { useNotification } from '../context/NotificationContext';
 
 const Reviews: React.FC = () => {
-  const { reviews, loading } = useReviews();
+  const { reviews, loading, addReview } = useReviews();
+  const { showNotification } = useNotification();
   const approvedReviews = useMemo(() => reviews.filter(r => r.status === 'Approved'), [reviews]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    author: '',
+    title: '',
+    content: '',
+    rating: 5
+  });
 
   const stats = useMemo(() => {
     if (approvedReviews.length === 0) return { avg: 5.0, count: 0, rows: [100, 0, 0, 0, 0] };
@@ -15,6 +25,34 @@ const Reviews: React.FC = () => {
     });
     return { avg, count: approvedReviews.length, rows };
   }, [approvedReviews]);
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      await addReview({
+        ...formData,
+        verified: false,
+        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        status: 'Pending'
+      });
+
+      showNotification('Review submitted! It will appear after approval.', 'success');
+      setIsModalOpen(false);
+      setFormData({
+        author: '',
+        title: '',
+        content: '',
+        rating: 5
+      });
+    } catch (error) {
+      console.error('Error submitting review:', error);
+      showNotification('Failed to submit review. Please try again.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -101,10 +139,92 @@ const Reviews: React.FC = () => {
       </div>
 
       <div className="mt-20 text-center">
-        <button className="gold-gradient text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:brightness-110 shadow-2xl transition-all">
+        <button
+          onClick={() => setIsModalOpen(true)}
+          className="gold-gradient text-white px-12 py-4 rounded-full font-bold uppercase tracking-widest text-xs hover:brightness-110 shadow-2xl transition-all"
+        >
           Write a Luxury Review
         </button>
       </div>
+
+      {/* Review Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-zinc-900 rounded-3xl w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in duration-300">
+            <div className="p-8 border-b border-stone-100 dark:border-stone-800 flex justify-between items-center">
+              <h3 className="text-2xl font-bold text-secondary dark:text-white">Share Your Experience</h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-stone-400 hover:text-stone-600">
+                <span className="material-symbols-outlined">close</span>
+              </button>
+            </div>
+            <form onSubmit={handleSubmitReview} className="p-8 space-y-6">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3">Your Name</label>
+                <input
+                  required
+                  value={formData.author}
+                  onChange={(e) => setFormData({ ...formData, author: e.target.value })}
+                  className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 ring-primary/20"
+                  placeholder="Jane Doe"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3">Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, rating: star })}
+                      className="text-3xl transition-colors"
+                    >
+                      <span className={`material-icons ${star <= formData.rating ? 'text-primary' : 'text-stone-300'}`}>
+                        star
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3">Review Title</label>
+                <input
+                  required
+                  value={formData.title}
+                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 ring-primary/20"
+                  placeholder="Amazing results!"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-3">Your Review</label>
+                <textarea
+                  required
+                  value={formData.content}
+                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm min-h-[150px] resize-none focus:ring-2 ring-primary/20"
+                  placeholder="Share your experience with our products..."
+                />
+              </div>
+              <div className="flex gap-4 pt-6">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 py-4 border border-stone-200 dark:border-stone-700 rounded-xl text-[10px] font-bold uppercase tracking-widest hover:bg-stone-50 dark:hover:bg-stone-800 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 py-4 gold-gradient text-white rounded-xl text-[10px] font-bold uppercase tracking-widest shadow-lg hover:brightness-110 transition-all disabled:opacity-50"
+                >
+                  {isSubmitting ? 'Submitting...' : 'Submit Review'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

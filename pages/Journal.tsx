@@ -68,7 +68,7 @@ const Journal: React.FC = () => {
                         <div className="w-12 h-1 bg-[#A68966]"></div>
                     </div>
                     <div className="flex gap-12 hidden md:flex text-[10px] font-black uppercase tracking-widest text-stone-400">
-                        {['All', 'Education', 'Formulation', 'Rituals'].map(cat => (
+                        {['All', 'Rituals', 'Science', 'Lifestyle', 'Botany'].map(cat => (
                             <button
                                 key={cat}
                                 onClick={() => setActiveCategory(cat)}

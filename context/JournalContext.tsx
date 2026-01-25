@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, doc, writeBatch, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
-import { MOCK_JOURNAL_POSTS } from '../constants';
+import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 export interface JournalPost {
     id: string;
@@ -32,29 +31,6 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     useEffect(() => {
         const postsRef = collection(db, 'journal');
-
-        const seedPosts = async () => {
-            try {
-                const snapshot = await getDocs(postsRef);
-                if (snapshot.empty) {
-                    const batch = writeBatch(db);
-                    MOCK_JOURNAL_POSTS.forEach(post => {
-                        const ref = doc(postsRef);
-                        batch.set(ref, {
-                            ...post,
-                            id: ref.id,
-                            status: 'Published',
-                            content: 'Clinical-grade botanical skincare is undergoing a revolution. In this article, we explore the deep-rooted science behind our active ingredients...'
-                        });
-                    });
-                    await batch.commit();
-                }
-            } catch (error) {
-                console.error("Error seeding posts:", error);
-            }
-        };
-
-        seedPosts();
 
         const unsubscribe = onSnapshot(postsRef, (snapshot) => {
             const items: JournalPost[] = [];
