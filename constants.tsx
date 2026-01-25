@@ -222,7 +222,7 @@ export const MOCK_REVIEWS: Review[] = [
   {
     id: 'r3',
     productId: 'p3',
-    author: 'Elena V.',
+    author: 'Ama O.',
     rating: 4,
     date: '2 weeks ago',
     title: 'Great for sensitivity',

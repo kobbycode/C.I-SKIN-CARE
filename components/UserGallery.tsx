@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 const FEED_ITEMS = [
     { id: 1, img: "/products/bel-eclat-hero.jpg", owner: "@sophia.beauty", tag: "Radiance Ritual" },
     { id: 2, img: "/products/5d-gluta-diamond-box.jpg", owner: "@marcus_luxe", tag: "Daily Discipline" },
-    { id: 3, img: "/products/spa-gels.jpg", owner: "@elena_ritual", tag: "Evening Glow" },
+    { id: 3, img: "/products/spa-gels.jpg", owner: "@ama_ritual", tag: "Evening Glow" },
     { id: 4, img: "/products/gluta-master-set.jpg", owner: "@skin_philosopher", tag: "Miracle Base" },
     { id: 5, img: "/products/bel-eclat-tumericSet.jpg", owner: "@the_glow_edit", tag: "Nature X Science" },
     { id: 6, img: "/products/shelf-display.jpg", owner: "@clara_ci", tag: "Ritual Corner" },

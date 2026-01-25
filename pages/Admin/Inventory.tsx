@@ -122,16 +122,16 @@ const Inventory: React.FC = () => {
       {/* Inventory Stats - Scalable Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
         {[
-          { label: 'Total Products', value: products.length.toString(), trend: '+4%', trendUp: true },
-          { label: 'Low Stock Items', value: products.filter(p => (p.stock || 0) < 10).length.toString(), trend: '+2', trendUp: false },
-          { label: 'Active Listings', value: products.filter(p => p.status === 'Active').length.toString(), trend: '0%', trendUp: true },
-          { label: 'Total Value', value: 'GH₵' + products.reduce((sum, p) => sum + (p.price * (p.stock || 0)), 0).toLocaleString(), trend: '+12%', trendUp: true }
+          { label: 'Total Products', value: products.length.toString(), trend: '0%', trendUp: true, sub: 'All items' },
+          { label: 'Low Stock Items', value: products.filter(p => (p.stock || 0) < 10).length.toString(), trend: 'Active', trendUp: false, sub: 'Below 10 units' },
+          { label: 'Active Listings', value: products.filter(p => p.status === 'Active').length.toString(), trend: 'Live', trendUp: true, sub: 'Shown to public' },
+          { label: 'Total Value', value: 'GH₵' + products.reduce((sum, p) => sum + (p.price * (p.stock || 0)), 0).toLocaleString(), trend: '0%', trendUp: true, sub: 'Inventory worth' }
         ].map((stat, i) => (
           <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
             <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest mb-2">{stat.label}</p>
             <div className="flex items-baseline gap-2">
               <h3 className="text-xl md:text-2xl font-bold text-[#221C1D]">{stat.value}</h3>
-              <span className={`text-[10px] font-bold ${stat.trendUp ? 'text-green-600' : 'text-red-600'}`}>
+              <span className={`text-[10px] font-bold ${stat.trendUp ? 'text-green-600' : 'text-stone-400'}`}>
                 {stat.trend}
               </span>
             </div>

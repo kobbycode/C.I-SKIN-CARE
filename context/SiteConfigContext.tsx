@@ -165,7 +165,7 @@ const defaultPhilosophy: Philosophy = {
 };
 
 const defaultTestimonials: Testimonial[] = [
-    { author: 'Elena V.', quote: 'My skin has never felt more alive. The Radiance Serum is my holy grail. It\'s not just skincare, it\'s a daily ritual of self-love.' },
+    { author: 'Ama O.', quote: 'My skin has never felt more alive. The Radiance Serum is my holy grail. It\'s not just skincare, it\'s a daily ritual of self-love.' },
     { author: 'Sophia R.', quote: 'A literal game changer for my morning routine. I have never seen such fast results.' }
 ];
 

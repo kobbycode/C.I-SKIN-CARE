@@ -171,7 +171,7 @@ const Home: React.FC = () => {
                 className="w-16 h-16 rounded-full object-cover mb-4"
                 src="/assets/customer-portrait.png"
               />
-              <p className="font-semibold tracking-widest uppercase text-xs">{siteConfig.testimonials[0]?.author || "Elena V."} — Verified Buyer</p>
+              <p className="font-semibold tracking-widest uppercase text-xs">{siteConfig.testimonials[0]?.author || "Ama O."} — Verified Buyer</p>
             </div>
           </div>
           <div className="flex justify-center space-x-2">
