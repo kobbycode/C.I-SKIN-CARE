@@ -8,19 +8,39 @@ const Orders: React.FC = () => {
     const { showNotification } = useNotification();
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('All Orders');
+    const [searchTerm, setSearchTerm] = useState('');
 
     const filteredOrders = useMemo(() => {
-        if (activeTab === 'All Orders') return orders;
-        return orders.filter(o => activeTab.includes(o.status));
-    }, [orders, activeTab]);
+        let result = orders;
 
-    const selectedOrder = useMemo(() => orders.find(o => o.id === selectedOrderId) || orders[0], [orders, selectedOrderId]);
+        // Filter by tab
+        if (activeTab !== 'All Orders') {
+            result = result.filter(o => activeTab.includes(o.status));
+        }
 
-    const stats = useMemo(() => [
-        { label: 'Pending Shipments', value: orders.filter(o => o.status === 'Pending').length.toString(), trend: '+5%', sub: 'Immediate action' },
-        { label: 'Orders Today', value: orders.filter(o => o.date.includes(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' }))).length.toString(), trend: '-2%', sub: 'Updated now' },
-        { label: 'Total Volume', value: 'GH₵' + orders.reduce((sum, o) => sum + o.total, 0).toLocaleString(), trend: '+8.4%', sub: 'Cycle projection' }
-    ], [orders]);
+        // Filter by search
+        if (searchTerm) {
+            const lowSearch = searchTerm.toLowerCase();
+            result = result.filter(o =>
+                o.customerName.toLowerCase().includes(lowSearch) ||
+                o.id.toLowerCase().includes(lowSearch) ||
+                o.customerEmail.toLowerCase().includes(lowSearch)
+            );
+        }
+
+        return result;
+    }, [orders, activeTab, searchTerm]);
+
+    const selectedOrder = useMemo(() => orders.find(o => o.id === selectedOrderId) || filteredOrders[0] || orders[0], [orders, filteredOrders, selectedOrderId]);
+
+    const stats = useMemo(() => {
+        const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        return [
+            { label: 'Pending Shipments', value: orders.filter(o => o.status === 'Pending').length.toString(), trend: '+5%', sub: 'Immediate action' },
+            { label: 'Orders Today', value: orders.filter(o => o.date === today).length.toString(), trend: '-2%', sub: 'Updated now' },
+            { label: 'Total Volume', value: 'GH₵' + orders.reduce((sum, o) => sum + o.total, 0).toLocaleString(), trend: '+8.4%', sub: 'Cycle projection' }
+        ];
+    }, [orders]);
 
     const handleStatusUpdate = async (id: string, status: any) => {
         try {
@@ -75,7 +95,13 @@ const Orders: React.FC = () => {
                             </div>
                             <div className="relative w-full md:w-64">
                                 <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-stone-300 text-lg">search</span>
-                                <input type="text" placeholder="Search orders..." className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-transparent rounded-lg text-xs focus:outline-none focus:border-[#F2A600] transition-colors" />
+                                <input
+                                    type="text"
+                                    placeholder="Search orders..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-transparent rounded-lg text-xs focus:outline-none focus:border-[#F2A600] transition-colors"
+                                />
                             </div>
                         </div>
                     </div>
@@ -198,6 +224,23 @@ const Orders: React.FC = () => {
                                 </div>
                             </div>
                         </div>
+
+                        {selectedOrder.items && selectedOrder.items.length > 0 && (
+                            <div className="mb-10">
+                                <h6 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-6">Order Items</h6>
+                                <div className="space-y-4">
+                                    {selectedOrder.items.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center text-xs">
+                                            <div className="flex-1 min-w-0 pr-4">
+                                                <p className="font-bold text-[#221C1D] truncate">{item.name}</p>
+                                                <p className="text-[9px] text-stone-400 uppercase">Qty: {item.quantity}</p>
+                                            </div>
+                                            <p className="font-bold text-[#221C1D]">GH₵{(item.price * item.quantity).toFixed(2)}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <div className="mb-10 p-5 bg-[#FDFCFB] border border-stone-50 rounded-2xl">
                             <div className="flex gap-4 mb-5">

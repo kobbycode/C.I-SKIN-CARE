@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useFAQs, FAQ } from '../../context/FAQContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -14,6 +14,22 @@ const FAQManager: React.FC = () => {
         category: string;
         status: 'Public' | 'Draft';
     }>({ question: '', answer: '', category: 'Safety', status: 'Draft' });
+
+    const metrics = useMemo(() => {
+        const activeQs = faqs.length;
+        const totalHits = faqs.reduce((sum, f) => sum + (f.views || 0), 0);
+
+        // Calculate category counts
+        const catMap: Record<string, number> = {};
+        faqs.forEach(f => {
+            catMap[f.category] = (catMap[f.category] || 0) + 1;
+        });
+
+        const categoryList = Object.entries(catMap).map(([name, count]) => ({ name, count }))
+            .sort((a, b) => b.count - a.count);
+
+        return { activeQs, totalHits, categoryList };
+    }, [faqs]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -121,12 +137,12 @@ const FAQManager: React.FC = () => {
                             </div>
                             <div className="grid grid-cols-2 gap-4 pt-4">
                                 <div className="p-4 bg-stone-50 rounded-xl border border-stone-100/50">
-                                    <p className="text-xl font-bold text-[#221C1D]">24</p>
+                                    <p className="text-xl font-bold text-[#221C1D]">{metrics.activeQs}</p>
                                     <p className="text-[8px] font-black text-stone-400 uppercase tracking-widest">Active Qs</p>
                                 </div>
                                 <div className="p-4 bg-stone-50 rounded-xl border border-stone-100/50">
-                                    <p className="text-xl font-bold text-[#221C1D]">5.2k</p>
-                                    <p className="text-[8px] font-black text-stone-400 uppercase tracking-widest">Daily Hits</p>
+                                    <p className="text-xl font-bold text-[#221C1D]">{(metrics.totalHits / 1000).toFixed(1)}k</p>
+                                    <p className="text-[8px] font-black text-stone-400 uppercase tracking-widest">Global Hits</p>
                                 </div>
                             </div>
                         </div>
@@ -138,12 +154,7 @@ const FAQManager: React.FC = () => {
                             <button className="text-[10px] font-bold text-[#F2A600] uppercase tracking-wider hover:underline">Manage</button>
                         </div>
                         <div className="space-y-4">
-                            {[
-                                { name: 'Product Safety', count: 8 },
-                                { name: 'Ingredients', count: 12 },
-                                { name: 'Shipping', count: 5 },
-                                { name: 'Authenticity', count: 4 }
-                            ].map(cat => (
+                            {metrics.categoryList.map(cat => (
                                 <div key={cat.name} className="flex justify-between items-center group cursor-pointer">
                                     <p className="text-xs font-bold text-stone-600 group-hover:text-[#F2A600] transition-colors">{cat.name}</p>
                                     <span className="px-2 py-0.5 bg-stone-50 rounded text-[9px] font-bold text-stone-400 group-hover:text-[#F2A600] transition-colors">{cat.count}</span>

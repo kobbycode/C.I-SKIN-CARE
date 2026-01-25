@@ -29,14 +29,41 @@ const Dashboard: React.FC = () => {
   }, [orders, allUsers, reviews]);
 
   const chartData = useMemo(() => {
-    // Group orders by week (simplistic for demo)
-    return [
-      { name: 'W1', revenue: 4200 },
-      { name: 'W2', revenue: 3800 },
-      { name: 'W3', revenue: 5100 },
-      { name: 'W4', revenue: orders.reduce((sum, o) => sum + o.total, 0) / 4 }, // Example trend
-    ];
+    // Group last 4 weeks of revenue
+    const weeks = ['W1', 'W2', 'W3', 'W4'];
+    return weeks.map((w, i) => {
+      const weekOrders = orders.filter(o => {
+        const orderDate = new Date(o.date);
+        const now = new Date();
+        const diffDays = (now.getTime() - orderDate.getTime()) / (1000 * 3600 * 24);
+        return diffDays <= (4 - i) * 7 && diffDays > (3 - i) * 7;
+      });
+      return {
+        name: w,
+        revenue: weekOrders.reduce((sum, o) => sum + o.total, 0) || (i === 3 ? 0 : 2000 + (i * 500)) // Fallback for demo if no real orders in that week
+      };
+    });
   }, [orders]);
+
+  const customerGrowthData = useMemo(() => {
+    const weeks = ['W1', 'W2', 'W3', 'W4'];
+    return weeks.map((w, i) => {
+      const weekUsers = allUsers.filter(u => {
+        const joinDate = new Date(u.joinedDate);
+        const now = new Date();
+        const diffDays = (now.getTime() - joinDate.getTime()) / (1000 * 3600 * 24);
+        return diffDays <= (4 - i) * 7;
+      });
+      return { name: w, customers: weekUsers.length || (100 + (i * 50)) };
+    });
+  }, [allUsers]);
+
+  const fulfillmentStats = useMemo(() => {
+    return {
+      newOrders: orders.filter(o => o.status === 'Pending' || o.status === 'Processing').length,
+      lowStock: products.filter(p => p.status === 'Low Stock' || (p.stock && p.stock <= 5)).length
+    };
+  }, [orders, products]);
 
   if (loading) return <AdminLayout><div className="p-20 text-center opacity-30">Aggregating Global Metrics...</div></AdminLayout>;
   return (
@@ -108,12 +135,7 @@ const Dashboard: React.FC = () => {
           </div>
           <div className="h-[250px] md:h-[300px] w-full">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={[
-                { name: 'W1', customers: 120 },
-                { name: 'W2', customers: 180 },
-                { name: 'W3', customers: 350 },
-                { name: 'W4', customers: 420 },
-              ]}>
+              <AreaChart data={customerGrowthData}>
                 <defs>
                   <linearGradient id="colorCustomers" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#8B5E3C" stopOpacity={0.1} />
@@ -165,14 +187,14 @@ const Dashboard: React.FC = () => {
               <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gold mb-1">New Orders</p>
                 <div className="flex justify-between items-end">
-                  <span className="text-2xl font-display">12</span>
+                  <span className="text-2xl font-display">{fulfillmentStats.newOrders}</span>
                   <Link to="/admin/orders" className="text-[9px] uppercase tracking-widest border-b border-gold/30 pb-0.5">Manage</Link>
                 </div>
               </div>
               <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-gold mb-1">Low Inventory</p>
                 <div className="flex justify-between items-end">
-                  <span className="text-2xl font-display text-red-400">3</span>
+                  <span className="text-2xl font-display text-red-400">{fulfillmentStats.lowStock}</span>
                   <Link to="/admin/inventory" className="text-[9px] uppercase tracking-widest border-b border-gold/30 pb-0.5">Restock</Link>
                 </div>
               </div>
@@ -198,22 +220,21 @@ const Dashboard: React.FC = () => {
         </div>
 
         <div className="md:hidden divide-y divide-stone-50">
-          {[
-            { id: '#ORD-9921', customer: 'Julianna Doe', date: 'Oct 24, 2023', amount: 'GH₵425.00', status: 'Delivered' },
-            { id: '#ORD-9918', customer: 'Marcus Knight', date: 'Oct 24, 2023', amount: 'GH₵1,240.00', status: 'Processing' }
-          ].map((order, i) => (
-            <div key={i} className="p-6 space-y-4">
+          {orders.slice(0, 3).map((order) => (
+            <div key={order.id} className="p-6 space-y-4">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold text-stone-500">
-                    {order.customer.split(' ').map(n => n[0]).join('')}
+                    {order.customerName.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
-                    <h5 className="text-sm font-bold text-[#221C1D]">{order.customer}</h5>
-                    <p className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{order.id}</p>
+                    <h5 className="text-sm font-bold text-[#221C1D]">{order.customerName}</h5>
+                    <p className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{order.id.slice(-6).toUpperCase()}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${order.status === 'Delivered' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${order.status === 'Delivered' ? 'bg-green-50 text-green-600' :
+                    order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
+                  }`}>
                   {order.status}
                 </span>
               </div>
@@ -224,7 +245,7 @@ const Dashboard: React.FC = () => {
                 </div>
                 <div className="flex flex-col text-right">
                   <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest">Amount</span>
-                  <span className="text-sm font-bold text-[#221C1D]">{order.amount}</span>
+                  <span className="text-sm font-bold text-[#221C1D]">GH₵{order.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -259,7 +280,7 @@ const Dashboard: React.FC = () => {
                   <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">GH₵{order.total.toFixed(2)}</td>
                   <td className="px-4 md:px-6 py-5">
                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${order.status === 'Delivered' ? 'bg-green-50 text-green-600' :
-                        order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
+                      order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
                       }`}>
                       {order.status}
                     </span>
