@@ -91,8 +91,32 @@ const CMSSettings: React.FC = () => {
                                         className="flex-1 bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm text-stone-600 focus:outline-none focus:border-[#F2A600]"
                                         placeholder="Link Path"
                                     />
+                                    <button
+                                        onClick={() => {
+                                            setFormData(prev => ({
+                                                ...prev,
+                                                navLinks: prev.navLinks.filter((_, index) => index !== i)
+                                            }));
+                                            setIsDirty(true);
+                                        }}
+                                        className="w-10 h-10 flex items-center justify-center bg-stone-50 rounded-xl hover:bg-red-50 hover:text-red-500 transition-colors"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">delete</span>
+                                    </button>
                                 </div>
                             ))}
+                            <button
+                                onClick={() => {
+                                    setFormData(prev => ({
+                                        ...prev,
+                                        navLinks: [...prev.navLinks, { name: '', path: '' }]
+                                    }));
+                                    setIsDirty(true);
+                                }}
+                                className="w-full py-3 border border-dashed border-stone-300 rounded-xl text-stone-400 font-bold uppercase text-[10px] tracking-widest hover:border-[#F2A600] hover:text-[#F2A600] transition-all"
+                            >
+                                + Add Navigation Link
+                            </button>
                         </div>
                     </section>
 
