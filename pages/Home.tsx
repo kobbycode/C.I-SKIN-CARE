@@ -10,6 +10,16 @@ const Home: React.FC = () => {
   const [isSubscribed, setIsSubscribed] = React.useState(false);
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
 
+  React.useEffect(() => {
+    if (!siteConfig.testimonials || siteConfig.testimonials.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setActiveTestimonial(prev => (prev + 1) % siteConfig.testimonials.length);
+    }, 7000); // Change slide every 7 seconds
+
+    return () => clearInterval(interval);
+  }, [siteConfig.testimonials]);
+
   const activeHero = useMemo(() => {
     return siteConfig.heroBanners.find(h => h.status === 'Live') || siteConfig.heroBanners[0];
   }, [siteConfig.heroBanners]);

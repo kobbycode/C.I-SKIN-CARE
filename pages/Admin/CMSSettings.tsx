@@ -3,6 +3,8 @@ import SocialIcon from '../../components/SocialIcon';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useSiteConfig, SiteConfig, HeroBanner } from '../../context/SiteConfigContext';
 import { useNotification } from '../../context/NotificationContext';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../firebaseConfig';
 
 const CMSSettings: React.FC = () => {
     const { siteConfig, updateSiteConfig } = useSiteConfig();
@@ -14,6 +16,9 @@ const CMSSettings: React.FC = () => {
         index: number;
         data: any;
     } | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setFormData(siteConfig);
@@ -26,8 +31,18 @@ const CMSSettings: React.FC = () => {
 
     const handleNestedChange = (section: keyof SiteConfig, index: number, field: string, value: any) => {
         setFormData(prev => {
-            const list = [...(prev[section] as any[])];
-            list[index] = { ...list[index], [field]: value };
+            let list = [...(prev[section] as any[])];
+
+            // Mutual exclusivity for hero banners: only one can be "Live"
+            if (section === 'heroBanners' && field === 'status' && value === 'Live') {
+                list = list.map((item, idx) => ({
+                    ...item,
+                    status: idx === index ? 'Live' : 'Draft'
+                }));
+            } else {
+                list[index] = { ...list[index], [field]: value };
+            }
+
             return { ...prev, [section]: list };
         });
         setIsDirty(true);
@@ -73,14 +88,62 @@ const CMSSettings: React.FC = () => {
     const handleModalSave = () => {
         if (!activeModal) return;
         const { type, index, data } = activeModal;
+        const section = type === 'hero' ? 'heroBanners' : type === 'testimonial' ? 'testimonials' : 'ritualGuide';
 
         setFormData(prev => {
-            const newList = [...(prev[type === 'hero' ? 'heroBanners' : type === 'testimonial' ? 'testimonials' : 'ritualGuide'] as any[])];
-            newList[index] = data;
-            return { ...prev, [type === 'hero' ? 'heroBanners' : type === 'testimonial' ? 'testimonials' : 'ritualGuide']: newList };
+            let newList = [...(prev[section] as any[])];
+
+            // Mutual exclusivity for hero banners: only one can be "Live"
+            if (section === 'heroBanners' && data.status === 'Live') {
+                newList = newList.map(item => ({ ...item, status: 'Draft' }));
+            }
+
+            if (index === -1) {
+                // Adding a new item
+                newList.push(data);
+            } else {
+                // Updating an existing item
+                newList[index] = data;
+            }
+
+            return { ...prev, [section]: newList };
         });
         setIsDirty(true);
         setActiveModal(null);
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file || !activeModal) return;
+
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        const storageRef = ref(storage, `cms/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setUploadProgress(progress);
+            },
+            (error) => {
+                console.error("Upload failed:", error);
+                showNotification('Upload failed. Please try again.', 'error');
+                setIsUploading(false);
+            },
+            async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                const { type, data } = activeModal;
+                setActiveModal({
+                    ...activeModal,
+                    data: { ...data, [type === 'hero' ? 'img' : 'image']: downloadURL }
+                });
+                setIsUploading(false);
+                setUploadProgress(0);
+                showNotification('Image uploaded successfully!', 'success');
+            }
+        );
     };
 
     const CMSModal = () => {
@@ -112,12 +175,43 @@ const CMSSettings: React.FC = () => {
                                     />
                                 </div>
                                 <div className="flex-1 space-y-4">
-                                    <input
-                                        value={data.img || data.image || ''}
-                                        onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, [type === 'hero' ? 'img' : 'image']: e.target.value } })}
-                                        className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 ring-primary/20"
-                                        placeholder="Paste image URL here..."
-                                    />
+                                    <div className="flex gap-2">
+                                        <input
+                                            value={data.img || data.image || ''}
+                                            onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, [type === 'hero' ? 'img' : 'image']: e.target.value } })}
+                                            className="flex-1 bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 ring-primary/20"
+                                            placeholder="Paste image URL here..."
+                                        />
+                                        <button
+                                            onClick={() => fileInputRef.current?.click()}
+                                            disabled={isUploading}
+                                            className="px-4 py-3 bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-xl transition-colors flex items-center justify-center min-w-[48px]"
+                                            title="Upload from device"
+                                        >
+                                            {isUploading ? (
+                                                <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                                            ) : (
+                                                <span className="material-symbols-outlined text-stone-500">upload_file</span>
+                                            )}
+                                        </button>
+                                        <input
+                                            type="file"
+                                            ref={fileInputRef}
+                                            onChange={handleImageUpload}
+                                            className="hidden"
+                                            accept="image/*"
+                                        />
+                                    </div>
+
+                                    {isUploading && (
+                                        <div className="w-full bg-stone-100 dark:bg-stone-800 rounded-full h-1 overflow-hidden">
+                                            <div
+                                                className="bg-primary h-full transition-all duration-300"
+                                                style={{ width: `${uploadProgress}%` }}
+                                            ></div>
+                                        </div>
+                                    )}
+
                                     <p className="text-[9px] text-stone-400 italic">Recommended: High-quality JPG or PNG. Portraits should be square.</p>
                                 </div>
                             </div>
@@ -298,8 +392,7 @@ const CMSSettings: React.FC = () => {
                             <button
                                 onClick={() => {
                                     const newHero: HeroBanner = { title: '', sub: '', img: '/products/bel-eclat-hero.jpg', status: 'Draft' };
-                                    setFormData(prev => ({ ...prev, heroBanners: [...prev.heroBanners, newHero] }));
-                                    setActiveModal({ type: 'hero', index: formData.heroBanners.length, data: newHero });
+                                    setActiveModal({ type: 'hero', index: -1, data: newHero });
                                 }}
                                 className="text-[10px] font-bold text-[#F2A600] uppercase tracking-wider hover:underline"
                             >
@@ -409,8 +502,7 @@ const CMSSettings: React.FC = () => {
                                     <button
                                         onClick={() => {
                                             const newTestimonial = { author: '', quote: '', image: '/assets/customer-portrait.png' };
-                                            setFormData(prev => ({ ...prev, testimonials: [...(prev.testimonials || []), newTestimonial] }));
-                                            setActiveModal({ type: 'testimonial', index: (formData.testimonials || []).length, data: newTestimonial });
+                                            setActiveModal({ type: 'testimonial', index: -1, data: newTestimonial });
                                         }}
                                         className="text-[10px] font-bold text-[#F2A600] uppercase hover:underline"
                                     >
