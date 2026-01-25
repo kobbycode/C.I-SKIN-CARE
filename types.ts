@@ -43,3 +43,10 @@ export interface Order {
   shippingAddress: string;
   paymentMethod: string;
 }
+
+export interface Category {
+  id: string;
+  name: string;
+  status: 'Active' | 'Seasonal' | 'Draft';
+  displayOrder?: number;
+}

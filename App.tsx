@@ -12,6 +12,7 @@ import { ReviewProvider } from './context/ReviewContext';
 import { OrderProvider } from './context/OrderContext';
 import { JournalProvider } from './context/JournalContext';
 import { FAQProvider } from './context/FAQContext';
+import { CategoryProvider } from './context/CategoryContext';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
@@ -157,12 +158,14 @@ const App: React.FC = () => {
               <OrderProvider>
                 <JournalProvider>
                   <FAQProvider>
-                    <BrowserRouter>
-                      <ScrollToTop />
-                      <Suspense fallback={<PageLoader />}>
-                        <MainLayout />
-                      </Suspense>
-                    </BrowserRouter>
+                    <CategoryProvider>
+                      <BrowserRouter>
+                        <ScrollToTop />
+                        <Suspense fallback={<PageLoader />}>
+                          <MainLayout />
+                        </Suspense>
+                      </BrowserRouter>
+                    </CategoryProvider>
                   </FAQProvider>
                 </JournalProvider>
               </OrderProvider>
