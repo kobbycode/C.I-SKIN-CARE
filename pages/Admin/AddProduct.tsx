@@ -104,9 +104,19 @@ const AddProduct: React.FC = () => {
                         <p className="text-stone-500">{id ? 'Refine an existing clinical-grade botanical.' : 'Add a new clinical-grade botanical to the collection.'}</p>
                     </div>
                 </div>
+                <div className="flex gap-4">
+                    <button
+                        type="submit"
+                        form="product-form"
+                        disabled={isSubmitting}
+                        className="bg-[#221C1D] text-white px-6 py-2.5 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all flex items-center gap-2 shadow-lg"
+                    >
+                        {isSubmitting ? 'Saving...' : 'Save Changes'}
+                    </button>
+                </div>
             </header>
 
-            <form onSubmit={handleSubmit} className="max-w-5xl">
+            <form id="product-form" onSubmit={handleSubmit} className="max-w-5xl">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
                     {/* Left Column: Essential Details */}
                     <div className="lg:col-span-8 space-y-8">
@@ -336,7 +346,7 @@ const AddProduct: React.FC = () => {
                                         Establishing...
                                     </>
                                 ) : (
-                                    <>Authenticating Product</>
+                                    <>{id ? 'Save Product Changes' : 'Establish Formulation'}</>
                                 )}
                             </button>
                             <button type="button" className="w-full text-stone-400 py-2 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-colors">
