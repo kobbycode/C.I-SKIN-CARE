@@ -121,7 +121,7 @@ const defaultHomeSections: HomeSection[] = [
 ];
 
 const defaultHeroBanners: HeroBanner[] = [
-    { title: 'The Science of Glow', sub: 'Spring Collection 2024', img: '/products/bel-eclat-hero.jpg', status: 'Live' },
+    { title: 'The Science of Glow', sub: 'Spring Collection 2024', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAboFWaO4tGfvMQ6x8YVJhB4MsX9dAZvyVpImJ-E-HQ5E0T6G3kprf7DBc12UgFaVPuHeEOkebv_0CJBJ_wQ4VbOtkKjBYLJ_dF_vQOsq9jMlTOLcKsMyexRCotCfntLS2pyoB4LRlymwjKRwEg4dgR7SJCdOC_JztikGLdytoTpzKHG-0hClG3QDNBaSwD3QxxksB6ZJ4NhHGCpAdfx3Y2ICUr635Lbhmi0u3gMw2mEeFkH8-ZukAvPyJRQjCEZgE6nmgU6H2u__Y', status: 'Live' },
     { title: 'Ritual of Restoration', sub: 'Nighttime Essentials', img: '/products/gluta-master-set.jpg', status: 'Scheduled' }
 ];
 
