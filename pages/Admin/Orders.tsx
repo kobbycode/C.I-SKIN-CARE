@@ -31,7 +31,12 @@ const Orders: React.FC = () => {
         return result;
     }, [orders, activeTab, searchTerm]);
 
-    const selectedOrder = useMemo(() => orders.find(o => o.id === selectedOrderId) || filteredOrders[0] || orders[0], [orders, filteredOrders, selectedOrderId]);
+    const selectedOrder = useMemo(() => {
+        if (filteredOrders.length > 0) {
+            return orders.find(o => o.id === selectedOrderId) || filteredOrders[0];
+        }
+        return null;
+    }, [orders, filteredOrders, selectedOrderId]);
 
     const stats = useMemo(() => {
         const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -196,104 +201,114 @@ const Orders: React.FC = () => {
 
                 {/* Journey Timeline Side Pane - Responsive */}
                 <div className="w-full xl:w-[400px] bg-white border border-stone-100 rounded-2xl overflow-hidden shadow-[0_4px_20px_rgba(0,0,0,0.02)] h-fit sticky top-0">
-                    <div className="p-6 md:p-8">
-                        <div className="flex justify-between items-start mb-8">
-                            <div>
-                                <h4 className="text-xl font-bold text-[#221C1D]">Order {selectedOrder.id.slice(-6).toUpperCase()}</h4>
-                                <p className="text-xs text-stone-400">Placed on {selectedOrder.date} at {selectedOrder.time}</p>
-                            </div>
-                        </div>
-
-                        <div className="mb-10">
-                            <h6 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-6">Journey Timeline</h6>
-                            <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[2px] before:bg-stone-50">
-                                <div className="relative pl-8">
-                                    <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white shadow-sm z-10 ${selectedOrder.status !== 'Pending' ? 'bg-[#F2A600]' : 'bg-stone-200'}`} />
-                                    <p className="text-xs font-bold text-[#221C1D]">Order Received</p>
-                                    <p className="text-[10px] text-stone-400">{selectedOrder.date}, {selectedOrder.time}</p>
-                                </div>
-                                <div className="relative pl-8">
-                                    <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white z-10 ${['Processing', 'Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200'}`} />
-                                    <p className="text-xs font-bold text-[#221C1D]">Processing Fulfillment</p>
-                                    <p className="text-[10px] text-stone-400 italic">{selectedOrder.status === 'Processing' ? 'In Progress' : ['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'Completed' : 'Awaiting Action'}</p>
-                                </div>
-                                <div className="relative pl-8">
-                                    <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white z-10 ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200 opacity-40'}`} />
-                                    <p className={`text-xs font-bold ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'text-[#221C1D]' : 'text-stone-400'}`}>Shipped</p>
-                                    <p className="text-[10px] text-stone-400">{selectedOrder.status === 'Shipped' || selectedOrder.status === 'Delivered' ? 'Sent via Global Logistics' : 'In Queue'}</p>
+                    {selectedOrder ? (
+                        <div className="p-6 md:p-8">
+                            <div className="flex justify-between items-start mb-8">
+                                <div>
+                                    <h4 className="text-xl font-bold text-[#221C1D]">Order {selectedOrder.id.slice(-6).toUpperCase()}</h4>
+                                    <p className="text-xs text-stone-400">Placed on {selectedOrder.date} at {selectedOrder.time}</p>
                                 </div>
                             </div>
-                        </div>
 
-                        {selectedOrder.items && selectedOrder.items.length > 0 && (
                             <div className="mb-10">
-                                <h6 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-6">Order Items</h6>
-                                <div className="space-y-4">
-                                    {selectedOrder.items.map((item, idx) => (
-                                        <div key={idx} className="flex justify-between items-center text-xs">
-                                            <div className="flex-1 min-w-0 pr-4">
-                                                <p className="font-bold text-[#221C1D] truncate">{item.name}</p>
-                                                <p className="text-[9px] text-stone-400 uppercase">Qty: {item.quantity}</p>
+                                <h6 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-6">Journey Timeline</h6>
+                                <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[2px] before:bg-stone-50">
+                                    <div className="relative pl-8">
+                                        <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white shadow-sm z-10 ${selectedOrder.status !== 'Pending' ? 'bg-[#F2A600]' : 'bg-stone-200'}`} />
+                                        <p className="text-xs font-bold text-[#221C1D]">Order Received</p>
+                                        <p className="text-[10px] text-stone-400">{selectedOrder.date}, {selectedOrder.time}</p>
+                                    </div>
+                                    <div className="relative pl-8">
+                                        <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white z-10 ${['Processing', 'Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200'}`} />
+                                        <p className="text-xs font-bold text-[#221C1D]">Processing Fulfillment</p>
+                                        <p className="text-[10px] text-stone-400 italic">{selectedOrder.status === 'Processing' ? 'In Progress' : ['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'Completed' : 'Awaiting Action'}</p>
+                                    </div>
+                                    <div className="relative pl-8">
+                                        <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white z-10 ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200 opacity-40'}`} />
+                                        <p className={`text-xs font-bold ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'text-[#221C1D]' : 'text-stone-400'}`}>Shipped</p>
+                                        <p className="text-[10px] text-stone-400">{selectedOrder.status === 'Shipped' || selectedOrder.status === 'Delivered' ? 'Sent via Global Logistics' : 'In Queue'}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {selectedOrder.items && selectedOrder.items.length > 0 && (
+                                <div className="mb-10">
+                                    <h6 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-6">Order Items</h6>
+                                    <div className="space-y-4">
+                                        {selectedOrder.items.map((item, idx) => (
+                                            <div key={idx} className="flex justify-between items-center text-xs">
+                                                <div className="flex-1 min-w-0 pr-4">
+                                                    <p className="font-bold text-[#221C1D] truncate">{item.name}</p>
+                                                    <p className="text-[9px] text-stone-400 uppercase">Qty: {item.quantity}</p>
+                                                </div>
+                                                <p className="font-bold text-[#221C1D]">GH₵{(item.price * item.quantity).toFixed(2)}</p>
                                             </div>
-                                            <p className="font-bold text-[#221C1D]">GH₵{(item.price * item.quantity).toFixed(2)}</p>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        <div className="mb-10 p-5 bg-[#FDFCFB] border border-stone-50 rounded-2xl">
-                            <div className="flex gap-4 mb-5">
-                                <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-xs font-bold text-stone-500 uppercase">
-                                    {selectedOrder.customerName.split(' ').map(n => n[0]).join('')}
+                            <div className="mb-10 p-5 bg-[#FDFCFB] border border-stone-50 rounded-2xl">
+                                <div className="flex gap-4 mb-5">
+                                    <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-xs font-bold text-stone-500 uppercase">
+                                        {selectedOrder.customerName.split(' ').map(n => n[0]).join('')}
+                                    </div>
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-bold text-[#221C1D] truncate">{selectedOrder.customerName}</p>
+                                        <p className="text-[10px] text-stone-400">{selectedOrder.paymentMethod} • GH₵{selectedOrder.total.toFixed(2)}</p>
+                                    </div>
                                 </div>
-                                <div className="min-w-0">
-                                    <p className="text-sm font-bold text-[#221C1D] truncate">{selectedOrder.customerName}</p>
-                                    <p className="text-[10px] text-stone-400">{selectedOrder.paymentMethod} • GH₵{selectedOrder.total.toFixed(2)}</p>
+                                <div className="grid grid-cols-1 gap-6">
+                                    <div>
+                                        <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Shipping Address</p>
+                                        <p className="text-[10px] text-stone-600 leading-relaxed italic">
+                                            {selectedOrder.shippingAddress}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Contact</p>
+                                        <p className="text-[10px] text-stone-600 truncate">{selectedOrder.customerEmail}</p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="grid grid-cols-1 gap-6">
-                                <div>
-                                    <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Shipping Address</p>
-                                    <p className="text-[10px] text-stone-600 leading-relaxed italic">
-                                        {selectedOrder.shippingAddress}
-                                    </p>
+
+                            <div className="pt-8 border-t border-stone-100 mt-8">
+                                <div className="flex justify-between items-center mb-6">
+                                    <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Action Center</span>
+                                    <span className="text-xl font-bold text-[#221C1D]">GH₵{selectedOrder.total.toFixed(2)}</span>
                                 </div>
-                                <div>
-                                    <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Contact</p>
-                                    <p className="text-[10px] text-stone-600 truncate">{selectedOrder.customerEmail}</p>
+                                <div className="flex flex-col gap-3">
+                                    {selectedOrder.status === 'Pending' && (
+                                        <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Processing')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#221C1D] text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors shadow-sm">
+                                            Mark as Processing
+                                        </button>
+                                    )}
+                                    {selectedOrder.status === 'Processing' && (
+                                        <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Shipped')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#F2A600] text-black rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#D49100] transition-colors shadow-sm">
+                                            Dispatch Order
+                                        </button>
+                                    )}
+                                    {selectedOrder.status === 'Shipped' && (
+                                        <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Delivered')} className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition-colors shadow-sm">
+                                            Confirm Delivery
+                                        </button>
+                                    )}
+                                    <button className="w-full flex items-center justify-center gap-2 py-3 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-400 uppercase tracking-widest hover:bg-stone-50 transition-colors">
+                                        <span className="material-symbols-outlined text-lg">print</span>
+                                        Manifest
+                                    </button>
                                 </div>
                             </div>
                         </div>
-
-                        <div className="pt-8 border-t border-stone-100 mt-8">
-                            <div className="flex justify-between items-center mb-6">
-                                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Action Center</span>
-                                <span className="text-xl font-bold text-[#221C1D]">GH₵{selectedOrder.total.toFixed(2)}</span>
+                    ) : (
+                        <div className="p-12 text-center">
+                            <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-200">
+                                <span className="material-symbols-outlined text-3xl">receipt_long</span>
                             </div>
-                            <div className="flex flex-col gap-3">
-                                {selectedOrder.status === 'Pending' && (
-                                    <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Processing')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#221C1D] text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors shadow-sm">
-                                        Mark as Processing
-                                    </button>
-                                )}
-                                {selectedOrder.status === 'Processing' && (
-                                    <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Shipped')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#F2A600] text-black rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#D49100] transition-colors shadow-sm">
-                                        Dispatch Order
-                                    </button>
-                                )}
-                                {selectedOrder.status === 'Shipped' && (
-                                    <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Delivered')} className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition-colors shadow-sm">
-                                        Confirm Delivery
-                                    </button>
-                                )}
-                                <button className="w-full flex items-center justify-center gap-2 py-3 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-400 uppercase tracking-widest hover:bg-stone-50 transition-colors">
-                                    <span className="material-symbols-outlined text-lg">print</span>
-                                    Manifest
-                                </button>
-                            </div>
+                            <h4 className="text-lg font-bold text-[#221C1D] mb-2 uppercase tracking-widest">No Selection</h4>
+                            <p className="text-xs text-stone-400 leading-relaxed italic">Select an order from the archive to perform fulfillment rituals.</p>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
         </AdminLayout>
