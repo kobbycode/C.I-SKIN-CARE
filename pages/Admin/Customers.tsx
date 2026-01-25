@@ -27,17 +27,71 @@ const Customers: React.FC = () => {
 
             let matchesTab = true;
             if (activeFilter === 'VIP') matchesTab = u.points > 1000;
-            // 'New' could be based on registration date, for now we just show all
+            if (activeFilter === 'New') {
+                const joinDate = new Date(u.joinedDate);
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                matchesTab = joinDate >= thirtyDaysAgo;
+            }
 
             return matchesSearch && matchesSkin && matchesTab;
         });
     }, [allUsers, searchQuery, activeSkinFilter, activeFilter]);
 
-    const stats = useMemo(() => [
-        { label: 'Total Customers', value: allUsers.length.toLocaleString(), trend: '+0%', sub: 'Global clientele' },
-        { label: 'Avg. LTV', value: 'GH₵' + (allUsers.length ? (allUsers.reduce((sum, u) => sum + getUserLTV(u.email), 0) / allUsers.length).toFixed(2) : '0'), trend: '+0%', sub: 'Lifetime average' },
-        { label: 'Loyalty Members', value: allUsers.filter(u => u.points > 0).length.toString(), trend: 'Active', sub: 'In ritual program' }
-    ], [allUsers, orders]);
+    const stats = useMemo(() => {
+        const now = new Date();
+        const thisMonth = now.getMonth();
+        const thisYear = now.getFullYear();
+
+        const usersThisMonth = allUsers.filter(u => {
+            const d = new Date(u.joinedDate);
+            return d.getMonth() === thisMonth && d.getFullYear() === thisYear;
+        }).length;
+
+        const usersLastMonth = allUsers.filter(u => {
+            const d = new Date(u.joinedDate);
+            // Handle January
+            const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+            const lastYear = thisMonth === 0 ? thisYear - 1 : thisYear;
+            return d.getMonth() === lastMonth && d.getFullYear() === lastYear;
+        }).length;
+
+        // Total Customers Trend
+        const customerTrend = usersLastMonth === 0
+            ? (usersThisMonth > 0 ? '+100%' : '0%')
+            : `${(((usersThisMonth - usersLastMonth) / usersLastMonth) * 100).toFixed(1)}%`;
+
+        // Avg LTV
+        const totalLTV = allUsers.reduce((sum, u) => sum + getUserLTV(u.email), 0);
+        const avgLTV = allUsers.length ? totalLTV / allUsers.length : 0;
+
+        // Loyalty members trend (Active if > 0)
+        const loyaltyMembers = allUsers.filter(u => u.points > 0).length;
+
+        return [
+            {
+                label: 'Total Customers',
+                value: allUsers.length.toLocaleString(),
+                trend: customerTrend,
+                sub: `${usersThisMonth} new this month`,
+                trendUp: usersThisMonth >= usersLastMonth
+            },
+            {
+                label: 'Avg. LTV',
+                value: 'GH₵' + avgLTV.toFixed(2),
+                trend: '+0%',
+                sub: 'Across all clientele',
+                trendUp: true
+            },
+            {
+                label: 'Loyalty Members',
+                value: loyaltyMembers.toString(),
+                trend: loyaltyMembers > 0 ? 'Active' : 'Neutral',
+                sub: 'In ritual program',
+                trendUp: loyaltyMembers > 0
+            }
+        ];
+    }, [allUsers, orders]);
 
     const selectedUser = useMemo(() => {
         if (filteredUsers.length > 0) {
@@ -76,7 +130,7 @@ const Customers: React.FC = () => {
                             <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)]">
                                 <div className="flex justify-between items-start mb-2">
                                     <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest">{stat.label}</p>
-                                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-green-50 text-green-600">
+                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${stat.trendUp ? 'bg-green-50 text-green-600' : 'bg-stone-50 text-stone-400'}`}>
                                         {stat.trend}
                                     </span>
                                 </div>

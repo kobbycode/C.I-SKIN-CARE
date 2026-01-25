@@ -20,11 +20,30 @@ const Dashboard: React.FC = () => {
     const ordersToday = orders.filter(o => o.date === new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })).length;
     const pendingReviews = reviews.filter(r => r.status === 'Pending').length;
 
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const lastMonth = thisMonth === 0 ? 11 : thisMonth - 1;
+
+    // Revenue Trend (Simplified: vs last month)
+    const thisMonthRev = orders.filter(o => new Date(o.date).getMonth() === thisMonth).reduce((sum, o) => sum + o.total, 0);
+    const lastMonthRev = orders.filter(o => new Date(o.date).getMonth() === lastMonth).reduce((sum, o) => sum + o.total, 0);
+    const revTrend = lastMonthRev === 0 ? (thisMonthRev > 0 ? '+100%' : '0%') : `${(((thisMonthRev - lastMonthRev) / lastMonthRev) * 100).toFixed(1)}%`;
+
+    // Orders Trend
+    const thisMonthOrders = orders.filter(o => new Date(o.date).getMonth() === thisMonth).length;
+    const lastMonthOrders = orders.filter(o => new Date(o.date).getMonth() === lastMonth).length;
+    const orderTrend = lastMonthOrders === 0 ? (thisMonthOrders > 0 ? '+100%' : '0%') : `${(((thisMonthOrders - lastMonthOrders) / lastMonthOrders) * 100).toFixed(1)}%`;
+
+    // Customers Trend
+    const thisMonthUsers = allUsers.filter(u => new Date(u.joinedDate).getMonth() === thisMonth).length;
+    const lastMonthUsers = allUsers.filter(u => new Date(u.joinedDate).getMonth() === lastMonth).length;
+    const userTrend = lastMonthUsers === 0 ? (thisMonthUsers > 0 ? '+100%' : '0%') : `${(((thisMonthUsers - lastMonthUsers) / lastMonthUsers) * 100).toFixed(1)}%`;
+
     return [
-      { label: 'Total Revenue', value: 'GH₵' + totalRevenue.toLocaleString(), trend: '+12.5%', icon: 'payments', trendUp: true },
-      { label: 'Orders (All Time)', value: orders.length.toString(), trend: '+5.2%', icon: 'shopping_bag', trendUp: true },
-      { label: 'Total Customers', value: allUsers.length.toString(), trend: '+3.1%', icon: 'person_add', trendUp: true },
-      { label: 'Pending Reviews', value: pendingReviews.toString(), trend: 'Urgent', icon: 'reviews', trendUp: pendingReviews > 0 }
+      { label: 'Total Revenue', value: 'GH₵' + totalRevenue.toLocaleString(), trend: revTrend, icon: 'payments', trendUp: thisMonthRev >= lastMonthRev },
+      { label: 'Orders (All Time)', value: orders.length.toString(), trend: orderTrend, icon: 'shopping_bag', trendUp: thisMonthOrders >= lastMonthOrders },
+      { label: 'Total Customers', value: allUsers.length.toString(), trend: userTrend, icon: 'person_add', trendUp: thisMonthUsers >= lastMonthUsers },
+      { label: 'Pending Reviews', value: pendingReviews.toString(), trend: pendingReviews > 0 ? 'Urgent' : 'Neutral', icon: 'reviews', trendUp: pendingReviews > 0 }
     ];
   }, [orders, allUsers, reviews]);
 
@@ -40,7 +59,7 @@ const Dashboard: React.FC = () => {
       });
       return {
         name: w,
-        revenue: weekOrders.reduce((sum, o) => sum + o.total, 0) || (i === 3 ? 0 : 2000 + (i * 500)) // Fallback for demo if no real orders in that week
+        revenue: weekOrders.reduce((sum, o) => sum + o.total, 0)
       };
     });
   }, [orders]);
@@ -54,7 +73,7 @@ const Dashboard: React.FC = () => {
         const diffDays = (now.getTime() - joinDate.getTime()) / (1000 * 3600 * 24);
         return diffDays <= (4 - i) * 7;
       });
-      return { name: w, customers: weekUsers.length || (100 + (i * 50)) };
+      return { name: w, customers: weekUsers.length };
     });
   }, [allUsers]);
 
@@ -233,7 +252,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${order.status === 'Delivered' ? 'bg-green-50 text-green-600' :
-                    order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
+                  order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'
                   }`}>
                   {order.status}
                 </span>
