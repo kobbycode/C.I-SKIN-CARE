@@ -1,7 +1,50 @@
-import React from 'react';
+import React, { useState } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
+import { useFAQs, FAQ } from '../../context/FAQContext';
+import { useNotification } from '../../context/NotificationContext';
 
 const FAQManager: React.FC = () => {
+    const { faqs, addFAQ, updateFAQ, deleteFAQ, loading } = useFAQs();
+    const { showNotification } = useNotification();
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
+    const [formData, setFormData] = useState<{
+        question: string;
+        answer: string;
+        category: string;
+        status: 'Public' | 'Draft';
+    }>({ question: '', answer: '', category: 'Safety', status: 'Draft' });
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        try {
+            if (editingFaq) {
+                await updateFAQ(editingFaq.id, formData);
+                showNotification('FAQ updated', 'success');
+            } else {
+                await addFAQ(formData);
+                showNotification('FAQ created', 'success');
+            }
+            setIsModalOpen(false);
+            setEditingFaq(null);
+            setFormData({ question: '', answer: '', category: 'Safety', status: 'Draft' });
+        } catch (error) {
+            showNotification('Operation failed', 'error');
+        }
+    };
+
+    const handleEdit = (faq: FAQ) => {
+        setEditingFaq(faq);
+        setFormData({ question: faq.question, answer: faq.answer, category: faq.category, status: faq.status });
+        setIsModalOpen(true);
+    };
+
+    const handleDelete = async (id: string) => {
+        if (window.confirm('Delete this FAQ?')) {
+            await deleteFAQ(id);
+            showNotification('FAQ deleted', 'success');
+        }
+    };
     return (
         <AdminLayout>
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
@@ -9,7 +52,9 @@ const FAQManager: React.FC = () => {
                     <h2 className="text-2xl md:text-3xl font-bold text-[#221C1D]">Knowledge Base</h2>
                     <p className="text-stone-500 text-sm md:text-base">Manage frequently asked questions and concierge support guidance.</p>
                 </div>
-                <button className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider bg-[#221C1D] text-white hover:bg-black transition-colors rounded shadow-sm">
+                <button
+                    onClick={() => { setEditingFaq(null); setFormData({ question: '', answer: '', category: 'Safety', status: 'Draft' }); setIsModalOpen(true); }}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 text-[10px] font-bold uppercase tracking-wider bg-[#221C1D] text-white hover:bg-black transition-colors rounded shadow-sm">
                     <span className="material-symbols-outlined text-sm">add</span>
                     New Question
                 </button>
@@ -19,27 +64,8 @@ const FAQManager: React.FC = () => {
                 {/* Main FAQ List */}
                 <div className="xl:col-span-8">
                     <div className="space-y-6">
-                        {[
-                            {
-                                q: "Are C.I SKIN CARE products safe for sensitive skin?",
-                                category: "Safety",
-                                status: "Public",
-                                views: "1.2k"
-                            },
-                            {
-                                q: "What is the typical shelf life of the botanical serums?",
-                                category: "Product Care",
-                                status: "Public",
-                                views: "856"
-                            },
-                            {
-                                q: "Do you use synthetic fragrances? ",
-                                category: "Ingredients",
-                                status: "Public",
-                                views: "2.1k"
-                            },
-                        ].map((faq, i) => (
-                            <div key={i} className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-all group">
+                        {faqs.length > 0 ? faqs.map((faq) => (
+                            <div key={faq.id} className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 shadow-sm hover:shadow-md transition-all group">
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex flex-wrap gap-3 items-center">
                                         <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${faq.status === 'Public' ? 'bg-green-50 text-green-600' : 'bg-stone-50 text-stone-500'}`}>
@@ -50,29 +76,32 @@ const FAQManager: React.FC = () => {
                                         </span>
                                     </div>
                                     <div className="flex gap-2">
-                                        <button className="p-2 hover:bg-stone-50 rounded-lg text-stone-200 hover:text-stone-600 transition-colors">
+                                        <button onClick={() => handleEdit(faq)} className="p-2 hover:bg-stone-50 rounded-lg text-stone-200 hover:text-stone-600 transition-colors">
                                             <span className="material-symbols-outlined text-lg">edit</span>
                                         </button>
-                                        <button className="p-2 hover:bg-stone-50 rounded-lg text-stone-200 hover:text-red-400 transition-colors">
+                                        <button onClick={() => handleDelete(faq.id)} className="p-2 hover:bg-stone-50 rounded-lg text-stone-200 hover:text-red-400 transition-colors">
                                             <span className="material-symbols-outlined text-lg">delete</span>
                                         </button>
                                     </div>
                                 </div>
                                 <h3 className="text-base md:text-lg font-bold text-[#221C1D] mb-4 group-hover:text-[#F2A600] transition-colors cursor-pointer leading-snug">
-                                    {faq.q}
+                                    {faq.question}
                                 </h3>
+                                <p className="text-xs text-stone-500 leading-relaxed mb-6">{faq.answer}</p>
                                 <div className="flex items-center gap-6 pt-6 border-t border-stone-50">
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-stone-300 text-sm">visibility</span>
-                                        <span className="text-[9px] font-bold text-stone-400">{faq.views} Reads</span>
+                                        <span className="text-[9px] font-bold text-stone-400">{faq.views.toLocaleString()} Reads</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <span className="material-symbols-outlined text-stone-300 text-sm">schedule</span>
-                                        <span className="text-[9px] font-bold text-stone-400">2d ago</span>
+                                        <span className="text-[9px] font-bold text-stone-400">Updated {new Date(faq.lastUpdated).toLocaleDateString()}</span>
                                     </div>
                                 </div>
                             </div>
-                        ))}
+                        )) : (
+                            <div className="text-center py-20 bg-white border border-dashed border-stone-200 rounded-2xl opacity-40 italic font-display uppercase tracking-widest"> No questions recorded in the archives yet. </div>
+                        )}
                     </div>
                 </div>
 
@@ -127,6 +156,68 @@ const FAQManager: React.FC = () => {
                     </section>
                 </div>
             </div>
+
+            {/* Edit/Add Modal */}
+            {isModalOpen && (
+                <div className="fixed inset-0 bg-[#221C1D]/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                    <div className="bg-white rounded-3xl w-full max-w-2xl shadow-2xl animate-in fade-in zoom-in duration-300">
+                        <div className="p-8 border-b border-stone-100 flex justify-between items-center">
+                            <h3 className="font-display text-2xl text-[#221C1D] uppercase tracking-widest">{editingFaq ? 'Edit Ritual Support' : 'New Support Entry'}</h3>
+                            <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-stone-50 rounded-full transition-colors"><span className="material-symbols-outlined text-stone-400">close</span></button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Question</label>
+                                <input
+                                    required
+                                    value={formData.question}
+                                    onChange={(e) => setFormData({ ...formData, question: e.target.value })}
+                                    className="w-full bg-stone-50 border-none rounded-xl px-5 py-4 text-sm focus:ring-2 focus:ring-[#F2A600] transition-shadow"
+                                    placeholder="Enter natural language inquiry..."
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Concierge Assessment (Answer)</label>
+                                <textarea
+                                    required
+                                    value={formData.answer}
+                                    onChange={(e) => setFormData({ ...formData, answer: e.target.value })}
+                                    className="w-full bg-stone-50 border-none rounded-xl px-5 py-4 text-sm focus:ring-2 focus:ring-[#F2A600] transition-shadow min-h-[150px] resize-none"
+                                    placeholder="Provide detailed botanical guidance..."
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Classification</label>
+                                    <select
+                                        value={formData.category}
+                                        onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                        className="w-full bg-stone-50 border-none rounded-xl px-5 py-4 text-sm focus:ring-2 focus:ring-[#F2A600] transition-shadow"
+                                    >
+                                        {['Safety', 'Product Care', 'Ingredients', 'Shipping', 'Ritual Guide'].map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Visibility</label>
+                                    <select
+                                        value={formData.status}
+                                        onChange={(e) => setFormData({ ...formData, status: e.target.value as 'Public' | 'Draft' })}
+                                        className="w-full bg-stone-50 border-none rounded-xl px-5 py-4 text-sm focus:ring-2 focus:ring-[#F2A600] transition-shadow"
+                                    >
+                                        <option value="Public">Public Access</option>
+                                        <option value="Draft">Draft Only</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="pt-6">
+                                <button type="submit" className="w-full py-4 bg-[#221C1D] text-white rounded-xl text-[10px] font-bold uppercase tracking-[0.3em] shadow-lg hover:shadow-xl hover:translate-y-[-2px] transition-all duration-300">
+                                    {editingFaq ? 'Synchronize Record' : 'Publish Archive Entry'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 };

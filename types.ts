@@ -21,6 +21,7 @@ export interface CartItem extends Product {
 
 export interface Review {
   id: string;
+  productId: string;
   author: string;
   rating: number;
   date: string;
@@ -28,4 +29,17 @@ export interface Review {
   content: string;
   verified: boolean;
   images?: string[];
+  status: 'Pending' | 'Approved' | 'Rejected';
+}
+export interface Order {
+  id: string;
+  customerName: string;
+  customerEmail: string;
+  date: string;
+  time: string;
+  status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  total: number;
+  items: CartItem[];
+  shippingAddress: string;
+  paymentMethod: string;
 }

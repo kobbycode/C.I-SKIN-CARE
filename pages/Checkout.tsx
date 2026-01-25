@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { usePaystackPayment } from 'react-paystack';
 import { useApp } from '../App';
+import { useOrders } from '../context/OrderContext';
+import { useNotification } from '../context/NotificationContext';
 
 interface CheckoutFormData {
   email: string;
@@ -18,6 +20,8 @@ interface CheckoutFormData {
 
 const Checkout: React.FC = () => {
   const { cart, clearCart } = useApp();
+  const { addOrder } = useOrders();
+  const { showNotification } = useNotification();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState(1);
@@ -69,27 +73,28 @@ const Checkout: React.FC = () => {
     });
   };
 
-  const onPaymentSuccess = (reference: any) => {
-    // Save order to localStorage
+  const onPaymentSuccess = async (reference: any) => {
     const orderSummary = {
-      orderId: paystackConfig.reference,
-      transactionReference: reference.reference,
-      items: [...cart],
-      subtotal,
-      shipping,
-      tax,
-      total,
+      customerName: `${formData.firstName} ${formData.lastName}`,
+      customerEmail: formData.email,
       date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-      customerInfo: { ...formData },
-      paymentStatus: 'Successful'
+      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      status: 'Pending' as const,
+      total,
+      items: [...cart],
+      shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
+      paymentMethod: 'Paystack'
     };
 
-    // Save to localStorage
-    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    localStorage.setItem('orders', JSON.stringify([...existingOrders, orderSummary]));
-
-    clearCart();
-    navigate('/order-confirmation', { state: { orderSummary } });
+    try {
+      const orderId = await addOrder(orderSummary);
+      showNotification('Order placed successfully!', 'success');
+      clearCart();
+      navigate('/order-confirmation', { state: { orderSummary: { ...orderSummary, id: orderId } } });
+    } catch (error) {
+      console.error(error);
+      showNotification('Failed to record order. Please contact support.', 'error');
+    }
   };
 
   const onPaymentClose = () => {

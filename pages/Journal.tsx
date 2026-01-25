@@ -1,8 +1,20 @@
-
-import React from 'react';
-import { MOCK_JOURNAL_POSTS } from '../constants';
+import React, { useState } from 'react';
+import { useJournal } from '../context/JournalContext';
 
 const Journal: React.FC = () => {
+    const { posts, loading } = useJournal();
+    const [activeCategory, setActiveCategory] = useState('All');
+
+    const filteredPosts = posts.filter(post =>
+        activeCategory === 'All' || post.category === activeCategory
+    );
+
+    if (loading) return <div className="min-h-screen bg-[#FDFCFB] pt-40 text-center font-display text-xl uppercase tracking-widest opacity-30">Accessing Archives...</div>;
+    if (posts.length === 0) return <div className="min-h-screen bg-[#FDFCFB] pt-40 text-center font-display text-xl uppercase tracking-widest opacity-30">No rituals found.</div>;
+
+    const featuredPost = filteredPosts[0] || posts[0];
+    const feedPosts = filteredPosts.length > 1 ? filteredPosts.slice(1) : (filteredPosts.length === 1 && activeCategory !== 'All' ? [] : posts.slice(1));
+
     return (
         <main className="min-h-screen bg-[#FDFCFB] pt-40 pb-24">
             {/* Header */}
@@ -22,22 +34,22 @@ const Journal: React.FC = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2">
                         <div className="aspect-[4/3] lg:aspect-auto overflow-hidden">
                             <img
-                                src={MOCK_JOURNAL_POSTS[0].image}
+                                src={featuredPost.image}
                                 alt="Featured Post"
                                 className="w-full h-full object-cover transition-transform duration-[3s] group-hover:scale-110"
                             />
                         </div>
                         <div className="p-12 lg:p-20 flex flex-col justify-center">
                             <div className="flex items-center gap-4 mb-8 text-[10px] font-black uppercase tracking-widest text-[#A68966]">
-                                <span>{MOCK_JOURNAL_POSTS[0].category}</span>
+                                <span>{featuredPost.category}</span>
                                 <span className="w-1 h-1 bg-stone-300 rounded-full"></span>
-                                <span className="text-stone-400">{MOCK_JOURNAL_POSTS[0].readTime}</span>
+                                <span className="text-stone-400">{featuredPost.readTime}</span>
                             </div>
                             <h2 className="font-display text-4xl md:text-5xl text-[#221C1D] mb-8 leading-tight hover:text-[#A68966] transition-colors line-clamp-2">
-                                {MOCK_JOURNAL_POSTS[0].title}
+                                {featuredPost.title}
                             </h2>
                             <p className="text-stone-500 font-light leading-relaxed mb-10 text-lg">
-                                {MOCK_JOURNAL_POSTS[0].excerpt}
+                                {featuredPost.excerpt}
                             </p>
                             <button className="w-fit text-[10px] font-black uppercase tracking-[0.3em] text-[#221C1D] border-b-2 border-[#A68966] pb-2 hover:opacity-70 transition-all">
                                 Read the Feature
@@ -55,15 +67,20 @@ const Journal: React.FC = () => {
                         <div className="w-12 h-1 bg-[#A68966]"></div>
                     </div>
                     <div className="flex gap-12 hidden md:flex text-[10px] font-black uppercase tracking-widest text-stone-400">
-                        <button className="text-[#221C1D]">All</button>
-                        <button className="hover:text-[#221C1D]">Education</button>
-                        <button className="hover:text-[#221C1D]">Formulation</button>
-                        <button className="hover:text-[#221C1D]">Rituals</button>
+                        {['All', 'Education', 'Formulation', 'Rituals'].map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setActiveCategory(cat)}
+                                className={`transition-all ${activeCategory === cat ? 'text-[#221C1D]' : 'hover:text-[#221C1D]'}`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
                     </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
-                    {MOCK_JOURNAL_POSTS.slice(1).map((post) => (
+                    {feedPosts.length > 0 ? feedPosts.map((post) => (
                         <article key={post.id} className="group cursor-pointer">
                             <div className="aspect-[3/2] overflow-hidden rounded-[2rem] mb-8 shadow-lg border border-stone-50">
                                 <img
@@ -89,7 +106,9 @@ const Journal: React.FC = () => {
                                 </span>
                             </div>
                         </article>
-                    ))}
+                    )) : (
+                        <div className="col-span-full py-20 text-center opacity-30 italic">No additional insights in this category yet.</div>
+                    )}
                 </div>
 
                 <div className="mt-24 text-center">

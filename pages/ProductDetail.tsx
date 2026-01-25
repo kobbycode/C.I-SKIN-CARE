@@ -3,18 +3,32 @@ import React, { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../App';
 import { useProducts } from '../context/ProductContext';
-import { MOCK_REVIEWS } from '../constants';
+import { useReviews } from '../context/ReviewContext';
+import { useNotification } from '../context/NotificationContext';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, toggleWishlist, isInWishlist } = useApp();
   const { products } = useProducts();
+  const { getApprovedReviewsByProduct, addReview } = useReviews();
+  const { showNotification } = useNotification();
+
   const [qty, setQty] = useState(1);
   const [activeImageIdx, setActiveImageIdx] = useState(0);
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  // Review Form State
+  const [reviewForm, setReviewForm] = useState({
+    author: '',
+    rating: 5,
+    title: '',
+    content: ''
+  });
 
   const product = products.find(p => p.id === id);
+  const productReviews = useMemo(() => id ? getApprovedReviewsByProduct(id) : [], [id, getApprovedReviewsByProduct]);
 
   // Logic for related products
   const relatedProducts = useMemo(() => {
@@ -26,7 +40,7 @@ const ProductDetail: React.FC = () => {
         p.tags.some(tag => product.tags.includes(tag))
       )
       .slice(0, 4); // Show up to 4 related products
-  }, [product]);
+  }, [product, products]);
 
   if (!product) {
     return (
@@ -50,13 +64,31 @@ const ProductDetail: React.FC = () => {
 
   const images = [product.image];
 
-  const handleReviewSubmit = (e: React.FormEvent) => {
+  const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setReviewSubmitted(true);
-    setTimeout(() => {
-      setShowReviewForm(false);
-      setReviewSubmitted(false);
-    }, 3000);
+    if (!id) return;
+
+    setIsSubmittingReview(true);
+    try {
+      await addReview({
+        ...reviewForm,
+        productId: id,
+        date: new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' }),
+        verified: false,
+        images: []
+      });
+      setReviewSubmitted(true);
+      showNotification('Review submitted for moderation', 'success');
+      setTimeout(() => {
+        setShowReviewForm(false);
+        setReviewSubmitted(false);
+        setReviewForm({ author: '', rating: 5, title: '', content: '' });
+      }, 3000);
+    } catch (error) {
+      showNotification('Failed to submit review', 'error');
+    } finally {
+      setIsSubmittingReview(false);
+    }
   };
 
   return (
@@ -112,7 +144,7 @@ const ProductDetail: React.FC = () => {
               <span className="material-icons text-sm">star_half</span>
             </div>
             <a href="#reviews" className="text-[10px] font-bold uppercase tracking-widest text-stone-400 hover:text-primary transition-colors">
-              ({MOCK_REVIEWS.length + 125} Reviews)
+              ({productReviews.length + 125} Reviews)
             </a>
           </div>
 
@@ -396,27 +428,58 @@ const ProductDetail: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-primary">Your Signature</label>
-                    <input required type="text" placeholder="Full Name" className="w-full bg-transparent border-b border-primary/20 focus:border-primary focus:ring-0 py-3 outline-none" />
+                    <input
+                      required
+                      type="text"
+                      value={reviewForm.author}
+                      onChange={(e) => setReviewForm({ ...reviewForm, author: e.target.value })}
+                      placeholder="Full Name"
+                      className="w-full bg-transparent border-b border-primary/20 focus:border-primary focus:ring-0 py-3 outline-none"
+                    />
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold uppercase tracking-widest text-primary">Your Assessment</label>
                     <div className="flex gap-1 py-3">
                       {[1, 2, 3, 4, 5].map(i => (
-                        <button key={i} type="button" className="material-icons text-gold text-2xl hover:scale-110 transition-transform">star</button>
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => setReviewForm({ ...reviewForm, rating: i })}
+                          className={`material-icons text-gold text-2xl hover:scale-110 transition-transform ${reviewForm.rating >= i ? 'opacity-100' : 'opacity-20'}`}
+                        >
+                          star
+                        </button>
                       ))}
                     </div>
                   </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-primary">Summary Title</label>
-                  <input required type="text" placeholder="e.g. A Transcendent Experience" className="w-full bg-transparent border-b border-primary/20 focus:border-primary focus:ring-0 py-3 outline-none" />
+                  <input
+                    required
+                    type="text"
+                    value={reviewForm.title}
+                    onChange={(e) => setReviewForm({ ...reviewForm, title: e.target.value })}
+                    placeholder="e.g. A Transcendent Experience"
+                    className="w-full bg-transparent border-b border-primary/20 focus:border-primary focus:ring-0 py-3 outline-none"
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold uppercase tracking-widest text-primary">Detailed Account</label>
-                  <textarea required placeholder="Describe your experience with this formulation..." className="w-full bg-transparent border-b border-primary/20 focus:border-primary focus:ring-0 py-3 outline-none min-h-[120px] resize-none"></textarea>
+                  <textarea
+                    required
+                    value={reviewForm.content}
+                    onChange={(e) => setReviewForm({ ...reviewForm, content: e.target.value })}
+                    placeholder="Describe your experience with this formulation..."
+                    className="w-full bg-transparent border-b border-primary/20 focus:border-primary focus:ring-0 py-3 outline-none min-h-[120px] resize-none"
+                  ></textarea>
                 </div>
-                <button type="submit" className="w-full bg-primary text-white py-5 rounded font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg hover:brightness-110 transition-all">
-                  Publish Your Ritual
+                <button
+                  type="submit"
+                  disabled={isSubmittingReview}
+                  className="w-full bg-primary text-white py-5 rounded font-bold uppercase tracking-[0.2em] text-[10px] shadow-lg hover:brightness-110 transition-all disabled:opacity-50"
+                >
+                  {isSubmittingReview ? 'Processing...' : 'Publish Your Ritual'}
                 </button>
               </form>
             )}
@@ -425,7 +488,7 @@ const ProductDetail: React.FC = () => {
 
         {/* Review List */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-24">
-          {MOCK_REVIEWS.map((review) => (
+          {productReviews.length > 0 ? productReviews.map((review) => (
             <div key={review.id} className="bg-white dark:bg-stone-900 p-8 rounded-2xl border border-primary/5 hover:border-primary/20 transition-all shadow-sm flex flex-col group">
               <div className="flex justify-between items-start mb-6">
                 <div className="flex text-gold">
@@ -448,7 +511,7 @@ const ProductDetail: React.FC = () => {
               <h3 className="font-display text-xl mb-4 italic leading-relaxed text-stone-800 dark:text-stone-200">"{review.title}"</h3>
               <p className="text-sm font-light leading-relaxed opacity-60 mb-8 flex-grow">{review.content}</p>
 
-              {review.images && (
+              {review.images && review.images.length > 0 && (
                 <div className="flex gap-3">
                   {review.images.map((img, idx) => (
                     <div key={idx} className="w-16 h-16 rounded-lg overflow-hidden border border-primary/5 grayscale hover:grayscale-0 transition-all cursor-zoom-in">
@@ -458,7 +521,9 @@ const ProductDetail: React.FC = () => {
                 </div>
               )}
             </div>
-          ))}
+          )) : (
+            <div className="col-span-full text-center py-20 opacity-30 italic"> No product assessments found for this formulation yet. </div>
+          )}
         </div>
 
         {/* Call to Action */}

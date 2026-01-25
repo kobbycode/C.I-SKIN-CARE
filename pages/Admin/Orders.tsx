@@ -1,15 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
-
-const MOCK_ORDERS = [
-    { id: '#ORD-9012', customer: 'Elena Larsson', email: 'elena.l@example.com', date: 'Oct 24, 2023', time: '10:45 AM', status: 'Processing', total: 'GH₵458.00', items: 2 },
-    { id: '#ORD-9011', customer: 'James Whittaker', email: 'j.whit@provider.net', date: 'Oct 23, 2023', time: '04:12 PM', status: 'Shipped', total: 'GH₵280.00', items: 1 },
-    { id: '#ORD-9010', customer: 'Sophia Martinez', email: 'sophia.m@gmail.com', date: 'Oct 23, 2023', time: '11:20 AM', status: 'Delivered', total: 'GH₵150.00', items: 1 }
-];
+import { useOrders } from '../../context/OrderContext';
+import { useNotification } from '../../context/NotificationContext';
 
 const Orders: React.FC = () => {
-    const [selectedOrderId, setSelectedOrderId] = useState(MOCK_ORDERS[0].id);
-    const selectedOrder = MOCK_ORDERS.find(o => o.id === selectedOrderId) || MOCK_ORDERS[0];
+    const { orders, updateOrderStatus, loading } = useOrders();
+    const { showNotification } = useNotification();
+    const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState('All Orders');
+
+    const filteredOrders = useMemo(() => {
+        if (activeTab === 'All Orders') return orders;
+        return orders.filter(o => activeTab.includes(o.status));
+    }, [orders, activeTab]);
+
+    const selectedOrder = useMemo(() => orders.find(o => o.id === selectedOrderId) || orders[0], [orders, selectedOrderId]);
+
+    const stats = useMemo(() => [
+        { label: 'Pending Shipments', value: orders.filter(o => o.status === 'Pending').length.toString(), trend: '+5%', sub: 'Immediate action' },
+        { label: 'Orders Today', value: orders.filter(o => o.date.includes(new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric' }))).length.toString(), trend: '-2%', sub: 'Updated now' },
+        { label: 'Total Volume', value: 'GH₵' + orders.reduce((sum, o) => sum + o.total, 0).toLocaleString(), trend: '+8.4%', sub: 'Cycle projection' }
+    ], [orders]);
+
+    const handleStatusUpdate = async (id: string, status: any) => {
+        try {
+            await updateOrderStatus(id, status);
+            showNotification('Order status updated', 'success');
+        } catch (error) {
+            showNotification('Update failed', 'error');
+        }
+    };
 
     return (
         <AdminLayout>
@@ -25,11 +45,7 @@ const Orders: React.FC = () => {
 
                     {/* Order Stats */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-                        {[
-                            { label: 'Pending Shipments', value: '24', trend: '+5%', sub: 'Immediate action' },
-                            { label: 'Orders Today', value: '142', trend: '-2%', sub: 'Updated 5m ago' },
-                            { label: 'Total Volume', value: 'GH₵12,450', trend: '+8.4%', sub: 'Daily projection' }
-                        ].map((stat, i) => (
+                        {stats.map((stat, i) => (
                             <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-hover hover:shadow-md">
                                 <div className="flex justify-between items-start mb-2">
                                     <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest">{stat.label}</p>
@@ -47,8 +63,12 @@ const Orders: React.FC = () => {
                     <div className="bg-white border border-stone-100 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.02)] overflow-hidden mb-8">
                         <div className="p-6 border-b border-stone-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
                             <div className="flex gap-6 overflow-x-auto pb-2 md:pb-0 scrollbar-hide border-b md:border-none border-stone-50">
-                                {['All Orders', 'Pending (12)', 'Processing (8)', 'Shipped'].map((tab, i) => (
-                                    <button key={tab} className={`text-[10px] md:text-xs font-bold uppercase tracking-widest pb-1 transition-all whitespace-nowrap ${i === 0 ? 'text-[#221C1D] border-b-2 border-[#F2A600]' : 'text-stone-400 hover:text-stone-600'}`}>
+                                {['All Orders', `Pending (${orders.filter(o => o.status === 'Pending').length})`, `Processing (${orders.filter(o => o.status === 'Processing').length})`, 'Shipped'].map((tab) => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => setActiveTab(tab)}
+                                        className={`text-[10px] md:text-xs font-bold uppercase tracking-widest pb-1 transition-all whitespace-nowrap ${activeTab === tab ? 'text-[#221C1D] border-b-2 border-[#F2A600]' : 'text-stone-400 hover:text-stone-600'}`}
+                                    >
                                         {tab}
                                     </button>
                                 ))}
@@ -63,16 +83,16 @@ const Orders: React.FC = () => {
                     {/* Orders Table */}
                     <div className="bg-white border border-stone-100 rounded-xl overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
                         <div className="md:hidden divide-y divide-stone-50">
-                            {MOCK_ORDERS.map((o, i) => (
-                                <div key={i} onClick={() => setSelectedOrderId(o.id)} className={`p-6 space-y-4 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-stone-50' : 'active:bg-stone-50'}`}>
+                            {filteredOrders.length > 0 ? filteredOrders.map((o) => (
+                                <div key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`p-6 space-y-4 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-stone-50' : 'active:bg-stone-50'}`}>
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold text-stone-500 uppercase">
-                                                {o.customer.split(' ').map(n => n[0]).join('')}
+                                                {o.customerName.split(' ').map(n => n[0]).join('')}
                                             </div>
                                             <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-bold text-[#221C1D] truncate">{o.customer}</span>
-                                                <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{o.id}</span>
+                                                <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
+                                                <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{o.id.slice(-6).toUpperCase()}</span>
                                             </div>
                                         </div>
                                         <span className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
@@ -92,7 +112,9 @@ const Orders: React.FC = () => {
                                         </button>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="p-10 text-center text-stone-400 italic">No orders found.</div>
+                            )}
                         </div>
 
                         <div className="hidden md:block overflow-x-auto">
@@ -107,17 +129,17 @@ const Orders: React.FC = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-stone-50">
-                                    {MOCK_ORDERS.map((o, i) => (
-                                        <tr key={i} onClick={() => setSelectedOrderId(o.id)} className={`hover:bg-stone-50/50 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-stone-50/30' : ''}`}>
-                                            <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D] whitespace-nowrap">{o.id}</td>
+                                    {filteredOrders.map((o) => (
+                                        <tr key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`hover:bg-stone-50/50 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-stone-50/30' : ''}`}>
+                                            <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D] whitespace-nowrap">{o.id.slice(-6).toUpperCase()}</td>
                                             <td className="px-4 md:px-6 py-5">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold text-stone-500 uppercase flex-shrink-0">
-                                                        {o.customer.split(' ').map(n => n[0]).join('')}
+                                                        {o.customerName.split(' ').map(n => n[0]).join('')}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
-                                                        <span className="text-sm font-bold text-[#221C1D] truncate">{o.customer}</span>
-                                                        <span className="text-[10px] text-stone-400 truncate">{o.email}</span>
+                                                        <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
+                                                        <span className="text-[10px] text-stone-400 truncate">{o.customerEmail}</span>
                                                     </div>
                                                 </div>
                                             </td>
@@ -127,7 +149,7 @@ const Orders: React.FC = () => {
                                                     <span className="text-[9px] text-stone-400 uppercase">{o.time}</span>
                                                 </div>
                                             </td>
-                                            <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">{o.total}</td>
+                                            <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">GH₵{o.total.toFixed(2)}</td>
                                             <td className="px-4 md:px-6 py-5">
                                                 <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
                                                     o.status === 'Shipped' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
@@ -141,7 +163,7 @@ const Orders: React.FC = () => {
                             </table>
                         </div>
                         <div className="p-6 text-center border-t border-stone-50">
-                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Showing 1-10 of 1,245 orders</p>
+                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Showing {filteredOrders.length} of {orders.length} orders</p>
                         </div>
                     </div>
                 </div>
@@ -151,7 +173,7 @@ const Orders: React.FC = () => {
                     <div className="p-6 md:p-8">
                         <div className="flex justify-between items-start mb-8">
                             <div>
-                                <h4 className="text-xl font-bold text-[#221C1D]">Order {selectedOrder.id}</h4>
+                                <h4 className="text-xl font-bold text-[#221C1D]">Order {selectedOrder.id.slice(-6).toUpperCase()}</h4>
                                 <p className="text-xs text-stone-400">Placed on {selectedOrder.date} at {selectedOrder.time}</p>
                             </div>
                         </div>
@@ -167,12 +189,12 @@ const Orders: React.FC = () => {
                                 <div className="relative pl-8">
                                     <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white z-10 ${['Processing', 'Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200'}`} />
                                     <p className="text-xs font-bold text-[#221C1D]">Processing Fulfillment</p>
-                                    <p className="text-[10px] text-stone-400 italic">{selectedOrder.status === 'Processing' ? 'In Progress - Warehouse A' : 'Completed'}</p>
+                                    <p className="text-[10px] text-stone-400 italic">{selectedOrder.status === 'Processing' ? 'In Progress' : ['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'Completed' : 'Awaiting Action'}</p>
                                 </div>
                                 <div className="relative pl-8">
                                     <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white z-10 ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200 opacity-40'}`} />
                                     <p className={`text-xs font-bold ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'text-[#221C1D]' : 'text-stone-400'}`}>Shipped</p>
-                                    <p className="text-[10px] text-stone-400">{selectedOrder.status === 'Shipped' || selectedOrder.status === 'Delivered' ? 'Sent via Global Logistics' : 'Estimated Arrival: 2 Days'}</p>
+                                    <p className="text-[10px] text-stone-400">{selectedOrder.status === 'Shipped' || selectedOrder.status === 'Delivered' ? 'Sent via Global Logistics' : 'In Queue'}</p>
                                 </div>
                             </div>
                         </div>
@@ -180,40 +202,51 @@ const Orders: React.FC = () => {
                         <div className="mb-10 p-5 bg-[#FDFCFB] border border-stone-50 rounded-2xl">
                             <div className="flex gap-4 mb-5">
                                 <div className="w-10 h-10 rounded-full bg-stone-200 flex items-center justify-center text-xs font-bold text-stone-500 uppercase">
-                                    {selectedOrder.customer.split(' ').map(n => n[0]).join('')}
+                                    {selectedOrder.customerName.split(' ').map(n => n[0]).join('')}
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-sm font-bold text-[#221C1D] truncate">{selectedOrder.customer}</p>
-                                    <p className="text-[10px] text-stone-400">Platinum Member • 12 Orders</p>
+                                    <p className="text-sm font-bold text-[#221C1D] truncate">{selectedOrder.customerName}</p>
+                                    <p className="text-[10px] text-stone-400">{selectedOrder.paymentMethod} • GH₵{selectedOrder.total.toFixed(2)}</p>
                                 </div>
                             </div>
                             <div className="grid grid-cols-1 gap-6">
                                 <div>
                                     <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Shipping Address</p>
                                     <p className="text-[10px] text-stone-600 leading-relaxed italic">
-                                        1245 Strandvägen, Stockholm, 114 56, Sweden
+                                        {selectedOrder.shippingAddress}
                                     </p>
                                 </div>
                                 <div>
                                     <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Contact</p>
-                                    <p className="text-[10px] text-stone-600 truncate">{selectedOrder.email}</p>
+                                    <p className="text-[10px] text-stone-600 truncate">{selectedOrder.customerEmail}</p>
                                 </div>
                             </div>
                         </div>
 
                         <div className="pt-8 border-t border-stone-100 mt-8">
                             <div className="flex justify-between items-center mb-6">
-                                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Total Value</span>
-                                <span className="text-xl font-bold text-[#221C1D]">{selectedOrder.total}</span>
+                                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Action Center</span>
+                                <span className="text-xl font-bold text-[#221C1D]">GH₵{selectedOrder.total.toFixed(2)}</span>
                             </div>
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <button className="flex-1 flex items-center justify-center gap-2 py-3 border border-stone-100 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-stone-50 transition-colors">
+                            <div className="flex flex-col gap-3">
+                                {selectedOrder.status === 'Pending' && (
+                                    <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Processing')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#221C1D] text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors shadow-sm">
+                                        Mark as Processing
+                                    </button>
+                                )}
+                                {selectedOrder.status === 'Processing' && (
+                                    <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Shipped')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#F2A600] text-black rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#D49100] transition-colors shadow-sm">
+                                        Dispatch Order
+                                    </button>
+                                )}
+                                {selectedOrder.status === 'Shipped' && (
+                                    <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Delivered')} className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition-colors shadow-sm">
+                                        Confirm Delivery
+                                    </button>
+                                )}
+                                <button className="w-full flex items-center justify-center gap-2 py-3 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-400 uppercase tracking-widest hover:bg-stone-50 transition-colors">
                                     <span className="material-symbols-outlined text-lg">print</span>
-                                    Label
-                                </button>
-                                <button className="flex-[1.5] flex items-center justify-center gap-2 py-3 bg-[#F2A600] text-black rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#D49100] transition-colors shadow-sm">
-                                    <span className="material-symbols-outlined text-lg">local_shipping</span>
-                                    {selectedOrder.status === 'Processing' ? 'Ship Order' : 'Track Order'}
+                                    Manifest
                                 </button>
                             </div>
                         </div>

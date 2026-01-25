@@ -8,6 +8,10 @@ import CartDrawer from './components/CartDrawer';
 import { SiteConfigProvider } from './context/SiteConfigContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ProductProvider } from './context/ProductContext';
+import { ReviewProvider } from './context/ReviewContext';
+import { OrderProvider } from './context/OrderContext';
+import { JournalProvider } from './context/JournalContext';
+import { FAQProvider } from './context/FAQContext';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
@@ -149,12 +153,20 @@ const App: React.FC = () => {
       <SiteConfigProvider>
         <NotificationProvider>
           <ProductProvider>
-            <BrowserRouter>
-              <ScrollToTop />
-              <Suspense fallback={<PageLoader />}>
-                <MainLayout />
-              </Suspense>
-            </BrowserRouter>
+            <ReviewProvider>
+              <OrderProvider>
+                <JournalProvider>
+                  <FAQProvider>
+                    <BrowserRouter>
+                      <ScrollToTop />
+                      <Suspense fallback={<PageLoader />}>
+                        <MainLayout />
+                      </Suspense>
+                    </BrowserRouter>
+                  </FAQProvider>
+                </JournalProvider>
+              </OrderProvider>
+            </ReviewProvider>
           </ProductProvider>
         </NotificationProvider>
       </SiteConfigProvider>
