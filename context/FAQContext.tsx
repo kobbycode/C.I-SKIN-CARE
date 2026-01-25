@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, doc, writeBatch, getDocs, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
 
 export interface FAQ {
     id: string;
@@ -28,51 +28,6 @@ export const FAQProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     useEffect(() => {
         const faqsRef = collection(db, 'faqs');
-
-        const seedFaqs = async () => {
-            try {
-                const snapshot = await getDocs(faqsRef);
-                if (snapshot.empty) {
-                    const batch = writeBatch(db);
-                    const mockFaqs = [
-                        {
-                            question: "Are C.I SKIN CARE products safe for sensitive skin?",
-                            answer: "All our formulations undergo rigorous dermatological testing under clinical supervision.",
-                            category: "Safety",
-                            status: "Public",
-                            views: 1200,
-                            lastUpdated: new Date().toISOString()
-                        },
-                        {
-                            question: "What is the typical shelf life of the botanical serums?",
-                            answer: "Our serums have a shelf life of 24 months unopened.",
-                            category: "Product Care",
-                            status: "Public",
-                            views: 856,
-                            lastUpdated: new Date().toISOString()
-                        },
-                        {
-                            question: "Do you use synthetic fragrances? ",
-                            answer: "No. Our scents are derived naturally from botanical extracts and essential oils.",
-                            category: "Ingredients",
-                            status: "Public",
-                            views: 2100,
-                            lastUpdated: new Date().toISOString()
-                        }
-                    ];
-
-                    mockFaqs.forEach(f => {
-                        const ref = doc(faqsRef);
-                        batch.set(ref, { ...f, id: ref.id });
-                    });
-                    await batch.commit();
-                }
-            } catch (error) {
-                console.error("Error seeding FAQs:", error);
-            }
-        };
-
-        seedFaqs();
 
         const unsubscribe = onSnapshot(faqsRef, (snapshot) => {
             const items: FAQ[] = [];

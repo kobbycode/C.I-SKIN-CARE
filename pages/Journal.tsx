@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useJournal } from '../context/JournalContext';
 
 const Journal: React.FC = () => {
@@ -30,7 +31,7 @@ const Journal: React.FC = () => {
 
             {/* Featured Post */}
             <section className="max-w-7xl mx-auto px-6 mb-32">
-                <div className="relative group cursor-pointer overflow-hidden rounded-[3rem] shadow-2xl border border-stone-100 bg-white">
+                <Link to={`/journal/${featuredPost.id}`} className="relative group cursor-pointer overflow-hidden rounded-[3rem] shadow-2xl border border-stone-100 bg-white block">
                     <div className="grid grid-cols-1 lg:grid-cols-2">
                         <div className="aspect-[4/3] lg:aspect-auto overflow-hidden">
                             <img
@@ -51,12 +52,12 @@ const Journal: React.FC = () => {
                             <p className="text-stone-500 font-light leading-relaxed mb-10 text-lg">
                                 {featuredPost.excerpt}
                             </p>
-                            <button className="w-fit text-[10px] font-black uppercase tracking-[0.3em] text-[#221C1D] border-b-2 border-[#A68966] pb-2 hover:opacity-70 transition-all">
+                            <span className="w-fit text-[10px] font-black uppercase tracking-[0.3em] text-[#221C1D] border-b-2 border-[#A68966] pb-2 hover:opacity-70 transition-all">
                                 Read the Feature
-                            </button>
+                            </span>
                         </div>
                     </div>
-                </div>
+                </Link>
             </section>
 
             {/* Latest Feed */}
@@ -81,7 +82,7 @@ const Journal: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12">
                     {feedPosts.length > 0 ? feedPosts.map((post) => (
-                        <article key={post.id} className="group cursor-pointer">
+                        <Link key={post.id} to={`/journal/${post.id}`} className="group cursor-pointer">
                             <div className="aspect-[3/2] overflow-hidden rounded-[2rem] mb-8 shadow-lg border border-stone-50">
                                 <img
                                     src={post.image}
@@ -105,7 +106,7 @@ const Journal: React.FC = () => {
                                     Read Article <span className="material-symbols-outlined text-sm">arrow_forward</span>
                                 </span>
                             </div>
-                        </article>
+                        </Link>
                     )) : (
                         <div className="col-span-full py-20 text-center opacity-30 italic">No additional insights in this category yet.</div>
                     )}

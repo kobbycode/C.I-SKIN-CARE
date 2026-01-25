@@ -2,12 +2,17 @@ import React, { useState } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useJournal, JournalPost } from '../../context/JournalContext';
 import { useNotification } from '../../context/NotificationContext';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../../firebaseConfig';
 
 const JournalManager: React.FC = () => {
     const { posts, addPost, updatePost, deletePost, loading } = useJournal();
     const { showNotification } = useNotification();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingPost, setEditingPost] = useState<JournalPost | null>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const fileInputRef = React.useRef<HTMLInputElement>(null);
     const [formData, setFormData] = useState<Omit<JournalPost, 'id'>>({
         title: '',
         category: 'Rituals',
@@ -77,6 +82,36 @@ const JournalManager: React.FC = () => {
                 showNotification('Deletion failed', 'error');
             }
         }
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsUploading(true);
+        setUploadProgress(0);
+
+        const storageRef = ref(storage, `journal/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setUploadProgress(progress);
+            },
+            (error) => {
+                console.error("Upload failed:", error);
+                showNotification('Upload failed. Please try again.', 'error');
+                setIsUploading(false);
+            },
+            async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                setFormData({ ...formData, image: downloadURL });
+                setIsUploading(false);
+                setUploadProgress(0);
+                showNotification('Image uploaded successfully!', 'success');
+            }
+        );
     };
 
     if (loading) return <AdminLayout><div className="p-20 text-center opacity-30">Loading Archives...</div></AdminLayout>;
@@ -161,14 +196,48 @@ const JournalManager: React.FC = () => {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Featured Image URL</label>
-                                <input
-                                    required
-                                    value={formData.image}
-                                    onChange={e => setFormData({ ...formData, image: e.target.value })}
-                                    className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold"
-                                    placeholder="https://..."
-                                />
+                                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Featured Image</label>
+                                {formData.image && (
+                                    <div className="w-full aspect-video rounded-xl overflow-hidden border border-stone-100 bg-stone-50">
+                                        <img src={formData.image} className="w-full h-full object-cover" alt="Preview" />
+                                    </div>
+                                )}
+                                <div className="flex gap-2">
+                                    <input
+                                        value={formData.image}
+                                        onChange={e => setFormData({ ...formData, image: e.target.value })}
+                                        className="flex-1 bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-gold"
+                                        placeholder="Paste image URL or upload from device"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        disabled={isUploading}
+                                        className="px-4 py-3 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors flex items-center justify-center min-w-[48px]"
+                                        title="Upload from device"
+                                    >
+                                        {isUploading ? (
+                                            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
+                                        ) : (
+                                            <span className="material-symbols-outlined text-stone-500">upload_file</span>
+                                        )}
+                                    </button>
+                                    <input
+                                        type="file"
+                                        ref={fileInputRef}
+                                        onChange={handleImageUpload}
+                                        className="hidden"
+                                        accept="image/*"
+                                    />
+                                </div>
+                                {isUploading && (
+                                    <div className="w-full bg-stone-100 rounded-full h-1 overflow-hidden">
+                                        <div
+                                            className="bg-primary h-full transition-all duration-300"
+                                            style={{ width: `${uploadProgress}%` }}
+                                        ></div>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2">

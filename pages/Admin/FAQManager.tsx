@@ -18,6 +18,13 @@ const FAQManager: React.FC = () => {
     const metrics = useMemo(() => {
         const activeQs = faqs.length;
         const totalHits = faqs.reduce((sum, f) => sum + (f.views || 0), 0);
+        const publicFaqs = faqs.filter(f => f.status === 'Public');
+
+        // Calculate self-service score: percentage of public FAQs with views
+        const faqsWithViews = publicFaqs.filter(f => (f.views || 0) > 0).length;
+        const selfServiceScore = publicFaqs.length > 0
+            ? Math.round((faqsWithViews / publicFaqs.length) * 100)
+            : 0;
 
         // Calculate category counts
         const catMap: Record<string, number> = {};
@@ -28,7 +35,7 @@ const FAQManager: React.FC = () => {
         const categoryList = Object.entries(catMap).map(([name, count]) => ({ name, count }))
             .sort((a, b) => b.count - a.count);
 
-        return { activeQs, totalHits, categoryList };
+        return { activeQs, totalHits, selfServiceScore, categoryList };
     }, [faqs]);
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -129,10 +136,15 @@ const FAQManager: React.FC = () => {
                             <div>
                                 <div className="flex justify-between mb-2">
                                     <p className="text-[9px] font-bold text-stone-400 uppercase">Self-Service Score</p>
-                                    <p className="text-[9px] font-bold text-green-600">84%</p>
+                                    <p className={`text-[9px] font-bold ${metrics.selfServiceScore >= 70 ? 'text-green-600' : metrics.selfServiceScore >= 40 ? 'text-amber-600' : 'text-red-600'}`}>
+                                        {metrics.selfServiceScore}%
+                                    </p>
                                 </div>
                                 <div className="w-full h-1.5 bg-stone-50 rounded-full overflow-hidden">
-                                    <div className="h-full bg-green-500 w-[84%] shadow-[0_0_8px_rgba(34,197,94,0.3)]" />
+                                    <div
+                                        className={`h-full ${metrics.selfServiceScore >= 70 ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.3)]' : metrics.selfServiceScore >= 40 ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]' : 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.3)]'}`}
+                                        style={{ width: `${metrics.selfServiceScore}%` }}
+                                    />
                                 </div>
                             </div>
                             <div className="grid grid-cols-2 gap-4 pt-4">
@@ -141,7 +153,11 @@ const FAQManager: React.FC = () => {
                                     <p className="text-[8px] font-black text-stone-400 uppercase tracking-widest">Active Qs</p>
                                 </div>
                                 <div className="p-4 bg-stone-50 rounded-xl border border-stone-100/50">
-                                    <p className="text-xl font-bold text-[#221C1D]">{(metrics.totalHits / 1000).toFixed(1)}k</p>
+                                    <p className="text-xl font-bold text-[#221C1D]">
+                                        {metrics.totalHits >= 1000
+                                            ? `${(metrics.totalHits / 1000).toFixed(1)}k`
+                                            : metrics.totalHits.toLocaleString()}
+                                    </p>
                                     <p className="text-[8px] font-black text-stone-400 uppercase tracking-widest">Global Hits</p>
                                 </div>
                             </div>
