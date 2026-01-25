@@ -151,7 +151,7 @@ const SiteConfigContext = createContext<SiteConfigContextType | undefined>(undef
 export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [siteConfig, setSiteConfig] = useState<SiteConfig>(() => {
         try {
-            const savedConfig = localStorage.getItem('siteConfig');
+            const savedConfig = localStorage.getItem('siteConfig_v1');
             return savedConfig ? JSON.parse(savedConfig) : defaultSiteConfig;
         } catch (error) {
             console.error("Failed to load site config from local storage", error);
@@ -161,7 +161,7 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
 
     useEffect(() => {
         try {
-            localStorage.setItem('siteConfig', JSON.stringify(siteConfig));
+            localStorage.setItem('siteConfig_v1', JSON.stringify(siteConfig));
         } catch (error) {
             console.error("Failed to save site config to local storage", error);
         }
