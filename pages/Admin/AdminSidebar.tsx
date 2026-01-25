@@ -73,10 +73,12 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onMobileClose }) => {
           </Link>
 
           <div className="pt-6 border-t border-stone-800 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-cover bg-center" style={{ backgroundImage: "url('/assets/customer-portrait.png')" }}></div>
+            <div className="w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center text-stone-500">
+              <span className="material-symbols-outlined text-lg">account_circle</span>
+            </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-bold truncate">Elena Rossi</p>
-              <p className="text-[10px] text-stone-500 uppercase truncate">Store Manager</p>
+              <p className="text-xs font-bold truncate">System Admin</p>
+              <p className="text-[9px] text-stone-600 uppercase truncate">Access Level 1</p>
             </div>
           </div>
         </div>
