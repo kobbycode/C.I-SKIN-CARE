@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SocialIcon from '../../components/SocialIcon';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useSiteConfig, SiteConfig } from '../../context/SiteConfigContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -313,8 +314,8 @@ const CMSSettings: React.FC = () => {
                                 <div className="space-y-3">
                                     {formData.socialLinks.map((social, i) => (
                                         <div key={social.platform} className="flex items-center gap-3">
-                                            <div className="w-9 h-9 bg-stone-50 rounded-lg flex items-center justify-center border border-stone-100 flex-shrink-0">
-                                                <span className="material-symbols-outlined text-stone-400 text-base">link</span>
+                                            <div className="w-9 h-9 bg-stone-50 rounded-lg flex items-center justify-center border border-stone-100 flex-shrink-0 text-stone-400">
+                                                <SocialIcon platform={social.platform} className="w-4 h-4" />
                                             </div>
                                             <input
                                                 value={social.url}

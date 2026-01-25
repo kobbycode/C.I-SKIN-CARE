@@ -2,20 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../App';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import SocialIcon from './SocialIcon';
 
 const Footer: React.FC = () => {
   const { toggleDarkMode, isDarkMode } = useApp();
   const { siteConfig } = useSiteConfig();
-
-  const getSocialIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'facebook': return 'facebook';
-      case 'instagram': return 'photo_camera';
-      case 'twitter': return 'flutter_dash'; // or a generic icon
-      case 'youtube': return 'smart_display';
-      default: return 'link';
-    }
-  };
 
   return (
     <footer className="bg-secondary text-white py-24 px-6 border-t border-primary/10">
@@ -34,7 +25,7 @@ const Footer: React.FC = () => {
             <p className="text-secondary-foreground/60 text-xs font-light leading-relaxed mb-10 max-w-sm">
               Crafting premium skincare solutions that merge scientific precision with the healing essence of botanical wisdom. Born in Ghana, refined for the world.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-4 flex-wrap">
               {siteConfig.socialLinks.filter(s => s.url).map(social => (
                 <a
                   key={social.platform}
@@ -43,7 +34,7 @@ const Footer: React.FC = () => {
                   rel="noopener noreferrer"
                   className="w-10 h-10 border border-primary/20 rounded-full flex items-center justify-center text-primary/60 hover:border-primary hover:text-primary transition-all duration-500 transform hover:-translate-y-1"
                 >
-                  <span className="material-symbols-outlined text-[18px]">{getSocialIcon(social.platform)}</span>
+                  <SocialIcon platform={social.platform} className="w-[18px] h-[18px]" />
                 </a>
               ))}
             </div>

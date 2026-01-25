@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import SocialIcon from '../components/SocialIcon';
 
 const Contact: React.FC = () => {
   const { siteConfig } = useSiteConfig();
@@ -13,16 +14,6 @@ const Contact: React.FC = () => {
       setIsSubmitting(false);
       setIsSubmitted(true);
     }, 1500);
-  };
-
-  const getSocialIcon = (platform: string) => {
-    switch (platform.toLowerCase()) {
-      case 'facebook': return 'facebook';
-      case 'instagram': return 'photo_camera';
-      case 'twitter': return 'flutter_dash';
-      case 'youtube': return 'play_circle';
-      default: return 'link';
-    }
   };
 
   return (
@@ -217,7 +208,7 @@ const Contact: React.FC = () => {
                   rel="noopener noreferrer"
                   className="w-12 h-12 border border-stone-200 rounded-full flex items-center justify-center text-[#A68966] hover:border-[#A68966] hover:bg-[#A68966]/5 transition-all duration-300"
                 >
-                  <span className="material-symbols-outlined text-xl">{getSocialIcon(social.platform)}</span>
+                  <SocialIcon platform={social.platform} className="w-[18px] h-[18px]" />
                 </a>
               ))}
             </div>
