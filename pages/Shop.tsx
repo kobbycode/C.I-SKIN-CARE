@@ -9,7 +9,16 @@ const Shop: React.FC = () => {
   const { addToCart } = useApp();
   const { products, loading: productsLoading } = useProducts();
   const { categories: dynamicCategories, loading: categoriesLoading } = useCategories();
-  const loading = productsLoading || categoriesLoading;
+
+  // Ensure we show loading on initial mount until data arrives
+  const [hasLoadedOnce, setHasLoadedOnce] = useState(false);
+  useEffect(() => {
+    if (!productsLoading && !categoriesLoading) {
+      setHasLoadedOnce(true);
+    }
+  }, [productsLoading, categoriesLoading]);
+
+  const loading = !hasLoadedOnce || productsLoading || categoriesLoading;
   const [searchParams] = useSearchParams();
 
   // Filtering States

@@ -21,34 +21,9 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     useEffect(() => {
         const reviewsRef = collection(db, 'reviews');
 
-        // Check if we need to seed
-        const seedReviews = async () => {
-            try {
-                const snapshot = await getDocs(reviewsRef);
 
-                if (snapshot.empty) {
-                    console.log("Seeding reviews to Firestore...");
-                    const batch = writeBatch(db);
 
-                    MOCK_REVIEWS.forEach((review, index) => {
-                        const ref = doc(reviewsRef); // Auto-generate ID
-                        batch.set(ref, {
-                            ...review,
-                            id: ref.id,
-                            productId: '1', // Assumed for mock data
-                            status: 'Approved'
-                        });
-                    });
 
-                    await batch.commit();
-                    console.log("Seeding complete.");
-                }
-            } catch (error) {
-                console.error("Error seeding reviews:", error);
-            }
-        };
-
-        seedReviews();
 
         // Subscribe to all changes (for Admin)
         const unsubscribe = onSnapshot(reviewsRef, (snapshot) => {

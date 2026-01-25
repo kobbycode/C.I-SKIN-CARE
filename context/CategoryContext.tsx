@@ -28,30 +28,15 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     useEffect(() => {
         const categoriesRef = collection(db, 'categories');
 
-        const seedIfEmpty = async () => {
-            const q = query(categoriesRef);
-            const snapshot = await getDocs(q);
-            if (snapshot.empty) {
-                const batch = writeBatch(db);
-                SEED_CATEGORIES.forEach(cat => {
-                    const newDoc = doc(categoriesRef);
-                    batch.set(newDoc, { ...cat, id: newDoc.id });
-                });
-                await batch.commit();
-            }
-        };
-
-        seedIfEmpty().then(() => {
-            const unsubscribe = onSnapshot(categoriesRef, (snapshot) => {
-                const items: Category[] = [];
-                snapshot.forEach(doc => {
-                    items.push(doc.data() as Category);
-                });
-                setCategories(items.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
-                setLoading(false);
+        const unsubscribe = onSnapshot(categoriesRef, (snapshot) => {
+            const items: Category[] = [];
+            snapshot.forEach(doc => {
+                items.push(doc.data() as Category);
             });
-            return () => unsubscribe();
+            setCategories(items.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
+            setLoading(false);
         });
+        return () => unsubscribe();
     }, []);
 
     const addCategory = async (category: Omit<Category, 'id'>) => {

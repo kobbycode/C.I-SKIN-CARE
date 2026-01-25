@@ -158,29 +158,31 @@ const Home: React.FC = () => {
       )}
 
       {/* Testimonial Section */}
-      <section className="py-24 bg-stone-100 dark:bg-stone-800/50">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <span className="material-icons-outlined text-gold text-5xl mb-6">format_quote</span>
-          <div className="mb-12">
-            <p className="text-2xl md:text-3xl font-display leading-snug mb-8 italic">
-              "{siteConfig.testimonials[0]?.quote || "My skin has never felt more alive."}"
-            </p>
-            <div className="flex flex-col items-center">
-              <img
-                alt="Customer Portrait"
-                className="w-16 h-16 rounded-full object-cover mb-4"
-                src="/assets/customer-portrait.png"
-              />
-              <p className="font-semibold tracking-widest uppercase text-xs">{siteConfig.testimonials[0]?.author || "Ama O."} — Verified Buyer</p>
+      {siteConfig.testimonials && siteConfig.testimonials.length > 0 && (
+        <section className="py-24 bg-stone-100 dark:bg-stone-800/50">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <span className="material-icons-outlined text-gold text-5xl mb-6">format_quote</span>
+            <div className="mb-12">
+              <p className="text-2xl md:text-3xl font-display leading-snug mb-8 italic">
+                "{siteConfig.testimonials[0]?.quote}"
+              </p>
+              <div className="flex flex-col items-center">
+                <img
+                  alt="Customer Portrait"
+                  className="w-16 h-16 rounded-full object-cover mb-4"
+                  src="/assets/customer-portrait.png"
+                />
+                <p className="font-semibold tracking-widest uppercase text-xs">{siteConfig.testimonials[0]?.author} — Verified Buyer</p>
+              </div>
+            </div>
+            <div className="flex justify-center space-x-2">
+              {siteConfig.testimonials.map((_, i) => (
+                <span key={i} className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-gold' : 'bg-stone-300 dark:bg-stone-600'}`}></span>
+              ))}
             </div>
           </div>
-          <div className="flex justify-center space-x-2">
-            {siteConfig.testimonials.map((_, i) => (
-              <span key={i} className={`w-2 h-2 rounded-full ${i === 0 ? 'bg-gold' : 'bg-stone-300 dark:bg-stone-600'}`}></span>
-            ))}
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Newsletter Section */}
       <section className="py-24 relative overflow-hidden bg-primary dark:bg-stone-900">
