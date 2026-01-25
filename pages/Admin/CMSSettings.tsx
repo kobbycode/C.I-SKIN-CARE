@@ -9,6 +9,11 @@ const CMSSettings: React.FC = () => {
     const { showNotification } = useNotification();
     const [formData, setFormData] = useState<SiteConfig>(siteConfig);
     const [isDirty, setIsDirty] = useState(false);
+    const [activeModal, setActiveModal] = useState<{
+        type: 'hero' | 'testimonial' | 'ritual';
+        index: number;
+        data: any;
+    } | null>(null);
 
     useEffect(() => {
         setFormData(siteConfig);
@@ -65,8 +70,152 @@ const CMSSettings: React.FC = () => {
         showNotification('Site configuration published successfully!', 'success');
     };
 
+    const handleModalSave = () => {
+        if (!activeModal) return;
+        const { type, index, data } = activeModal;
+
+        setFormData(prev => {
+            const newList = [...(prev[type === 'hero' ? 'heroBanners' : type === 'testimonial' ? 'testimonials' : 'ritualGuide'] as any[])];
+            newList[index] = data;
+            return { ...prev, [type === 'hero' ? 'heroBanners' : type === 'testimonial' ? 'testimonials' : 'ritualGuide']: newList };
+        });
+        setIsDirty(true);
+        setActiveModal(null);
+    };
+
+    const CMSModal = () => {
+        if (!activeModal) return null;
+        const { type, data } = activeModal;
+
+        return (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-300">
+                <div className="bg-white dark:bg-stone-900 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300">
+                    <div className="px-8 py-6 border-b border-stone-100 dark:border-stone-800 flex justify-between items-center bg-stone-50/50 dark:bg-stone-800/50">
+                        <h4 className="text-xl font-bold text-primary dark:text-white uppercase tracking-widest">
+                            Edit {type === 'hero' ? 'Hero Slide' : type === 'testimonial' ? 'Quoate' : 'Ritual'}
+                        </h4>
+                        <button onClick={() => setActiveModal(null)} className="p-2 hover:bg-stone-200 dark:hover:bg-stone-700 rounded-full transition-colors">
+                            <span className="material-symbols-outlined">close</span>
+                        </button>
+                    </div>
+
+                    <div className="p-8 space-y-6 max-h-[70vh] overflow-y-auto custom-scrollbar">
+                        {/* Image Preview & URL */}
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">visual Asset</label>
+                            <div className="flex flex-col md:flex-row gap-6">
+                                <div className="w-full md:w-1/3 aspect-[4/3] rounded-2xl overflow-hidden border border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-800">
+                                    <img
+                                        src={data.img || data.image || '/assets/customer-portrait.png'}
+                                        className="w-full h-full object-cover"
+                                        alt="Preview"
+                                    />
+                                </div>
+                                <div className="flex-1 space-y-4">
+                                    <input
+                                        value={data.img || data.image || ''}
+                                        onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, [type === 'hero' ? 'img' : 'image']: e.target.value } })}
+                                        className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm focus:ring-2 ring-primary/20"
+                                        placeholder="Paste image URL here..."
+                                    />
+                                    <p className="text-[9px] text-stone-400 italic">Recommended: High-quality JPG or PNG. Portraits should be square.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Content Fields */}
+                        <div className="grid grid-cols-1 gap-6 pt-4 border-t border-stone-50 dark:border-stone-800">
+                            {type === 'hero' && (
+                                <>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Headline</label>
+                                        <input
+                                            value={data.title}
+                                            onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, title: e.target.value } })}
+                                            className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm font-bold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Sub-headline</label>
+                                        <input
+                                            value={data.sub}
+                                            onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, sub: e.target.value } })}
+                                            className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {type === 'testimonial' && (
+                                <>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Client Name</label>
+                                        <input
+                                            value={data.author}
+                                            onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, author: e.target.value } })}
+                                            className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm font-bold"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Assessment Quote</label>
+                                        <textarea
+                                            value={data.quote}
+                                            onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, quote: e.target.value } })}
+                                            className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm min-h-[100px] resize-none"
+                                        />
+                                    </div>
+                                </>
+                            )}
+
+                            {type === 'ritual' && (
+                                <>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Ritual Title</label>
+                                            <input
+                                                value={data.title}
+                                                onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, title: e.target.value } })}
+                                                className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm font-bold"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Associated Collection</label>
+                                            <input
+                                                value={data.collection}
+                                                onChange={(e) => setActiveModal({ ...activeModal, data: { ...data, collection: e.target.value } })}
+                                                className="w-full bg-stone-50 dark:bg-stone-800 border-none rounded-xl px-4 py-3 text-sm"
+                                            />
+                                        </div>
+                                    </div>
+                                </>
+                            )}
+                        </div>
+                    </div>
+
+                    <div className="px-8 py-6 bg-stone-50 dark:bg-stone-800/50 border-t border-stone-100 dark:border-stone-800 flex justify-end gap-3">
+                        <button
+                            onClick={() => setActiveModal(null)}
+                            className="px-6 py-2.5 text-[10px] font-bold uppercase tracking-widest text-stone-500 hover:text-stone-700 transition-colors"
+                        >
+                            Cancel
+                        </button>
+                        <button
+                            onClick={handleModalSave}
+                            className="px-8 py-2.5 bg-primary text-white text-[10px] font-bold uppercase tracking-widest rounded-xl shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all"
+                        >
+                            Confirm Changes
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+
     return (
         <AdminLayout>
+            <CMSModal />
+
             <header className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-10">
                 <div>
                     <h2 className="text-2xl md:text-3xl font-bold text-[#221C1D]">CMS & Storefront Controls</h2>
@@ -146,7 +295,16 @@ const CMSSettings: React.FC = () => {
                     <section>
                         <div className="flex justify-between items-end mb-6">
                             <h3 className="text-xl font-bold text-[#221C1D]">Hero Banners</h3>
-                            <button className="text-[10px] font-bold text-[#F2A600] uppercase tracking-wider hover:underline">Add Slide</button>
+                            <button
+                                onClick={() => {
+                                    const newHero = { title: '', sub: '', img: '/products/bel-eclat-hero.jpg', status: 'Draft' };
+                                    setFormData(prev => ({ ...prev, heroBanners: [...prev.heroBanners, newHero] }));
+                                    setActiveModal({ type: 'hero', index: formData.heroBanners.length, data: newHero });
+                                }}
+                                className="text-[10px] font-bold text-[#F2A600] uppercase tracking-wider hover:underline"
+                            >
+                                Add Slide
+                            </button>
                         </div>
                         <div className="space-y-4">
                             {(formData.heroBanners || []).map((hero, i) => (
@@ -166,17 +324,27 @@ const CMSSettings: React.FC = () => {
                                             <span className="material-symbols-outlined text-[10px] ml-1 pointer-events-none">expand_more</span>
                                         </div>
                                         <div className="flex flex-col gap-2 mb-4">
-                                            <input
-                                                value={hero.sub}
-                                                onChange={(e) => handleNestedChange('heroBanners', i, 'sub', e.target.value)}
-                                                className="bg-transparent border-b border-white/30 text-[9px] font-bold text-stone-300 uppercase tracking-[0.2em] focus:outline-none focus:border-white w-full md:w-1/2"
-                                            />
-                                            <input
-                                                value={hero.title}
-                                                onChange={(e) => handleNestedChange('heroBanners', i, 'title', e.target.value)}
-                                                className="bg-transparent border-b border-white/30 text-xl md:text-2xl font-bold text-white focus:outline-none focus:border-white w-full md:w-2/3"
-                                            />
+                                            <p className="text-[9px] font-bold text-stone-300 uppercase tracking-[0.2em]">{hero.sub}</p>
+                                            <h4 className="text-xl md:text-2xl font-bold text-white mb-4 leading-tight">{hero.title}</h4>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => setActiveModal({ type: 'hero', index: i, data: { ...hero } })}
+                                                    className="w-max bg-white/20 backdrop-blur-md border border-white/30 text-white px-4 py-2 rounded-lg text-[10px] font-bold hover:bg-white/30 transition-all flex items-center gap-2"
+                                                >
+                                                    <span className="material-symbols-outlined text-sm">edit</span> Edit Slide
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setFormData(prev => ({ ...prev, heroBanners: prev.heroBanners.filter((_, idx) => idx !== i) }));
+                                                        setIsDirty(true);
+                                                    }}
+                                                    className="w-max bg-red-500/20 backdrop-blur-md border border-red-500/30 text-red-200 px-4 py-2 rounded-lg text-[10px] font-bold hover:bg-red-500/30 transition-all"
+                                                >
+                                                    Delete
+                                                </button>
+                                            </div>
                                         </div>
+
                                     </div>
                                 </div>
                             ))}
@@ -240,22 +408,26 @@ const CMSSettings: React.FC = () => {
                                     <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Curated Quotes</p>
                                     <button
                                         onClick={() => {
-                                            setFormData(prev => ({
-                                                ...prev,
-                                                testimonials: [...(prev.testimonials || []), { author: '', quote: '', image: '/assets/customer-portrait.png' }]
-                                            }));
-                                            setIsDirty(true);
+                                            const newTestimonial = { author: '', quote: '', image: '/assets/customer-portrait.png' };
+                                            setFormData(prev => ({ ...prev, testimonials: [...(prev.testimonials || []), newTestimonial] }));
+                                            setActiveModal({ type: 'testimonial', index: (formData.testimonials || []).length, data: newTestimonial });
                                         }}
                                         className="text-[10px] font-bold text-[#F2A600] uppercase hover:underline"
                                     >
                                         + Add Quoate
                                     </button>
+
                                 </div>
                                 <div className="space-y-4">
                                     {(formData.testimonials || []).map((t, i) => (
-                                        <div key={i} className="p-4 bg-stone-50 border border-stone-100 rounded-xl flex flex-col gap-3 group hover:bg-white hover:shadow-sm transition-all duration-300 relative">
+                                        <div
+                                            key={i}
+                                            onClick={() => setActiveModal({ type: 'testimonial', index: i, data: { ...t } })}
+                                            className="p-4 bg-stone-50 border border-stone-100 rounded-xl flex flex-col gap-3 group hover:bg-white hover:shadow-xl hover:scale-[1.02] cursor-pointer transition-all duration-300 relative"
+                                        >
                                             <button
-                                                onClick={() => {
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
                                                     setFormData(prev => ({
                                                         ...prev,
                                                         testimonials: prev.testimonials.filter((_, idx) => idx !== i)
@@ -266,34 +438,19 @@ const CMSSettings: React.FC = () => {
                                             >
                                                 <span className="material-symbols-outlined text-lg">delete</span>
                                             </button>
-                                            <div className="flex gap-4 items-start">
-                                                <div className="w-12 h-12 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
+                                            <div className="flex gap-4 items-center">
+                                                <div className="w-10 h-10 rounded-full overflow-hidden border border-stone-200 flex-shrink-0">
                                                     <img src={t.image || '/assets/customer-portrait.png'} className="w-full h-full object-cover" />
                                                 </div>
-                                                <div className="flex-1 space-y-3">
-                                                    <input
-                                                        value={t.author}
-                                                        onChange={(e) => handleNestedChange('testimonials', i, 'author', e.target.value)}
-                                                        className="w-full bg-transparent text-xs font-bold text-[#221C1D] focus:outline-none border-b border-transparent focus:border-[#F2A600]"
-                                                        placeholder="Author Name"
-                                                    />
-                                                    <input
-                                                        value={t.image || ''}
-                                                        onChange={(e) => handleNestedChange('testimonials', i, 'image', e.target.value)}
-                                                        className="w-full bg-transparent text-[8px] text-stone-400 focus:outline-none border-b border-transparent focus:border-[#F2A600]"
-                                                        placeholder="Portrait Image URL"
-                                                    />
+                                                <div>
+                                                    <p className="text-xs font-bold text-[#221C1D]">{t.author || 'Anonymous Client'}</p>
+                                                    <p className="text-[9px] text-stone-400 uppercase tracking-widest">Verified Buyer</p>
                                                 </div>
                                             </div>
-                                            <textarea
-                                                value={t.quote}
-                                                onChange={(e) => handleNestedChange('testimonials', i, 'quote', e.target.value)}
-                                                className="bg-transparent text-[10px] text-stone-500 italic w-full resize-none focus:outline-none border-b border-transparent focus:border-[#F2A600]"
-                                                rows={2}
-                                                placeholder="The client's assessment of your ritual..."
-                                            />
+                                            <p className="text-[10px] text-stone-500 italic line-clamp-2">"{t.quote || 'No assessment written yet...'}"</p>
                                         </div>
                                     ))}
+
                                 </div>
                             </div>
                         </div>
@@ -305,19 +462,22 @@ const CMSSettings: React.FC = () => {
                         <div className="space-y-6">
                             {(formData.ritualGuide || []).map((ritual, rIdx) => (
                                 <div key={rIdx} className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 space-y-6">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                        <input
-                                            value={ritual.title}
-                                            onChange={(e) => handleNestedChange('ritualGuide', rIdx, 'title', e.target.value)}
-                                            className="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm font-bold text-[#221C1D]"
-                                            placeholder="Ritual Title"
-                                        />
-                                        <input
-                                            value={ritual.collection}
-                                            onChange={(e) => handleNestedChange('ritualGuide', rIdx, 'collection', e.target.value)}
-                                            className="bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm text-stone-600"
-                                            placeholder="Collection Name"
-                                        />
+                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                        <div className="flex gap-4 items-center flex-1">
+                                            <div className="w-20 h-20 rounded-xl overflow-hidden border border-stone-100 flex-shrink-0 bg-stone-50">
+                                                <img src={ritual.image} className="w-full h-full object-cover" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="text-sm font-bold text-[#221C1D]">{ritual.title}</h4>
+                                                <p className="text-[10px] text-stone-400 uppercase tracking-widest">{ritual.collection}</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            onClick={() => setActiveModal({ type: 'ritual', index: rIdx, data: { ...ritual } })}
+                                            className="px-6 py-2 border border-luxury-brown text-luxury-brown text-[10px] font-bold uppercase tracking-widest hover:bg-luxury-brown hover:text-white transition-all rounded"
+                                        >
+                                            Edit Identity
+                                        </button>
                                     </div>
                                     <div className="space-y-4">
                                         <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Ritual Steps</p>
