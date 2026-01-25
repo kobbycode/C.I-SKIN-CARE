@@ -39,9 +39,12 @@ const Customers: React.FC = () => {
         { label: 'Loyalty Members', value: allUsers.filter(u => u.points > 0).length.toString(), trend: 'Active', sub: 'In ritual program' }
     ], [allUsers, orders]);
 
-    const selectedUser = useMemo(() =>
-        allUsers.find(u => u.id === selectedUserId) || allUsers[0],
-        [allUsers, selectedUserId]);
+    const selectedUser = useMemo(() => {
+        if (filteredUsers.length > 0) {
+            return allUsers.find(u => u.id === selectedUserId) || filteredUsers[0];
+        }
+        return null;
+    }, [allUsers, filteredUsers, selectedUserId]);
 
     if (loading) return <div className="p-20 text-center uppercase tracking-widest opacity-30">Consulting Member Ledgers...</div>;
 
@@ -125,7 +128,7 @@ const Customers: React.FC = () => {
                     {/* Customer Table */}
                     <div className="bg-white border border-stone-100 rounded-xl overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
                         <div className="md:hidden divide-y divide-stone-50">
-                            {filteredUsers.map((c) => (
+                            {filteredUsers.length > 0 ? filteredUsers.map((c) => (
                                 <div key={c.id} onClick={() => setSelectedUserId(c.id)} className={`p-6 space-y-4 transition-colors cursor-pointer ${selectedUserId === c.id ? 'bg-stone-50' : 'active:bg-stone-50'}`}>
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
@@ -142,7 +145,9 @@ const Customers: React.FC = () => {
                                         </span>
                                     </div>
                                 </div>
-                            ))}
+                            )) : (
+                                <div className="p-10 text-center text-stone-400 italic">No customers found in the archive.</div>
+                            )}
                         </div>
 
                         <div className="hidden md:block overflow-x-auto">
@@ -189,24 +194,61 @@ const Customers: React.FC = () => {
                 </div>
 
                 {/* Profile Detail Sidebar */}
-                {selectedUser && (
-                    <div className="w-full xl:w-[400px] shrink-0">
-                        <div className="bg-white border border-stone-100 rounded-xl p-8 sticky top-8">
-                            <h3 className="text-xl font-bold mb-4">{selectedUser.fullName}</h3>
-                            <p className="text-stone-500 mb-6">{selectedUser.email}</p>
-                            <div className="space-y-4">
-                                <div className="flex justify-between border-b pb-2">
-                                    <span className="text-stone-400 text-sm">Skin Type</span>
-                                    <span className="font-bold text-sm">{selectedUser.skinType}</span>
+                <div className="w-full xl:w-[400px] shrink-0">
+                    {selectedUser ? (
+                        <div className="bg-white border border-stone-100 rounded-xl p-8 sticky top-8 shadow-sm">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="w-16 h-16 rounded-full bg-stone-100 flex items-center justify-center text-xl font-bold text-stone-400 shadow-inner">
+                                    {selectedUser.fullName.split(' ').map(n => n[0]).join('')}
                                 </div>
-                                <div className="flex justify-between border-b pb-2">
-                                    <span className="text-stone-400 text-sm">Points</span>
-                                    <span className="font-bold text-sm text-[#F2A600]">{selectedUser.points}</span>
+                                <div className="min-w-0">
+                                    <h3 className="text-xl font-bold text-[#221C1D] truncate">{selectedUser.fullName}</h3>
+                                    <p className="text-xs text-stone-400 italic">{selectedUser.pointsTier || 'Base Ritual'}</p>
                                 </div>
                             </div>
+
+                            <div className="space-y-6">
+                                <div className="p-4 bg-stone-50 rounded-xl space-y-3">
+                                    <div className="flex justify-between items-center border-b border-stone-100 pb-3">
+                                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Skin Profile</span>
+                                        <span className="px-2 py-0.5 bg-white rounded text-[10px] font-bold text-stone-600">{selectedUser.skinType}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Loyalty Points</span>
+                                        <span className="text-sm font-bold text-[#F2A600]">{selectedUser.points}</span>
+                                    </div>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Member Since</p>
+                                        <p className="text-xs text-stone-600 font-medium">{selectedUser.joinedDate}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Primary Email</p>
+                                        <p className="text-xs text-stone-600 font-medium truncate">{selectedUser.email}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Focus Ritual</p>
+                                        <p className="text-xs text-stone-600 font-medium">{selectedUser.focusRitual || 'Not Selected'}</p>
+                                    </div>
+                                </div>
+
+                                <button className="w-full mt-4 py-3 bg-[#221C1D] text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all shadow-sm">
+                                    View Full History
+                                </button>
+                            </div>
                         </div>
-                    </div>
-                )}
+                    ) : (
+                        <div className="bg-white border border-stone-100 rounded-xl p-12 text-center sticky top-8">
+                            <div className="w-16 h-16 bg-stone-50 rounded-full flex items-center justify-center mx-auto mb-6 text-stone-200">
+                                <span className="material-symbols-outlined text-3xl">account_circle</span>
+                            </div>
+                            <h4 className="text-lg font-bold text-[#221C1D] mb-2 uppercase tracking-widest">No Selection</h4>
+                            <p className="text-xs text-stone-400 leading-relaxed italic">Select a customer from the registry to view their skincare journey.</p>
+                        </div>
+                    )}
+                </div>
             </div>
         </AdminLayout>
     );
