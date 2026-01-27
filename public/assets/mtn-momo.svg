@@ -1,7 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="180" height="70" viewBox="0 0 180 70">
-  <rect x="0" y="0" width="180" height="70" fill="#ffd100"/>
-  <rect x="8" y="8" width="80" height="54" rx="8" fill="#000000"/>
-  <text x="48" y="40" font-size="22" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" fill="#ffffff" font-weight="700">MTN</text>
-  <text x="100" y="32" font-size="18" font-family="Montserrat, Arial, sans-serif" fill="#000000" font-weight="700">Mobile</text>
-  <text x="100" y="52" font-size="18" font-family="Montserrat, Arial, sans-serif" fill="#000000" font-weight="700">Money</text>
-</svg>

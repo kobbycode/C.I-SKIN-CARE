@@ -43,6 +43,9 @@ export interface Order {
   items: CartItem[];
   shippingAddress: string;
   paymentMethod: string;
+  deliveryNotes?: string;
+  deliveryMapLink?: string;
+  deliveryContactPhone?: string;
 }
 
 export interface Category {

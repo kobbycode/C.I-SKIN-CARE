@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70">
-  <rect x="0" y="0" width="200" height="70" fill="#ffffff"/>
-  <g transform="translate(12,18)">
-    <path d="M15 0c12 0 22 7 22 16s-10 16-22 16S-7 25 0 14C4 6 10 0 15 0z" fill="#e30613"/>
-    <text x="50" y="18" font-size="22" font-family="Montserrat, Arial, sans-serif" fill="#e30613" font-weight="700">airtel</text>
-    <text x="110" y="18" font-size="22" font-family="Montserrat, Arial, sans-serif" fill="#1f3c88" font-weight="700">tigo</text>
-    <text x="50" y="40" font-size="16" font-family="Montserrat, Arial, sans-serif" fill="#1f3c88" font-weight="700">Money</text>
-  </g>
-</svg>

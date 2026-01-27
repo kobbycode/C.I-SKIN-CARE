@@ -16,6 +16,8 @@ interface CheckoutFormData {
   state: string;
   zipCode: string;
   phone: string;
+  landmark?: string;
+  deliveryInstructions?: string;
 }
 
 const Checkout: React.FC = () => {
@@ -41,7 +43,9 @@ const Checkout: React.FC = () => {
     city: '',
     state: '',
     zipCode: '',
-    phone: ''
+    phone: '',
+    landmark: '',
+    deliveryInstructions: ''
   });
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -472,6 +476,11 @@ const Checkout: React.FC = () => {
                     <button type="button" onClick={() => setStep(1)} className="text-primary font-bold hover:underline">Change</button>
                   </div>
                   <div className="flex justify-between border-b border-primary/5 pb-2 pt-1">
+                    <span className="opacity-60">Phone</span>
+                    <span className="font-medium text-right">{formData.phone}</span>
+                    <button type="button" onClick={() => setStep(1)} className="text-primary font-bold hover:underline">Change</button>
+                  </div>
+                  <div className="flex justify-between border-b border-primary/5 pb-2 pt-1">
                     <span className="opacity-60">Ship to</span>
                     <span className="font-medium text-right truncate max-w-[200px]">{formData.address}, {formData.city}, {formData.state} {formData.zipCode}</span>
                     <button type="button" onClick={() => setStep(1)} className="text-primary font-bold hover:underline">Change</button>
@@ -490,7 +499,7 @@ const Checkout: React.FC = () => {
                       {selectedPayment === 'pay_on_delivery' ? 'Pay on Delivery' : 'Secure Payment via Paystack'}
                     </h3>
                     <div className="flex gap-2">
-                      <img src="https://paystack.com/assets/img/paystack-icon.png" alt="Paystack" className="h-6" />
+                      <img src="/assets/paystack-logo.png" alt="Paystack" className="h-6" />
                     </div>
                   </div>
                   {selectedPayment === 'pay_on_delivery' ? (
@@ -525,6 +534,39 @@ const Checkout: React.FC = () => {
                       )}
                     </div>
                   )}
+                </section>
+                <section className="pt-6 border-t border-primary/10">
+                  <h4 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Delivery Details</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <input
+                      name="landmark"
+                      value={formData.landmark || ''}
+                      onChange={handleInputChange}
+                      placeholder="Nearby landmark (optional)"
+                      className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                    <input
+                      name="deliveryInstructions"
+                      value={formData.deliveryInstructions || ''}
+                      onChange={handleInputChange}
+                      placeholder="Delivery instructions (e.g., gate code, floor)"
+                      className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
+                    />
+                  </div>
+                  <div className="pt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const query = `${formData.address}, ${formData.city}, ${formData.state}`;
+                        const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+                        window.open(url, '_blank');
+                      }}
+                      className="bg-primary text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">map</span>
+                      Track Location
+                    </button>
+                  </div>
                 </section>
 
                 <div className="pt-8 flex justify-between items-center">
