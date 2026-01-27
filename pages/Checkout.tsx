@@ -25,6 +25,13 @@ const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState(1);
+  const [selectedPayment, setSelectedPayment] = useState<'paystack' | 'mtn_momo' | 'telecel_cash' | 'airteltigo_money' | 'pay_on_delivery'>('paystack');
+  const paymentImages = {
+    telecel_cash: (import.meta.env.VITE_IMG_TELECEL_CASH as string) || '/assets/telecel-cash.svg',
+    airteltigo_money: (import.meta.env.VITE_IMG_AIRTELTIGO_MONEY as string) || '/assets/airteltigo-money.svg',
+    mtn_momo: (import.meta.env.VITE_IMG_MTN_MOMO as string) || '/assets/mtn-momo.svg',
+    pay_on_delivery: (import.meta.env.VITE_IMG_POD as string) || '/assets/cash-on-delivery.svg'
+  };
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: '',
     firstName: '',
@@ -48,6 +55,7 @@ const Checkout: React.FC = () => {
     email: formData.email,
     amount: Math.round(total * 100), // Convert to pesewas (smallest currency unit)
     publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_', // Add your Paystack public key
+    channels: selectedPayment === 'paystack' ? ['card', 'bank_transfer', 'mobile_money'] : ['mobile_money'],
     metadata: {
       custom_fields: [
         {
@@ -59,6 +67,11 @@ const Checkout: React.FC = () => {
           display_name: "Phone Number",
           variable_name: "phone_number",
           value: formData.phone
+        },
+        {
+          display_name: "Preferred Payment",
+          variable_name: "preferred_payment",
+          value: selectedPayment
         }
       ]
     }
@@ -83,7 +96,14 @@ const Checkout: React.FC = () => {
       total,
       items: [...cart],
       shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
-      paymentMethod: 'Paystack'
+      paymentMethod:
+        selectedPayment === 'mtn_momo'
+          ? 'MTN MoMo via Paystack'
+          : selectedPayment === 'telecel_cash'
+          ? 'Telecel Cash via Paystack'
+          : selectedPayment === 'airteltigo_money'
+          ? 'AirtelTigo Money via Paystack'
+          : 'Paystack'
     };
 
     try {
@@ -107,6 +127,35 @@ const Checkout: React.FC = () => {
 
     if (!formData.email || !formData.firstName || !formData.lastName) {
       alert('Please fill in all required fields');
+      return;
+    }
+
+    if (selectedPayment === 'pay_on_delivery') {
+      (async () => {
+        try {
+          setIsProcessing(true);
+          const orderSummary = {
+            customerName: `${formData.firstName} ${formData.lastName}`,
+            customerEmail: formData.email,
+            date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+            status: 'Pending' as const,
+            total,
+            items: [...cart],
+            shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
+            paymentMethod: 'Pay on Delivery'
+          };
+          const orderId = await addOrder(orderSummary);
+          showNotification('Order placed. Pay on delivery selected.', 'success');
+          clearCart();
+          navigate('/order-confirmation', { state: { orderSummary: { ...orderSummary, id: orderId } } });
+        } catch (error) {
+          console.error(error);
+          showNotification('Failed to record order. Please contact support.', 'error');
+        } finally {
+          setIsProcessing(false);
+        }
+      })();
       return;
     }
 
@@ -334,6 +383,87 @@ const Checkout: React.FC = () => {
             {/* Step 3: Payment */}
             {step === 3 && (
               <div className="animate-in slide-in-from-right duration-500">
+                <section className="mb-8">
+                  <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4 border-b border-primary/10 pb-2">Select Payment Method</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPayment('mtn_momo')}
+                      className={`p-4 rounded-lg border transition-all text-left ${selectedPayment === 'mtn_momo' ? 'border-accent bg-accent/5' : 'border-primary/10 hover:bg-primary/5'}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={paymentImages.mtn_momo}
+                            alt="MTN MoMo"
+                            className="w-12 h-12 object-contain rounded bg-white dark:bg-stone-800 border border-primary/10 p-1"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.jpg'; }}
+                          />
+                          <span className="text-xs font-black uppercase tracking-[0.2em]">MTN MoMo</span>
+                        </div>
+                        <span className="px-2 py-1 text-[9px] rounded bg-yellow-400 text-black font-bold uppercase shrink-0">MoMo</span>
+                      </div>
+                      <p className="text-[10px] mt-2 opacity-70">Pay with MTN Mobile Money. Redirects securely via Paystack.</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPayment('telecel_cash')}
+                      className={`p-4 rounded-lg border transition-all text-left ${selectedPayment === 'telecel_cash' ? 'border-accent bg-accent/5' : 'border-primary/10 hover:bg-primary/5'}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={paymentImages.telecel_cash}
+                            alt="Telecel Cash"
+                            className="w-12 h-12 object-contain rounded bg-white dark:bg-stone-800 border border-primary/10 p-1"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.jpg'; }}
+                          />
+                          <span className="text-xs font-black uppercase tracking-[0.2em]">Telecel Cash</span>
+                        </div>
+                        <span className="px-2 py-1 text-[9px] rounded bg-red-500 text-white font-bold uppercase shrink-0">Cash</span>
+                      </div>
+                      <p className="text-[10px] mt-2 opacity-70">Pay with Telecel/Vodafone Cash. Redirects securely via Paystack.</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPayment('airteltigo_money')}
+                      className={`p-4 rounded-lg border transition-all text-left ${selectedPayment === 'airteltigo_money' ? 'border-accent bg-accent/5' : 'border-primary/10 hover:bg-primary/5'}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={paymentImages.airteltigo_money}
+                            alt="AirtelTigo Money"
+                            className="w-12 h-12 object-contain rounded bg-white dark:bg-stone-800 border border-primary/10 p-1"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.jpg'; }}
+                          />
+                          <span className="text-xs font-black uppercase tracking-[0.2em]">AirtelTigo Money</span>
+                        </div>
+                        <span className="px-2 py-1 text-[9px] rounded bg-blue-500 text-white font-bold uppercase shrink-0">MoMo</span>
+                      </div>
+                      <p className="text-[10px] mt-2 opacity-70">Pay with AirtelTigo Money. Redirects securely via Paystack.</p>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedPayment('pay_on_delivery')}
+                      className={`p-4 rounded-lg border transition-all text-left ${selectedPayment === 'pay_on_delivery' ? 'border-accent bg-accent/5' : 'border-primary/10 hover:bg-primary/5'}`}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={paymentImages.pay_on_delivery}
+                            alt="Cash on Delivery"
+                            className="w-12 h-12 object-contain rounded bg-white dark:bg-stone-800 border border-primary/10 p-1"
+                            onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/logo.jpg'; }}
+                          />
+                          <span className="text-xs font-black uppercase tracking-[0.2em]">Cash On Delivery</span>
+                        </div>
+                        <span className="px-2 py-1 text-[9px] rounded bg-stone-900 text-white font-bold uppercase shrink-0">POD</span>
+                      </div>
+                      <p className="text-[10px] mt-2 opacity-70">Place order and pay when your items arrive.</p>
+                    </button>
+                  </div>
+                </section>
                 {/* Summary of Step 1 & 2 */}
                 <div className="border border-primary/10 rounded-lg p-4 mb-8 text-[11px] space-y-2">
                   <div className="flex justify-between border-b border-primary/5 pb-2">
@@ -356,26 +486,45 @@ const Checkout: React.FC = () => {
                 {/* Payment with Paystack */}
                 <section>
                   <div className="flex justify-between items-center mb-6 border-b border-primary/10 pb-2">
-                    <h3 className="text-xs font-black uppercase tracking-[0.2em]">Secure Payment via Paystack</h3>
+                    <h3 className="text-xs font-black uppercase tracking-[0.2em]">
+                      {selectedPayment === 'pay_on_delivery' ? 'Pay on Delivery' : 'Secure Payment via Paystack'}
+                    </h3>
                     <div className="flex gap-2">
                       <img src="https://paystack.com/assets/img/paystack-icon.png" alt="Paystack" className="h-6" />
                     </div>
                   </div>
-                  <div className="p-6 bg-primary/5 rounded-lg border border-primary/10">
-                    <div className="flex items-start gap-3 mb-4">
-                      <span className="material-symbols-outlined text-primary">lock</span>
-                      <div>
-                        <p className="text-sm font-bold mb-1">Secure Payment Processing</p>
-                        <p className="text-xs opacity-70">You'll be redirected to Paystack's secure payment page to complete your purchase. We accept cards, mobile money, and bank transfers.</p>
+                  {selectedPayment === 'pay_on_delivery' ? (
+                    <div className="p-6 bg-primary/5 rounded-lg border border-primary/10">
+                      <div className="flex items-start gap-3 mb-2">
+                        <span className="material-symbols-outlined text-primary">local_shipping</span>
+                        <div>
+                          <p className="text-sm font-bold mb-1">Pay on Delivery</p>
+                          <p className="text-xs opacity-70">We will process your order and you can pay when your items arrive.</p>
+                        </div>
                       </div>
+                      <p className="text-[10px] opacity-70">Cash or mobile money accepted upon delivery.</p>
                     </div>
-                    <div className="flex gap-2 flex-wrap">
-                      <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Visa</span>
-                      <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Mastercard</span>
-                      <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">MTN Mobile Money</span>
-                      <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Vodafone Cash</span>
+                  ) : (
+                    <div className="p-6 bg-primary/5 rounded-lg border border-primary/10">
+                      <div className="flex items-start gap-3 mb-4">
+                        <span className="material-symbols-outlined text-primary">lock</span>
+                        <div>
+                          <p className="text-sm font-bold mb-1">Secure Payment Processing</p>
+                          <p className="text-xs opacity-70">You'll be redirected to Paystack's secure payment page to complete your purchase. Choose card, bank transfer, or mobile money.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 flex-wrap">
+                        <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Visa</span>
+                        <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Mastercard</span>
+                        <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">MTN Mobile Money</span>
+                        <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">AirtelTigo Money</span>
+                        <span className="px-3 py-1 bg-white dark:bg-stone-800 rounded text-[9px] font-bold uppercase">Telecel Cash</span>
+                      </div>
+                      {selectedPayment !== 'paystack' && (
+                        <p className="text-[10px] mt-3 opacity-70">On Paystack, select Mobile Money and choose your network.</p>
+                      )}
                     </div>
-                  </div>
+                  )}
                 </section>
 
                 <div className="pt-8 flex justify-between items-center">
@@ -399,15 +548,17 @@ const Checkout: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        Pay GH₵{total.toFixed(2)}
+                        {selectedPayment === 'pay_on_delivery' ? 'Place Order (Pay on Delivery)' : `Pay GH₵${total.toFixed(2)}`}
                       </>
                     )}
                   </button>
                 </div>
-                <p className="text-center mt-4 text-[9px] font-bold uppercase tracking-[0.2em] opacity-40">
-                  <span className="material-icons text-[12px] align-middle mr-1">verified_user</span>
-                  Secured by Paystack • 256-bit SSL Encryption
-                </p>
+                {selectedPayment !== 'pay_on_delivery' && (
+                  <p className="text-center mt-4 text-[9px] font-bold uppercase tracking-[0.2em] opacity-40">
+                    <span className="material-icons text-[12px] align-middle mr-1">verified_user</span>
+                    Secured by Paystack • 256-bit SSL Encryption
+                  </p>
+                )}
               </div>
             )}
           </form>

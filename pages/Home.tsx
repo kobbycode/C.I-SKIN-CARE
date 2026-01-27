@@ -24,6 +24,20 @@ const Home: React.FC = () => {
     return siteConfig.heroBanners.find(h => h.status === 'Live') || siteConfig.heroBanners[0];
   }, [siteConfig.heroBanners]);
 
+  const dynamicSeasonSub = React.useMemo(() => {
+    const m = new Date().getMonth();
+    const y = new Date().getFullYear();
+    const season =
+      m === 11 || m === 0 || m === 1
+        ? 'Winter'
+        : m >= 2 && m <= 4
+        ? 'Spring'
+        : m >= 5 && m <= 7
+        ? 'Summer'
+        : 'Autumn';
+    return `${season} Collection ${y}`;
+  }, []);
+
   const isSectionActive = (name: string) => {
     // Mapping section names from CMSSettings to Home components
     // 'Featured Products Grid' -> Collections
@@ -59,7 +73,7 @@ const Home: React.FC = () => {
         </div>
         <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-center items-start px-4 sm:px-6 lg:px-8 pt-32 lg:pt-20">
           <div className="max-w-2xl text-white">
-            <h2 className="font-display text-sm md:text-lg tracking-widest mb-4 opacity-90 uppercase animate-in fade-in slide-in-from-left duration-1000">{activeHero?.sub}</h2>
+            <h2 className="font-display text-sm md:text-lg tracking-widest mb-4 opacity-90 uppercase animate-in fade-in slide-in-from-left duration-1000">{dynamicSeasonSub}</h2>
             <h1 className="text-4xl md:text-6xl lg:text-7xl font-display mb-6 md:mb-8 leading-tight animate-in fade-in slide-in-from-left duration-1000 delay-200">
               {activeHero?.title}
             </h1>

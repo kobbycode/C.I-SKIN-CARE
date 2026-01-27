@@ -35,7 +35,7 @@ const Reviews: React.FC = () => {
         ...formData,
         verified: false,
         date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-        status: 'Pending'
+        productId: 'general'
       });
 
       showNotification('Review submitted! It will appear after approval.', 'success');

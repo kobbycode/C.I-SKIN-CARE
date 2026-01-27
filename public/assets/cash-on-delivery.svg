@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="80" viewBox="0 0 220 80">
+  <rect x="0" y="0" width="220" height="80" fill="#ffffff"/>
+  <rect x="10" y="20" width="200" height="40" rx="8" fill="#673ab7"/>
+  <rect x="14" y="24" width="192" height="32" rx="6" fill="#ffeb3b"/>
+  <text x="110" y="46" font-size="20" text-anchor="middle" font-family="Montserrat, Arial, sans-serif" fill="#673ab7" font-weight="800">CASH ON DELIVERY</text>
+</svg>
