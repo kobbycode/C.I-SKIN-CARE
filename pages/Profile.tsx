@@ -3,6 +3,7 @@ import LoyaltyPortal from '../components/LoyaltyPortal';
 import { useUser } from '../context/UserContext';
 import React, { useEffect, useState } from 'react';
 import { useOrders } from '../context/OrderContext';
+import { useNotification } from '../context/NotificationContext';
 
 const Profile: React.FC = () => {
   const { toggleDarkMode, isDarkMode } = useApp();
@@ -187,6 +188,7 @@ export default Profile;
 
 const DeliveryDetailsEditor: React.FC = () => {
   const { currentUser, updateProfile } = useUser();
+  const { showNotification } = useNotification();
   const [form, setForm] = useState({
     deliveryAddress: '',
     deliveryCity: '',
@@ -194,7 +196,9 @@ const DeliveryDetailsEditor: React.FC = () => {
     deliveryZipCode: '',
     deliveryPhone: '',
     deliveryLandmark: '',
-    deliveryInstructions: ''
+    deliveryInstructions: '',
+    deliveryLocationLat: 0,
+    deliveryLocationLng: 0
   });
 
   useEffect(() => {
@@ -206,7 +210,9 @@ const DeliveryDetailsEditor: React.FC = () => {
         deliveryZipCode: currentUser.deliveryZipCode || '',
         deliveryPhone: currentUser.deliveryPhone || '',
         deliveryLandmark: currentUser.deliveryLandmark || '',
-        deliveryInstructions: currentUser.deliveryInstructions || ''
+        deliveryInstructions: currentUser.deliveryInstructions || '',
+        deliveryLocationLat: currentUser.deliveryLocationLat || 0,
+        deliveryLocationLng: currentUser.deliveryLocationLng || 0
       });
     }
   }, [currentUser]);
@@ -217,10 +223,66 @@ const DeliveryDetailsEditor: React.FC = () => {
 
   const save = async () => {
     await updateProfile(form);
+    showNotification('Profile updated successfully!', 'success');
+  };
+
+  const handleUseCurrentLocation = async () => {
+    if (!navigator.geolocation) {
+      showNotification('Geolocation is not supported by your browser.', 'error');
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(async (position) => {
+      const { latitude, longitude } = position.coords;
+
+      // Update coordinates
+      setForm(prev => ({
+        ...prev,
+        deliveryLocationLat: latitude,
+        deliveryLocationLng: longitude
+      }));
+
+      try {
+        // Reverse geocoding to find landmark/address
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+        const data = await response.json();
+        
+        if (data && data.display_name) {
+          setForm(prev => ({
+            ...prev,
+            deliveryLandmark: data.display_name,
+            // Optionally update other fields if they are empty
+            deliveryCity: prev.deliveryCity || data.address?.city || data.address?.town || data.address?.village || '',
+            deliveryState: prev.deliveryState || data.address?.state || data.address?.region || '',
+            deliveryZipCode: prev.deliveryZipCode || data.address?.postcode || ''
+          }));
+          showNotification('Location captured • Landmark filled', 'success');
+        }
+      } catch (error) {
+        console.error('Error fetching address:', error);
+        showNotification('Location captured, but failed to find address details.', 'success');
+      }
+    }, (error) => {
+      console.error('Geolocation error:', error);
+      showNotification('Unable to fetch your location. Please check permissions.', 'error');
+    }, {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    });
   };
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <button
+          onClick={handleUseCurrentLocation}
+          className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary hover:text-accent flex items-center gap-2"
+        >
+          <span className="material-symbols-outlined text-[14px]">my_location</span>
+          Use Current Location
+        </button>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <input
           name="deliveryAddress"
