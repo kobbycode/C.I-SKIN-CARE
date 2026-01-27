@@ -27,10 +27,10 @@ const Checkout: React.FC = () => {
   const [step, setStep] = useState(1);
   const [selectedPayment, setSelectedPayment] = useState<'paystack' | 'mtn_momo' | 'telecel_cash' | 'airteltigo_money' | 'pay_on_delivery'>('paystack');
   const paymentImages = {
-    telecel_cash: (import.meta.env.VITE_IMG_TELECEL_CASH as string) || '/assets/telecel-cash.svg',
-    airteltigo_money: (import.meta.env.VITE_IMG_AIRTELTIGO_MONEY as string) || '/assets/airteltigo-money.svg',
-    mtn_momo: (import.meta.env.VITE_IMG_MTN_MOMO as string) || '/assets/mtn-momo.svg',
-    pay_on_delivery: (import.meta.env.VITE_IMG_POD as string) || '/assets/cash-on-delivery.svg'
+    telecel_cash: (import.meta.env.VITE_IMG_TELECEL_CASH as string) || '/assets/telecel-cash.jpeg',
+    airteltigo_money: (import.meta.env.VITE_IMG_AIRTELTIGO_MONEY as string) || '/assets/airteltigo-money.png',
+    mtn_momo: (import.meta.env.VITE_IMG_MTN_MOMO as string) || '/assets/mtn-momo.png',
+    pay_on_delivery: (import.meta.env.VITE_IMG_POD as string) || '/assets/cash-on-delivery.jpg'
   };
   const [formData, setFormData] = useState<CheckoutFormData>({
     email: '',

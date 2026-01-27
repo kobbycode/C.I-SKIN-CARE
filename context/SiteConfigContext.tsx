@@ -74,6 +74,8 @@ export interface StoryContent {
     visionSub: string;
     founderTitle: string;
     founderText: string[];
+    founderName: string;
+    founderImage: string;
     coreValues: CoreValue[];
 }
 
@@ -205,6 +207,8 @@ const defaultStory: StoryContent = {
         "When I started C.I Skin Care, my vision was simple: to create a brand that doesn't just sell products, but offers a sanctuary of confidence for every individual.",
         "Every formulation we release is a result of years of research and a deep commitment to safety. We believe that luxury is not just a price point, but a promise of quality and a celebration of your natural beauty."
     ],
+    founderName: "Comfort I.",
+    founderImage: "/assets/founder.png",
     coreValues: [
         { title: 'Customer Oriented', desc: 'We prioritize customer satisfaction and their wellbeing above all else.', icon: 'person_heart' },
         { title: 'Integrity', desc: 'We comply with skincare guidelines and are transparent in our operations.', icon: 'verified_user' },

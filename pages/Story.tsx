@@ -9,7 +9,7 @@ const Story: React.FC = () => {
             {/* Hero Section - About Us */}
             <section className="max-w-7xl mx-auto px-6 mb-32">
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-                    <div className="order-2 lg:order-1">
+                        <div className="order-2 lg:order-1">
                         <span className="text-[10px] uppercase tracking-[0.4em] text-primary mb-6 block font-black">About Us</span>
                         <h1 className="font-display text-5xl md:text-7xl text-secondary dark:text-primary mb-8 leading-[1.1]">
                             {story.aboutTitle}
@@ -87,14 +87,14 @@ const Story: React.FC = () => {
                                 ))}
                             </div>
                             <div className="mt-12 pt-8 border-t border-white/10">
-                                <p className="font-display text-2xl text-gold mb-1">Comfort I. <span className="text-stone-400 font-sans text-[10px] uppercase tracking-widest ml-4">Creative Director & Founder</span></p>
-                                <div className="text-3xl font-display opacity-40 select-none">Comfort I.</div>
+                                <p className="font-display text-2xl text-gold mb-1">{story.founderName} <span className="text-stone-400 font-sans text-[10px] uppercase tracking-widest ml-4">Creative Director & Founder</span></p>
+                                <div className="text-3xl font-display opacity-40 select-none">{story.founderName}</div>
                             </div>
                         </div>
                         <div className="order-1 lg:order-2">
                             <div className="relative aspect-square rounded-[2rem] overflow-hidden group shadow-2xl border-4 border-gold/10">
                                 <img
-                                    src="/assets/founder.png"
+                                    src={story.founderImage || "/assets/founder.png"}
                                     alt="Comfort I. - Founder"
                                     className="w-full h-full object-cover transition-transform duration-[2s] group-hover:scale-110"
                                 />

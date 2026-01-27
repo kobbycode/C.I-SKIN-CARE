@@ -19,6 +19,7 @@ const CMSSettings: React.FC = () => {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadProgress, setUploadProgress] = useState(0);
     const fileInputRef = React.useRef<HTMLInputElement>(null);
+    const founderFileInputRef = React.useRef<HTMLInputElement>(null);
 
     useEffect(() => {
         setFormData(siteConfig);
@@ -110,6 +111,37 @@ const CMSSettings: React.FC = () => {
         });
         setIsDirty(true);
         setActiveModal(null);
+    };
+
+    const handleFounderImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIsUploading(true);
+        setUploadProgress(0);
+        const storageRef = ref(storage, `cms/founder_${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+        uploadTask.on('state_changed',
+            (snapshot) => {
+                const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                setUploadProgress(progress);
+            },
+            (error) => {
+                console.error("Upload failed:", error);
+                showNotification('Upload failed. Please try again.', 'error');
+                setIsUploading(false);
+            },
+            async () => {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                setFormData(prev => ({
+                    ...prev,
+                    story: { ...prev.story, founderImage: downloadURL }
+                }));
+                setIsUploading(false);
+                setUploadProgress(0);
+                showNotification('Founder image uploaded successfully!', 'success');
+                founderFileInputRef.current && (founderFileInputRef.current.value = '');
+            }
+        );
     };
 
     const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -645,6 +677,51 @@ const CMSSettings: React.FC = () => {
                                     onChange={(e) => handleStoryChange('founderTitle', e.target.value)}
                                     className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm font-bold"
                                 />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Founder Name</label>
+                                        <input
+                                            value={formData.story.founderName}
+                                            onChange={(e) => handleStoryChange('founderName', e.target.value)}
+                                            className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm"
+                                            placeholder="Founder Name"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Founder Image</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                value={formData.story.founderImage || ''}
+                                                onChange={(e) => handleStoryChange('founderImage', e.target.value)}
+                                                className="flex-1 bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm"
+                                                placeholder="Image URL"
+                                            />
+                                            <button
+                                                onClick={() => founderFileInputRef.current?.click()}
+                                                className="px-4 py-3 bg-stone-100 hover:bg-stone-200 rounded-xl transition-colors min-w-[48px]"
+                                                title="Upload image"
+                                                type="button"
+                                            >
+                                                <span className="material-symbols-outlined text-stone-500">upload_file</span>
+                                            </button>
+                                            <input
+                                                ref={founderFileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={handleFounderImageUpload}
+                                                className="hidden"
+                                            />
+                                        </div>
+                                        {isUploading && (
+                                            <div className="w-full bg-stone-100 rounded-full h-1 overflow-hidden">
+                                                <div className="bg-primary h-full transition-all" style={{ width: `${uploadProgress}%` }}></div>
+                                            </div>
+                                        )}
+                                        <div className="mt-3 w-24 h-24 rounded-xl overflow-hidden border border-stone-100 bg-stone-50">
+                                            <img src={formData.story.founderImage || '/assets/founder.png'} alt="Founder Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    </div>
+                                </div>
                                 {formData.story.founderText.map((para, pIdx) => (
                                     <textarea
                                         key={pIdx}
