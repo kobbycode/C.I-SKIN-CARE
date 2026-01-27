@@ -10,6 +10,7 @@ const Customers: React.FC = () => {
     const [searchQuery, setSearchQuery] = useState('');
     const [activeFilter, setActiveFilter] = useState('All');
     const [activeSkinFilter, setActiveSkinFilter] = useState('All');
+    const [isHistoryOpen, setIsHistoryOpen] = useState(false);
 
     const loading = usersLoading || ordersLoading;
 
@@ -99,6 +100,11 @@ const Customers: React.FC = () => {
         }
         return null;
     }, [allUsers, filteredUsers, selectedUserId]);
+
+    const selectedUserOrders = useMemo(() => {
+        if (!selectedUser) return [];
+        return orders.filter(o => o.customerEmail === selectedUser.email);
+    }, [orders, selectedUser]);
 
     if (loading) return <div className="p-20 text-center uppercase tracking-widest opacity-30">Consulting Member Ledgers...</div>;
 
@@ -237,7 +243,12 @@ const Customers: React.FC = () => {
                                             <td className="px-6 py-5 text-sm font-bold text-[#221C1D]">{c.points}</td>
                                             <td className="px-6 py-5 text-sm font-bold text-[#221C1D]">GH₵{getUserLTV(c.email).toFixed(2)}</td>
                                             <td className="px-6 py-5 text-right">
-                                                <button className="p-2 text-stone-300 hover:text-[#F2A600] transition-colors"><span className="material-symbols-outlined">visibility</span></button>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); setSelectedUserId(c.id); }}
+                                                    className="p-2 text-stone-300 hover:text-[#F2A600] transition-colors"
+                                                >
+                                                    <span className="material-symbols-outlined">visibility</span>
+                                                </button>
                                             </td>
                                         </tr>
                                     ))}
@@ -267,9 +278,17 @@ const Customers: React.FC = () => {
                                         <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Skin Profile</span>
                                         <span className="px-2 py-0.5 bg-white rounded text-[10px] font-bold text-stone-600">{selectedUser.skinType}</span>
                                     </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Skin Type Detail</p>
+                                        <p className="text-xs text-stone-600 font-medium">{selectedUser.skinTypeDetail || 'Not Provided'}</p>
+                                    </div>
                                     <div className="flex justify-between items-center">
                                         <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">Loyalty Points</span>
                                         <span className="text-sm font-bold text-[#F2A600]">{selectedUser.points}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                        <span className="text-[10px] font-black text-stone-400 uppercase tracking-widest">To Next Tier</span>
+                                        <span className="text-xs font-bold text-stone-600">{selectedUser.pointsToNextTier ?? 0}</span>
                                     </div>
                                 </div>
 
@@ -286,9 +305,39 @@ const Customers: React.FC = () => {
                                         <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Focus Ritual</p>
                                         <p className="text-xs text-stone-600 font-medium">{selectedUser.focusRitual || 'Not Selected'}</p>
                                     </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Focus Ritual Detail</p>
+                                        <p className="text-xs text-stone-600 font-medium">{selectedUser.focusRitualDetail || 'Not Provided'}</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Delivery Address</p>
+                                        <p className="text-xs text-stone-600 font-medium break-words">
+                                            {selectedUser.deliveryAddress || 'Not Provided'}
+                                        </p>
+                                        <p className="text-xs text-stone-600 font-medium">
+                                            {[selectedUser.deliveryCity, selectedUser.deliveryState, selectedUser.deliveryZipCode].filter(Boolean).join(', ') || ''}
+                                        </p>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Delivery Phone</p>
+                                            <p className="text-xs text-stone-600 font-medium">{selectedUser.deliveryPhone || 'Not Provided'}</p>
+                                        </div>
+                                        <div>
+                                            <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Landmark</p>
+                                            <p className="text-xs text-stone-600 font-medium">{selectedUser.deliveryLandmark || 'Not Provided'}</p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest mb-2">Delivery Instructions</p>
+                                        <p className="text-xs text-stone-600 font-medium break-words">{selectedUser.deliveryInstructions || 'Not Provided'}</p>
+                                    </div>
                                 </div>
 
-                                <button className="w-full mt-4 py-3 bg-[#221C1D] text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all shadow-sm">
+                                <button
+                                    onClick={() => setIsHistoryOpen(true)}
+                                    className="w-full mt-4 py-3 bg-[#221C1D] text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-all shadow-sm"
+                                >
                                     View Full History
                                 </button>
                             </div>
@@ -304,6 +353,49 @@ const Customers: React.FC = () => {
                     )}
                 </div>
             </div>
+            {isHistoryOpen && selectedUser && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-3xl w-full max-w-3xl shadow-2xl">
+                        <div className="p-6 border-b border-stone-100 flex justify-between items-center">
+                            <div>
+                                <h3 className="text-xl font-bold text-[#221C1D]">Order History</h3>
+                                <p className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{selectedUser.fullName}</p>
+                            </div>
+                            <button onClick={() => setIsHistoryOpen(false)} className="text-stone-400 hover:text-stone-600">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        <div className="p-6 max-h-[70vh] overflow-y-auto space-y-4">
+                            {selectedUserOrders.length === 0 ? (
+                                <div className="py-20 text-center opacity-40 italic">No orders found for this customer.</div>
+                            ) : (
+                                selectedUserOrders.map((o) => (
+                                    <div key={o.id} className="border border-stone-100 rounded-xl p-4 bg-stone-50">
+                                        <div className="flex justify-between items-center mb-2">
+                                            <p className="text-sm font-bold text-[#221C1D]">#{o.id.slice(-6)}</p>
+                                            <span className="text-[10px] font-bold uppercase tracking-widest text-stone-400">{o.date} • {o.time}</span>
+                                        </div>
+                                        <div className="flex justify-between items-center">
+                                            <span className="px-2.5 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest bg-white border border-stone-100 text-stone-600">{o.status}</span>
+                                            <p className="text-sm font-bold text-[#221C1D]">GH₵{o.total.toFixed(2)}</p>
+                                        </div>
+                                        <div className="mt-3 text-xs text-stone-600">
+                                            <p className="font-medium">Items: {o.items.length}</p>
+                                            <p className="font-medium">Shipping: {o.shippingAddress}</p>
+                                            {o.paymentMethod && <p className="font-medium">Payment: {o.paymentMethod}</p>}
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        <div className="p-6 border-t border-stone-100 flex justify-end">
+                            <button onClick={() => setIsHistoryOpen(false)} className="px-4 py-2 border border-stone-200 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-stone-50 transition-all">
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </AdminLayout>
     );
 };

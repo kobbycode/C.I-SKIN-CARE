@@ -1,24 +1,67 @@
 import { useApp } from '../App';
 import LoyaltyPortal from '../components/LoyaltyPortal';
 import { useUser } from '../context/UserContext';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useOrders } from '../context/OrderContext';
 import { useNotification } from '../context/NotificationContext';
+import { Link, useNavigate } from 'react-router-dom';
 
 const Profile: React.FC = () => {
-  const { toggleDarkMode, isDarkMode } = useApp();
-  const { currentUser, loading: userLoading } = useUser();
+  const { toggleDarkMode, isDarkMode, wishlist, toggleWishlist } = useApp();
+  const { currentUser, loading: userLoading, logout } = useUser();
   const { orders, loading: ordersLoading } = useOrders();
+  const { showNotification } = useNotification();
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<'orders' | 'skin' | 'favorites' | 'addresses' | 'preferences'>('orders');
+  const [signOutLoading, setSignOutLoading] = useState(false);
+  const [jumpLoading, setJumpLoading] = useState(false);
+  const ordersSectionRef = useRef<HTMLDivElement | null>(null);
+  const skinSectionRef = useRef<HTMLDivElement | null>(null);
+  const favoritesSectionRef = useRef<HTMLDivElement | null>(null);
+  const addressesSectionRef = useRef<HTMLDivElement | null>(null);
+  const preferencesSectionRef = useRef<HTMLDivElement | null>(null);
 
   const loading = userLoading || ordersLoading;
 
   const userOrders = orders.filter(o => o.customerEmail === currentUser?.email);
+  useEffect(() => {
+    const sectionMap: Record<typeof activeTab, React.RefObject<HTMLDivElement>> = {
+      orders: ordersSectionRef,
+      skin: skinSectionRef,
+      favorites: favoritesSectionRef,
+      addresses: addressesSectionRef,
+      preferences: preferencesSectionRef
+    };
+    const target = sectionMap[activeTab]?.current;
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [activeTab]);
 
-  if (loading || !currentUser) return (
-    <div className="pt-40 text-center uppercase tracking-widest opacity-30 font-display">
-      Opening Personal Archives...
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="pt-40 text-center uppercase tracking-widest opacity-30 font-display">
+        Opening Personal Archives...
+      </div>
+    );
+  }
+  if (!currentUser) {
+    return (
+      <main className="pt-40 pb-24 px-10 min-h-screen">
+        <div className="max-w-[900px] mx-auto text-center">
+          <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-accent mb-6 mx-auto flex items-center justify-center">
+            <span className="material-symbols-outlined text-5xl text-accent font-light">person</span>
+          </div>
+          <h1 className="font-display text-3xl mb-4">Welcome</h1>
+          <p className="text-xs opacity-60 mb-8">Please register or login to view and manage your profile.</p>
+          <div className="flex items-center justify-center gap-4">
+            <a href="/register" className="bg-primary text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px]">Register</a>
+            <a href="/login" className="border border-primary/20 py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px]">Login</a>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="pt-40 pb-24 px-10 bg-background-light dark:bg-background-dark min-h-screen">
@@ -37,24 +80,24 @@ const Profile: React.FC = () => {
           <nav className="space-y-6">
             <h5 className="text-[10px] font-bold uppercase tracking-[0.4em] text-secondary/30 dark:text-primary/30 border-b border-primary/10 pb-2">Account Rituals</h5>
             <ul className="space-y-4 text-xs font-medium uppercase tracking-[0.2em] text-secondary/70 dark:text-primary/70">
-              <li className="text-accent cursor-pointer flex items-center gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-accent"></span>
+              <li onClick={() => setActiveTab('orders')} className={`cursor-pointer flex items-center gap-3 ${activeTab === 'orders' ? 'text-accent' : 'hover:text-accent transition-colors'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'orders' ? 'bg-accent' : 'bg-transparent'}`}></span>
                 My Orders
               </li>
-              <li className="hover:text-accent cursor-pointer transition-colors flex items-center gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+              <li onClick={() => setActiveTab('skin')} className={`cursor-pointer transition-colors flex items-center gap-3 ${activeTab === 'skin' ? 'text-accent' : 'hover:text-accent'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'skin' ? 'bg-accent' : 'bg-transparent'}`}></span>
                 Skin Profile
               </li>
-              <li className="hover:text-accent cursor-pointer transition-colors flex items-center gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+              <li onClick={() => setActiveTab('favorites')} className={`cursor-pointer transition-colors flex items-center gap-3 ${activeTab === 'favorites' ? 'text-accent' : 'hover:text-accent'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'favorites' ? 'bg-accent' : 'bg-transparent'}`}></span>
                 Favorites
               </li>
-              <li className="hover:text-accent cursor-pointer transition-colors flex items-center gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+              <li onClick={() => setActiveTab('addresses')} className={`cursor-pointer transition-colors flex items-center gap-3 ${activeTab === 'addresses' ? 'text-accent' : 'hover:text-accent'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'addresses' ? 'bg-accent' : 'bg-transparent'}`}></span>
                 Addresses
               </li>
-              <li className="hover:text-accent cursor-pointer transition-colors flex items-center gap-3">
-                <span className="w-1.5 h-1.5 rounded-full bg-transparent"></span>
+              <li onClick={() => setActiveTab('preferences')} className={`cursor-pointer transition-colors flex items-center gap-3 ${activeTab === 'preferences' ? 'text-accent' : 'hover:text-accent'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'preferences' ? 'bg-accent' : 'bg-transparent'}`}></span>
                 Preferences
               </li>
             </ul>
@@ -68,9 +111,23 @@ const Profile: React.FC = () => {
               <span className="material-symbols-outlined text-sm">{isDarkMode ? 'light_mode' : 'dark_mode'}</span>
               Toggle Interface: {isDarkMode ? 'Luminous' : 'Nocturnal'}
             </button>
-            <button className="mt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-red-400 hover:text-red-500 transition-colors">
-              <span className="material-symbols-outlined text-sm">logout</span>
-              Sign Out
+            <button
+              disabled={signOutLoading}
+              onClick={async () => {
+                try {
+                  setSignOutLoading(true);
+                  await logout();
+                  showNotification('Signed out', 'success');
+                  navigate('/login');
+                } catch {
+                  showNotification('Failed to sign out', 'error');
+                } finally {
+                  setSignOutLoading(false);
+                }
+              }}
+              className={`mt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] ${signOutLoading ? 'text-stone-300' : 'text-red-400 hover:text-red-500'} transition-colors`}>
+              <span className="material-symbols-outlined text-sm">{signOutLoading ? 'progress_activity' : 'logout'}</span>
+              {signOutLoading ? 'Signing Out...' : 'Sign Out'}
             </button>
           </div>
         </aside>
@@ -81,8 +138,8 @@ const Profile: React.FC = () => {
           {/* Loyalty Portal */}
           <LoyaltyPortal />
 
-          {/* Recent Orders */}
-          <div className="pt-8">
+          {activeTab === 'orders' && (
+          <div ref={ordersSectionRef} className="pt-8">
             <div className="flex justify-between items-end mb-10">
               <div>
                 <h2 className="font-display text-3xl text-secondary dark:text-white mb-2">My Orders</h2>
@@ -121,9 +178,10 @@ const Profile: React.FC = () => {
               )}
             </div>
           </div>
+          )}
 
-          {/* Delivery Details */}
-          <div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+          {activeTab === 'addresses' && (
+          <div ref={addressesSectionRef} className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
             <div className="flex justify-between items-end mb-6">
               <div>
                 <h2 className="font-display text-2xl text-secondary dark:text-white">Delivery Details</h2>
@@ -132,6 +190,7 @@ const Profile: React.FC = () => {
             </div>
             <DeliveryDetailsEditor />
           </div>
+          )}
 
           {/* Skin Profile Highlights */}
           <div className="bg-primary/5 border border-primary/10 p-12 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -146,8 +205,16 @@ const Profile: React.FC = () => {
               <p className="text-xs opacity-50 mt-2">{currentUser.focusRitualDetail}</p>
             </div>
             <div className="text-center md:flex md:items-center md:justify-end">
-              <button className="bg-white dark:bg-stone-800 text-secondary dark:text-primary px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest border border-primary/10 hover:bg-primary hover:text-white transition-all">
-                Update Profile
+              <button
+                disabled={jumpLoading}
+                onClick={() => {
+                  setJumpLoading(true);
+                  setActiveTab('skin');
+                  setTimeout(() => setJumpLoading(false), 800);
+                }}
+                className={`px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest border border-primary/10 transition-all ${jumpLoading ? 'bg-stone-200 text-stone-500' : 'bg-white dark:bg-stone-800 text-secondary dark:text-primary hover:bg-primary hover:text-white'}`}
+              >
+                {jumpLoading ? 'Loading...' : 'Update Profile'}
               </button>
             </div>
           </div>
@@ -178,6 +245,82 @@ const Profile: React.FC = () => {
               </div>
             </div>
           </div>
+          {activeTab === 'skin' && <div ref={skinSectionRef}><SkinProfileEditor /></div>}
+          {activeTab === 'favorites' && (
+            <div ref={favoritesSectionRef} className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="font-display text-2xl text-secondary dark:text-white">Favorites</h2>
+                  <p className="text-xs opacity-60">Your curated selections.</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {wishlist.length > 0 ? wishlist.map(p => (
+                  <div key={p.id} className="flex gap-6 items-center p-6 bg-primary/5 border border-primary/10 rounded-2xl">
+                    <div className="w-20 h-20 rounded-lg overflow-hidden shrink-0 bg-white">
+                      <img src={p.image} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-display text-base mb-1 truncate">{p.name}</h4>
+                      <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-2">GH₵{p.price.toFixed(2)}</p>
+                      <div className="flex gap-3">
+                        <Link to={`/product/${p.id}`} className="text-[10px] font-bold uppercase tracking-widest text-primary hover:text-accent border-b border-primary/20 pb-0.5">View</Link>
+                        <button onClick={() => toggleWishlist(p)} className="text-[10px] font-bold uppercase tracking-widest text-red-400 hover:text-red-500">Remove</button>
+                      </div>
+                    </div>
+                  </div>
+                )) : (
+                  <div className="p-12 text-center opacity-30 italic uppercase tracking-widest border border-dashed border-primary/10 rounded-2xl">
+                    No favorites yet.
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          {activeTab === 'preferences' && (
+            <div ref={preferencesSectionRef} className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="font-display text-2xl text-secondary dark:text-white">Preferences</h2>
+                  <p className="text-xs opacity-60">Tailor your experience.</p>
+                </div>
+              </div>
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold">Interface Theme</p>
+                    <p className="text-[10px] opacity-60">Switch between Luminous and Nocturnal modes.</p>
+                  </div>
+                  <button
+                    onClick={toggleDarkMode}
+                    className="px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-primary text-white hover:bg-accent transition-colors"
+                  >
+                    {isDarkMode ? 'Switch to Luminous' : 'Switch to Nocturnal'}
+                  </button>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold">Session</p>
+                    <p className="text-[10px] opacity-60">Sign out of your account.</p>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      try {
+                        await logout();
+                        showNotification('Signed out', 'success');
+                        navigate('/login');
+                      } catch {
+                        showNotification('Failed to sign out', 'error');
+                      }
+                    }}
+                    className="px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
       </div>
     </main>
@@ -186,6 +329,110 @@ const Profile: React.FC = () => {
 
 export default Profile;
 
+const SkinProfileEditor: React.FC = () => {
+  const { currentUser, updateProfile } = useUser();
+  const { showNotification } = useNotification();
+  const [form, setForm] = useState({
+    skinType: 'Unknown',
+    skinTypeDetail: '',
+    focusRitual: 'None',
+    focusRitualDetail: ''
+  });
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    if (currentUser) {
+      setForm({
+        skinType: currentUser.skinType || 'Unknown',
+        skinTypeDetail: currentUser.skinTypeDetail || '',
+        focusRitual: currentUser.focusRitual || 'None',
+        focusRitualDetail: currentUser.focusRitualDetail || ''
+      });
+    }
+  }, [currentUser]);
+  const onChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+  const save = async () => {
+    try {
+      setSaving(true);
+      await updateProfile(form);
+      showNotification('Skin profile updated', 'success');
+    } finally {
+      setSaving(false);
+    }
+  };
+  return (
+    <div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+      <div className="flex justify-between items-end mb-6">
+        <div>
+          <h2 className="font-display text-2xl text-secondary dark:text-white">Skin Profile</h2>
+          <p className="text-xs opacity-60">Refine your skin type and ritual focus.</p>
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">Skin Type</span>
+          <select
+            name="skinType"
+            value={form.skinType}
+            onChange={onChange}
+            className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent"
+          >
+            <option>Unknown</option>
+            <option>Oily</option>
+            <option>Dry</option>
+            <option>Combination</option>
+            <option>Sensitive</option>
+          </select>
+        </div>
+        <div>
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">Focus Ritual</span>
+          <select
+            name="focusRitual"
+            value={form.focusRitual}
+            onChange={onChange}
+            className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent"
+          >
+            <option>None</option>
+            <option>Hydration</option>
+            <option>Brightening</option>
+            <option>Anti-Aging</option>
+            <option>Acne Care</option>
+          </select>
+        </div>
+        <div className="md:col-span-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">Skin Type Detail</span>
+          <textarea
+            name="skinTypeDetail"
+            value={form.skinTypeDetail}
+            onChange={onChange}
+            placeholder="Describe your skin behavior, triggers, routines..."
+            className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent h-24"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">Focus Ritual Detail</span>
+          <textarea
+            name="focusRitualDetail"
+            value={form.focusRitualDetail}
+            onChange={onChange}
+            placeholder="Share goals and observations for your focus ritual..."
+            className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent h-24"
+          />
+        </div>
+      </div>
+      <div className="pt-4">
+        <button
+          disabled={saving}
+          onClick={save}
+          className={`py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] ${saving ? 'bg-stone-300 text-white' : 'bg-accent text-white hover:bg-[#e19c00]'}`}
+        >
+          {saving ? 'Saving...' : 'Save Changes'}
+        </button>
+      </div>
+    </div>
+  );
+};
 const DeliveryDetailsEditor: React.FC = () => {
   const { currentUser, updateProfile } = useUser();
   const { showNotification } = useNotification();
@@ -200,6 +447,8 @@ const DeliveryDetailsEditor: React.FC = () => {
     deliveryLocationLat: 0,
     deliveryLocationLng: 0
   });
+  const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
 
   useEffect(() => {
     if (currentUser) {
@@ -222,13 +471,20 @@ const DeliveryDetailsEditor: React.FC = () => {
   };
 
   const save = async () => {
-    await updateProfile(form);
-    showNotification('Profile updated successfully!', 'success');
+    try {
+      setSaving(true);
+      await updateProfile(form);
+      showNotification('Profile updated successfully!', 'success');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleUseCurrentLocation = async () => {
+    setLocating(true);
     if (!navigator.geolocation) {
       showNotification('Geolocation is not supported by your browser.', 'error');
+      setLocating(false);
       return;
     }
 
@@ -262,9 +518,11 @@ const DeliveryDetailsEditor: React.FC = () => {
         console.error('Error fetching address:', error);
         showNotification('Location captured, but failed to find address details.', 'success');
       }
+      setLocating(false);
     }, (error) => {
       console.error('Geolocation error:', error);
       showNotification('Unable to fetch your location. Please check permissions.', 'error');
+      setLocating(false);
     }, {
       enableHighAccuracy: true,
       timeout: 10000,
@@ -276,11 +534,12 @@ const DeliveryDetailsEditor: React.FC = () => {
     <div className="space-y-4">
       <div className="flex justify-end">
         <button
+          disabled={locating}
           onClick={handleUseCurrentLocation}
-          className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary hover:text-accent flex items-center gap-2"
+          className={`text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 ${locating ? 'text-stone-300' : 'text-primary hover:text-accent'}`}
         >
-          <span className="material-symbols-outlined text-[14px]">my_location</span>
-          Use Current Location
+          <span className="material-symbols-outlined text-[14px]">{locating ? 'progress_activity' : 'my_location'}</span>
+          {locating ? 'Locating...' : 'Use Current Location'}
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -336,10 +595,11 @@ const DeliveryDetailsEditor: React.FC = () => {
       </div>
       <div className="pt-2">
         <button
+          disabled={saving}
           onClick={save}
-          className="bg-accent text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px]"
+          className={`py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] ${saving ? 'bg-stone-300 text-white' : 'bg-accent text-white hover:bg-[#e19c00]'}`}
         >
-          Save Changes
+          {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </div>
     </div>

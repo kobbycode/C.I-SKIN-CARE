@@ -1,22 +1,30 @@
 import { motion } from 'framer-motion';
 import { useUser } from '../context/UserContext';
+import { useOrders } from '../context/OrderContext';
 
 
 const LoyaltyPortal: React.FC = () => {
     const { currentUser, loading } = useUser();
+    const { orders } = useOrders();
 
     if (loading || !currentUser) return null;
 
+    const userOrderHistory = orders.filter(o => o.customerEmail === currentUser.email);
+    const pointsFromOrder = (total: number, status: string) => {
+        if (status !== 'Delivered') return 0;
+        return Math.round(total);
+    };
     const userLoyalty = {
         points: currentUser.points,
         tier: currentUser.pointsTier,
         nextTier: currentUser.pointsTier === 'Gold Ritual' ? 'Platinum Ritual' : 'Icon',
         pointsToNext: currentUser.pointsToNextTier,
-        history: [
-            { id: 1, action: "Order #4521", points: +450, date: "Jan 15, 2026" },
-            { id: 2, action: "Social Share", points: +50, date: "Jan 12, 2026" },
-            { id: 3, action: "Sign-up Bonus", points: +350, date: "Jan 01, 2026" },
-        ]
+        history: userOrderHistory.map((o) => ({
+            id: o.id,
+            action: `Order #${o.id.slice(-6).toUpperCase()}`,
+            points: pointsFromOrder(o.total, o.status),
+            date: o.date
+        })).filter(h => h.points > 0)
     };
 
     const progress = (userLoyalty.points / (userLoyalty.points + userLoyalty.pointsToNext)) * 100;

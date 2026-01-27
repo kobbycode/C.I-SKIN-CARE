@@ -132,6 +132,12 @@ const Checkout: React.FC = () => {
   const handlePlaceOrder = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!currentUser) {
+      showNotification('Please login or register to complete your order.', 'error');
+      navigate('/login', { state: { from: '/checkout' } });
+      return;
+    }
+
     if (!formData.email || !formData.firstName || !formData.lastName) {
       alert('Please fill in all required fields');
       return;
@@ -603,6 +609,7 @@ const Checkout: React.FC = () => {
                       onClick={async () => {
                         if (!currentUser) {
                           showNotification('Sign in to save delivery details to your profile.', 'error');
+                          navigate('/login', { state: { from: '/profile' } });
                           return;
                         }
                         try {
