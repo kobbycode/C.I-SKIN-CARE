@@ -97,11 +97,47 @@ const ProductDetail: React.FC = () => {
     setMeta('title', ogTitle);
     setMeta('description', ogDesc);
     setMeta('image', ogImage);
+    setMeta('image:secure_url', ogImage);
+    setMeta('image:type', 'image/jpeg');
+    setMeta('image:width', '1200');
+    setMeta('image:height', '630');
     setMeta('url', ogUrl);
     setMeta('card', 'summary_large_image', true);
     setMeta('title', ogTitle, true);
     setMeta('description', ogDesc, true);
     setMeta('image', ogImage, true);
+
+    let linkImage = document.head.querySelector('link[rel="image_src"]') as HTMLLinkElement | null;
+    if (!linkImage) {
+      linkImage = document.createElement('link');
+      linkImage.setAttribute('rel', 'image_src');
+      document.head.appendChild(linkImage);
+    }
+    linkImage.setAttribute('href', ogImage);
+
+    const jsonLd = {
+      '@context': 'https://schema.org/',
+      '@type': 'Product',
+      name: product.name,
+      image: [ogImage],
+      description: ogDesc,
+      brand: product.brand || 'C.I Skin Care',
+      offers: {
+        '@type': 'Offer',
+        url: ogUrl,
+        priceCurrency: 'GHS',
+        price: product.price.toFixed(2),
+        availability: 'https://schema.org/InStock'
+      }
+    };
+    let ldTag = document.getElementById('product-jsonld') as HTMLScriptElement | null;
+    if (!ldTag) {
+      ldTag = document.createElement('script');
+      ldTag.type = 'application/ld+json';
+      ldTag.id = 'product-jsonld';
+      document.head.appendChild(ldTag);
+    }
+    ldTag.textContent = JSON.stringify(jsonLd);
   }, [product.name, product.price, product.description, product.image]);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
