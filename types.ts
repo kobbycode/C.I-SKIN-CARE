@@ -69,4 +69,13 @@ export interface UserProfile {
   pointsToNextTier: number;
   joinedDate: string;
   avatar?: string;
+  deliveryAddress?: string;
+  deliveryCity?: string;
+  deliveryState?: string;
+  deliveryZipCode?: string;
+  deliveryPhone?: string;
+  deliveryLandmark?: string;
+  deliveryInstructions?: string;
+  deliveryLocationLat?: number;
+  deliveryLocationLng?: number;
 }

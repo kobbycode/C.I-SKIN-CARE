@@ -1,6 +1,7 @@
 import { useApp } from '../App';
 import LoyaltyPortal from '../components/LoyaltyPortal';
 import { useUser } from '../context/UserContext';
+import React, { useEffect, useState } from 'react';
 import { useOrders } from '../context/OrderContext';
 
 const Profile: React.FC = () => {
@@ -120,6 +121,17 @@ const Profile: React.FC = () => {
             </div>
           </div>
 
+          {/* Delivery Details */}
+          <div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+            <div className="flex justify-between items-end mb-6">
+              <div>
+                <h2 className="font-display text-2xl text-secondary dark:text-white">Delivery Details</h2>
+                <p className="text-xs opacity-60">Manage your preferred delivery information.</p>
+              </div>
+            </div>
+            <DeliveryDetailsEditor />
+          </div>
+
           {/* Skin Profile Highlights */}
           <div className="bg-primary/5 border border-primary/10 p-12 rounded-3xl grid grid-cols-1 md:grid-cols-3 gap-12">
             <div className="text-center md:text-left">
@@ -172,3 +184,102 @@ const Profile: React.FC = () => {
 };
 
 export default Profile;
+
+const DeliveryDetailsEditor: React.FC = () => {
+  const { currentUser, updateProfile } = useUser();
+  const [form, setForm] = useState({
+    deliveryAddress: '',
+    deliveryCity: '',
+    deliveryState: '',
+    deliveryZipCode: '',
+    deliveryPhone: '',
+    deliveryLandmark: '',
+    deliveryInstructions: ''
+  });
+
+  useEffect(() => {
+    if (currentUser) {
+      setForm({
+        deliveryAddress: currentUser.deliveryAddress || '',
+        deliveryCity: currentUser.deliveryCity || '',
+        deliveryState: currentUser.deliveryState || '',
+        deliveryZipCode: currentUser.deliveryZipCode || '',
+        deliveryPhone: currentUser.deliveryPhone || '',
+        deliveryLandmark: currentUser.deliveryLandmark || '',
+        deliveryInstructions: currentUser.deliveryInstructions || ''
+      });
+    }
+  }, [currentUser]);
+
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const save = async () => {
+    await updateProfile(form);
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <input
+          name="deliveryAddress"
+          value={form.deliveryAddress}
+          onChange={onChange}
+          placeholder="Address"
+          className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent"
+        />
+        <input
+          name="deliveryPhone"
+          value={form.deliveryPhone}
+          onChange={onChange}
+          placeholder="Phone"
+          className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent"
+        />
+        <input
+          name="deliveryCity"
+          value={form.deliveryCity}
+          onChange={onChange}
+          placeholder="City"
+          className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent"
+        />
+        <input
+          name="deliveryState"
+          value={form.deliveryState}
+          onChange={onChange}
+          placeholder="Region"
+          className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent"
+        />
+        <input
+          name="deliveryZipCode"
+          value={form.deliveryZipCode}
+          onChange={onChange}
+          placeholder="Postal Code"
+          className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent"
+        />
+        <input
+          name="deliveryLandmark"
+          value={form.deliveryLandmark}
+          onChange={onChange}
+          placeholder="Nearby Landmark"
+          className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent"
+        />
+        <input
+          name="deliveryInstructions"
+          value={form.deliveryInstructions}
+          onChange={onChange}
+          placeholder="Delivery Instructions"
+          className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent md:col-span-2"
+        />
+      </div>
+      <div className="pt-2">
+        <button
+          onClick={save}
+          className="bg-accent text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px]"
+        >
+          Save Changes
+        </button>
+      </div>
+    </div>
+  );
+}

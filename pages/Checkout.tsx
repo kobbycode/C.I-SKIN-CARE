@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { usePaystackPayment } from 'react-paystack';
 import { useApp } from '../App';
 import { useOrders } from '../context/OrderContext';
+import { useUser } from '../context/UserContext';
 import { useNotification } from '../context/NotificationContext';
 
 interface CheckoutFormData {
@@ -24,6 +25,7 @@ const Checkout: React.FC = () => {
   const { cart, clearCart } = useApp();
   const { addOrder } = useOrders();
   const { showNotification } = useNotification();
+  const { currentUser, updateProfile } = useUser();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState(1);
@@ -47,6 +49,7 @@ const Checkout: React.FC = () => {
     landmark: '',
     deliveryInstructions: ''
   });
+  const [geoCoords, setGeoCoords] = useState<{ lat: number; lng: number } | null>(null);
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal >= 200 ? 0 : 15.0;
@@ -553,7 +556,7 @@ const Checkout: React.FC = () => {
                       className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
                     />
                   </div>
-                  <div className="pt-4">
+                  <div className="pt-4 flex flex-wrap gap-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -565,6 +568,64 @@ const Checkout: React.FC = () => {
                     >
                       <span className="material-symbols-outlined text-[12px]">map</span>
                       Track Location
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!('geolocation' in navigator)) {
+                          showNotification('Geolocation not supported on this device.', 'error');
+                          return;
+                        }
+                        navigator.geolocation.getCurrentPosition(async (pos) => {
+                          const { latitude, longitude } = pos.coords;
+                          setGeoCoords({ lat: latitude, lng: longitude });
+                          try {
+                            const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
+                            const data = await resp.json();
+                            const display = data?.display_name || `${latitude.toFixed(5)}, ${longitude.toFixed(5)}`;
+                            setFormData(prev => ({ ...prev, landmark: display }));
+                            showNotification('Location captured • Landmark filled', 'success');
+                          } catch {
+                            setFormData(prev => ({ ...prev, landmark: `${latitude.toFixed(5)}, ${longitude.toFixed(5)}` }));
+                            showNotification('Location captured (fallback coordinates)', 'success');
+                          }
+                        }, () => {
+                          showNotification('Unable to fetch your location.', 'error');
+                        }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+                      }}
+                      className="bg-stone-900 text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">my_location</span>
+                      Use Current Location
+                    </button>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!currentUser) {
+                          showNotification('Sign in to save delivery details to your profile.', 'error');
+                          return;
+                        }
+                        try {
+                          await updateProfile({
+                            deliveryAddress: formData.address,
+                            deliveryCity: formData.city,
+                            deliveryState: formData.state,
+                            deliveryZipCode: formData.zipCode,
+                            deliveryPhone: formData.phone,
+                            deliveryLandmark: formData.landmark,
+                            deliveryInstructions: formData.deliveryInstructions,
+                            deliveryLocationLat: geoCoords?.lat,
+                            deliveryLocationLng: geoCoords?.lng
+                          });
+                          showNotification('Delivery details saved to your profile.', 'success');
+                        } catch (e) {
+                          showNotification('Failed to save delivery details.', 'error');
+                        }
+                      }}
+                      className="bg-accent text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
+                    >
+                      <span className="material-symbols-outlined text-[12px]">save</span>
+                      Save To Profile
                     </button>
                   </div>
                 </section>
