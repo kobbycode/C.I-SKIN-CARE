@@ -1,14 +1,12 @@
 {
-    "routes": [
+    "rewrites": [
         {
-            "src": "/product/(?<id>[^/]+)",
+            "source": "/product/:id",
             "has": [
                 { "type": "header", "key": "user-agent", "value": "(?i)(bot|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|whatsapp|googlebot)" }
             ],
-            "dest": "/api/og-product?id=$id"
-        }
-    ],
-    "rewrites": [
+            "destination": "/api/og-product?id=:id"
+        },
         {
             "source": "/(.*)",
             "destination": "/index.html"
