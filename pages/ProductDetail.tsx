@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useApp } from '../App';
 import { useProducts } from '../context/ProductContext';
@@ -65,10 +65,44 @@ const ProductDetail: React.FC = () => {
   const shareLinks = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
     x: `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`,
-    pinterest: `https://pinterest.com/pin/create/button/?url=${shareUrl}&media=${shareImage}&description=${shareTitle}`
+    pinterest: `https://pinterest.com/pin/create/button/?url=${shareUrl}&media=${shareImage}&description=${shareTitle}`,
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${product.name} – GH₵${product.price.toFixed(2)}\n${window.location.href}`)}`
   };
 
   const images = [product.image];
+
+  useEffect(() => {
+    const makeAbsolute = (url: string) => {
+      if (!url) return '';
+      if (url.startsWith('http://') || url.startsWith('https://')) return url;
+      return `${window.location.origin}${url.startsWith('/') ? '' : '/'}${url}`;
+    };
+    const ogTitle = `${product.name} – GH₵${product.price.toFixed(2)} | C.I SKIN CARE`;
+    const ogDesc = product.description || 'Discover science-backed luxury skincare.';
+    const ogImage = makeAbsolute(product.image);
+    const ogUrl = window.location.href;
+
+    const setMeta = (property: string, content: string, isTwitter = false) => {
+      const selector = isTwitter ? `meta[property="twitter:${property}"]` : `meta[property="og:${property}"]`;
+      let tag = document.head.querySelector(selector) as HTMLMetaElement | null;
+      if (!tag) {
+        tag = document.createElement('meta');
+        tag.setAttribute('property', isTwitter ? `twitter:${property}` : `og:${property}`);
+        document.head.appendChild(tag);
+      }
+      tag.setAttribute('content', content);
+    };
+
+    document.title = ogTitle;
+    setMeta('title', ogTitle);
+    setMeta('description', ogDesc);
+    setMeta('image', ogImage);
+    setMeta('url', ogUrl);
+    setMeta('card', 'summary_large_image', true);
+    setMeta('title', ogTitle, true);
+    setMeta('description', ogDesc, true);
+    setMeta('image', ogImage, true);
+  }, [product.name, product.price, product.description, product.image]);
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -324,6 +358,17 @@ const ProductDetail: React.FC = () => {
               >
                 <svg className="w-4 h-4 fill-current text-stone-300 group-hover:text-primary transition-colors" viewBox="0 0 24 24">
                   <path d="M12 2C6.48 2 2 6.48 2 12c0 4.27 2.67 7.9 6.47 9.35-.09-.8-.17-2.02.03-2.89.19-.79 1.2-5.07 1.2-5.07s-.31-.61-.31-1.5c0-1.41.82-2.46 1.83-2.46.86 0 1.28.65 1.28 1.43 0 .87-.55 2.16-.84 3.36-.24.99.49 1.81 1.46 1.81 1.76 0 3.1-1.85 3.1-4.52 0-2.36-1.7-4.01-4.12-4.01-2.81 0-4.46 2.11-4.46 4.28 0 .85.33 1.76.74 2.25.08.1.09.19.07.28-.08.31-.25 1.01-.28 1.15-.04.16-.14.2-.32.11-1.19-.55-1.93-2.3-1.93-3.7 0-3.01 2.19-5.78 6.31-5.78 3.31 0 5.88 2.36 5.88 5.5 0 3.3-2.08 5.96-4.97 5.96-1 0-1.94-.52-2.26-1.13l-.61 2.33c-.22.84-.81 1.89-1.21 2.54 1 .31 2.06.47 3.16.47 5.52 0 10-4.48 10-10S17.52 2 12 2z" />
+                </svg>
+              </a>
+              <a
+                href={shareLinks.whatsapp}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 flex items-center justify-center border border-stone-100 dark:border-stone-800 rounded hover:bg-stone-50 transition-all group"
+                aria-label="Share on WhatsApp"
+              >
+                <svg className="w-4 h-4 fill-current text-stone-300 group-hover:text-primary transition-colors" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.49 2 12c0 1.86.51 3.6 1.39 5.1L2 22l4.01-1.36C7.47 21.49 9.68 22 12 22c5.52 0 10-4.49 10-10S17.52 2 12 2zm0 18c-2.06 0-3.97-.72-5.49-1.92l-.39-.3-2.38.81.8-2.32-.26-.41C3.73 14.64 3 13.38 3 12c0-4.41 3.58-8 8-8s8 3.59 8 8-3.58 8-8 8zm4.57-5.21c-.25-.13-1.47-.73-1.7-.82-.23-.08-.4-.13-.57.13-.17.25-.65.82-.8.99-.15.17-.3.19-.55.06-.25-.13-1.06-.39-2.03-1.25-.75-.66-1.25-1.47-1.4-1.72-.15-.25-.02-.39.11-.52.12-.12.25-.32.38-.48.13-.16.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.37-.78-1.87-.21-.5-.42-.43-.57-.44-.15 0-.32-.01-.49-.01-.17 0-.45.06-.69.32-.24.26-.91.89-.91 2.16s.94 2.51 1.07 2.69c.13.17 1.85 2.82 4.48 3.94.63.27 1.12.43 1.51.56.63.2 1.2.17 1.65.1.5-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.29z"/>
                 </svg>
               </a>
             </div>
