@@ -6,7 +6,7 @@
                 {
                     "type": "header",
                     "key": "user-agent",
-                    "value": "(?i)(facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|pinterestbot|pinterest|googlebot|bingbot|duckduckbot|yandexbot|baiduspider|slurp)"
+                    "value": "(?i).*(facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|discordbot|telegrambot|pinterestbot|pinterest|googlebot|bingbot|duckduckbot|yandex(bot)?|baiduspider|slurp).*"
                 }
             ],
             "destination": "/api/og-product?id=:id"
