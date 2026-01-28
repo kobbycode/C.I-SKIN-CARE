@@ -64,10 +64,36 @@ const ProductDetail: React.FC = () => {
   const shareLinks = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
     x: `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`,
-    pinterest: `https://pinterest.com/pin/create/button/?url=${shareUrl}&media=${shareImage}&description=${shareTitle}`,
     whatsapp: `https://wa.me/?text=${encodeURIComponent(
       `${product?.name ?? 'C.I Skin Care'}${product ? ` – GH₵${product.price.toFixed(2)}` : ''}\n${shareUniqueUrl}`
     )}`
+  };
+
+  const handleInstagramShare = async () => {
+    const url = shareUniqueUrl;
+    const title = product?.name ?? 'C.I Skin Care';
+    const text = product ? `${title} – GH₵${product.price.toFixed(2)}` : title;
+
+    try {
+      // Best UX on mobile: use the native share sheet (user can pick Instagram).
+      if (typeof navigator !== 'undefined' && 'share' in navigator) {
+        await (navigator as any).share({ title, text, url });
+        return;
+      }
+    } catch {
+      // ignore and fall back
+    }
+
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        showNotification('Link copied — open Instagram and paste it', 'success');
+      } else {
+        showNotification('Copy this link and share on Instagram', 'success');
+      }
+    } finally {
+      window.open('https://www.instagram.com/', '_blank', 'noopener,noreferrer');
+    }
   };
 
   const images = product ? [product.image] : [];
@@ -418,14 +444,18 @@ const ProductDetail: React.FC = () => {
                 </svg>
               </a>
               <a
-                href={shareLinks.pinterest}
-                target="_blank"
-                rel="noopener noreferrer"
+                href="https://www.instagram.com/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleInstagramShare();
+                }}
                 className="w-10 h-10 flex items-center justify-center border border-stone-100 dark:border-stone-800 rounded hover:bg-stone-50 transition-all group"
-                aria-label="Share on Pinterest"
+                aria-label="Share on Instagram"
               >
                 <svg className="w-4 h-4 fill-current text-stone-300 group-hover:text-primary transition-colors" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12c0 4.27 2.67 7.9 6.47 9.35-.09-.8-.17-2.02.03-2.89.19-.79 1.2-5.07 1.2-5.07s-.31-.61-.31-1.5c0-1.41.82-2.46 1.83-2.46.86 0 1.28.65 1.28 1.43 0 .87-.55 2.16-.84 3.36-.24.99.49 1.81 1.46 1.81 1.76 0 3.1-1.85 3.1-4.52 0-2.36-1.7-4.01-4.12-4.01-2.81 0-4.46 2.11-4.46 4.28 0 .85.33 1.76.74 2.25.08.1.09.19.07.28-.08.31-.25 1.01-.28 1.15-.04.16-.14.2-.32.11-1.19-.55-1.93-2.3-1.93-3.7 0-3.01 2.19-5.78 6.31-5.78 3.31 0 5.88 2.36 5.88 5.5 0 3.3-2.08 5.96-4.97 5.96-1 0-1.94-.52-2.26-1.13l-.61 2.33c-.22.84-.81 1.89-1.21 2.54 1 .31 2.06.47 3.16.47 5.52 0 10-4.48 10-10S17.52 2 12 2z" />
+                  <path d="M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9A5.5 5.5 0 0 1 16.5 22h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zm9 2h-9A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5v-9A3.5 3.5 0 0 0 16.5 4z" />
+                  <path d="M12 7a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z" />
+                  <path d="M17.5 6.5a1 1 0 1 1 0 2 1 1 0 0 1 0-2z" />
                 </svg>
               </a>
               <a
