@@ -17,6 +17,34 @@ export default async function handler(req: any, res: any) {
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#39;');
 
+  // For attribute values that are URLs, do NOT escape '&' -> '&amp;'
+  // Some link scrapers (e.g. WhatsApp) may not decode entities reliably for OG image URLs.
+  const escapeHtmlUrlAttr = (s: string) =>
+    String(s ?? '')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const inferImageMimeType = (imageUrl: string) => {
+    try {
+      const u = new URL(imageUrl);
+      const p = u.pathname.toLowerCase();
+      if (p.endsWith('.png')) return 'image/png';
+      if (p.endsWith('.webp')) return 'image/webp';
+      if (p.endsWith('.gif')) return 'image/gif';
+      if (p.endsWith('.jpg') || p.endsWith('.jpeg')) return 'image/jpeg';
+      return 'image/jpeg';
+    } catch {
+      const lower = (imageUrl || '').toLowerCase();
+      if (lower.includes('.png')) return 'image/png';
+      if (lower.includes('.webp')) return 'image/webp';
+      if (lower.includes('.gif')) return 'image/gif';
+      if (lower.includes('.jpg') || lower.includes('.jpeg')) return 'image/jpeg';
+      return 'image/jpeg';
+    }
+  };
+
   const readFirestoreValue = (field: any) => {
     if (!field) return undefined;
     if (field.stringValue != null) return field.stringValue;
@@ -79,8 +107,9 @@ export default async function handler(req: any, res: any) {
     // Escape dynamic content for HTML safety
     const safeTitle = escapeHtml(name);
     const safeDesc = escapeHtml(description);
-    const safeImage = escapeHtml(image);
-    const safeUrl = escapeHtml(url);
+    const safeImage = escapeHtmlUrlAttr(image);
+    const safeUrl = escapeHtmlUrlAttr(url);
+    const imageType = inferImageMimeType(image);
 
     const html = `<!doctype html>
 <html lang="en">
@@ -94,7 +123,7 @@ export default async function handler(req: any, res: any) {
 <meta property="og:description" content="${safeDesc}">
 <meta property="og:image" content="${safeImage}">
 <meta property="og:image:secure_url" content="${safeImage}">
-<meta property="og:image:type" content="image/jpeg">
+<meta property="og:image:type" content="${imageType}">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 ${productPriceMeta}
