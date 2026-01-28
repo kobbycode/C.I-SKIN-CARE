@@ -48,43 +48,31 @@ const ProductDetail: React.FC = () => {
       .slice(0, 4); // Show up to 4 related products
   }, [product, products]);
 
-  // On direct visits from shared links, products load async. Show a loader until we know for sure.
-  if (loading) {
-    return (
-      <div className="pt-40 min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-      </div>
-    );
-  }
+  // Keep hooks unconditional: do not return early before useEffect below.
+  const isReady = !loading && !!product;
 
-  if (!product) {
-    return (
-      <div className="pt-40 text-center min-h-screen">
-        <h1 className="text-2xl font-display">Product Not Found</h1>
-        <Link to="/shop" className="text-primary mt-4 inline-block underline">Back to Shop</Link>
-      </div>
-    );
-  }
-
-  const isFavorited = isInWishlist(product.id);
+  const isFavorited = product ? isInWishlist(product.id) : false;
   // WhatsApp caches previews aggressively. Add a unique query param to force fresh scraping.
   // This does NOT change the actual product route; it only affects shared URLs.
   const shareBaseUrl = window.location.href;
   const shareUniqueUrl = `${shareBaseUrl}${shareBaseUrl.includes('?') ? '&' : '?'}share=${Date.now()}`;
   const shareUrl = encodeURIComponent(shareUniqueUrl);
-  const shareTitle = encodeURIComponent(product.name);
-  const shareImage = encodeURIComponent(product.image);
+  const shareTitle = encodeURIComponent(product?.name ?? '');
+  const shareImage = encodeURIComponent(product?.image ?? '');
 
   const shareLinks = {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
     x: `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`,
     pinterest: `https://pinterest.com/pin/create/button/?url=${shareUrl}&media=${shareImage}&description=${shareTitle}`,
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${product.name} – GH₵${product.price.toFixed(2)}\n${shareUniqueUrl}`)}`
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(
+      `${product?.name ?? 'C.I Skin Care'}${product ? ` – GH₵${product.price.toFixed(2)}` : ''}\n${shareUniqueUrl}`
+    )}`
   };
 
-  const images = [product.image];
+  const images = product ? [product.image] : [];
 
   useEffect(() => {
+    if (!product) return;
     const makeAbsolute = (url: string) => {
       if (!url) return '';
       if (url.startsWith('http://') || url.startsWith('https://')) return url;
@@ -151,7 +139,25 @@ const ProductDetail: React.FC = () => {
       document.head.appendChild(ldTag);
     }
     ldTag.textContent = JSON.stringify(jsonLd);
-  }, [product.name, product.price, product.description, product.image]);
+  }, [product?.name, product?.price, product?.description, product?.image]);
+
+  // On direct visits from shared links, products load async. Show a loader until we know for sure.
+  if (loading) {
+    return (
+      <div className="pt-40 min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!isReady) {
+    return (
+      <div className="pt-40 text-center min-h-screen">
+        <h1 className="text-2xl font-display">Product Not Found</h1>
+        <Link to="/shop" className="text-primary mt-4 inline-block underline">Back to Shop</Link>
+      </div>
+    );
+  }
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
