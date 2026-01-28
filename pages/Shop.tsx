@@ -4,6 +4,8 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { useApp } from '../App';
 import { useProducts } from '../context/ProductContext';
 import { useCategories } from '../context/CategoryContext';
+import OptimizedImage from '../components/OptimizedImage';
+import { ShopSkeleton } from '../components/Skeletons';
 
 const Shop: React.FC = () => {
   const { addToCart } = useApp();
@@ -179,9 +181,7 @@ const Shop: React.FC = () => {
         {/* Product Grid */}
         <div className="flex-1">
           {loading ? (
-            <div className="h-[60vh] flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-            </div>
+            <ShopSkeleton count={6} />
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-24 opacity-40">
               <span className="material-symbols-outlined text-6xl mb-4 font-light">search_off</span>
@@ -202,10 +202,11 @@ const Shop: React.FC = () => {
                       {/* Image Area */}
                       <div className="relative aspect-[4/5] overflow-hidden">
                         <Link to={`/product/${product.id}`} className="block h-full">
-                          <img
+                          <OptimizedImage
                             src={product.image}
                             alt={product.name}
                             className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                            loading="lazy"
                           />
                         </Link>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500 pointer-events-none"></div>

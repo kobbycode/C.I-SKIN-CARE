@@ -20,11 +20,21 @@ export default defineConfig(({ mode }) => {
       minify: 'esbuild',
       rollupOptions: {
         output: {
-          manualChunks: {
-            vendor: ['react', 'react-dom', 'react-router-dom'],
-            animation: ['framer-motion'],
-            charts: ['recharts'],
-            payments: ['react-paystack']
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+
+            // Core framework
+            // Keep React + router together to avoid circular/empty chunk edge cases.
+            if (id.includes('react-router-dom') || id.includes('react-dom') || id.includes('react')) return 'react';
+
+            // Heavy libs
+            if (id.includes('/firebase/') || id.includes('\\firebase\\') || id.includes('firebase')) return 'firebase';
+            if (id.includes('recharts')) return 'charts';
+            if (id.includes('framer-motion')) return 'animation';
+            if (id.includes('react-paystack')) return 'payments';
+
+            // Everything else from node_modules
+            return 'vendor';
           }
         }
       }

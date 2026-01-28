@@ -31,7 +31,8 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
                     setHasError(true);
                     setIsLoaded(true); // Stop skeleton
                 }}
-                loading="lazy"
+                loading={props.loading ?? 'lazy'}
+                decoding={(props as any).decoding ?? 'async'}
                 {...props}
             />
         </div>

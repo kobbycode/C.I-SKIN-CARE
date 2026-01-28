@@ -5,6 +5,8 @@ import { useApp } from '../App';
 import { useProducts } from '../context/ProductContext';
 import { useReviews } from '../context/ReviewContext';
 import { useNotification } from '../context/NotificationContext';
+import OptimizedImage from '../components/OptimizedImage';
+import { SkeletonLine } from '../components/Skeletons';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -171,9 +173,30 @@ const ProductDetail: React.FC = () => {
   // On direct visits from shared links, products load async. Show a loader until we know for sure.
   if (loading) {
     return (
-      <div className="pt-40 min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
-      </div>
+      <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 mb-24">
+          <div className="space-y-4">
+            <div className="aspect-[4/5] bg-primary/5 dark:bg-white/5 rounded-lg overflow-hidden border border-primary/5 animate-pulse" />
+            <div className="grid grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="aspect-square rounded bg-primary/5 dark:bg-white/5 animate-pulse" />
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-col space-y-6">
+            <SkeletonLine className="h-10 w-3/4" />
+            <SkeletonLine className="h-4 w-40" />
+            <SkeletonLine className="h-8 w-32" />
+            <div className="space-y-3">
+              <SkeletonLine className="h-3 w-full" />
+              <SkeletonLine className="h-3 w-11/12" />
+              <SkeletonLine className="h-3 w-10/12" />
+            </div>
+            <div className="h-14 w-full rounded bg-primary/10 dark:bg-white/10 animate-pulse" />
+            <div className="h-14 w-full rounded bg-primary/10 dark:bg-white/10 animate-pulse" />
+          </div>
+        </div>
+      </main>
     );
   }
 
@@ -237,10 +260,11 @@ const ProductDetail: React.FC = () => {
         {/* Left: Product Gallery */}
         <div className="space-y-4">
           <div className="aspect-[4/5] bg-stone-50 dark:bg-stone-900 rounded-lg overflow-hidden relative group border border-primary/5">
-            <img
+            <OptimizedImage
               src={images[activeImageIdx]}
               alt={product.name}
               className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="eager"
             />
             {product.status === 'Active' && (
               <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 text-[9px] uppercase tracking-widest font-bold border border-gold/30">
