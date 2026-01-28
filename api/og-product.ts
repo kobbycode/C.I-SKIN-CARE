@@ -1,10 +1,31 @@
 
-import { db } from '../firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
 export default async function handler(req: any, res: any) {
   const id = (req.query.id as string) || '';
   const host = (req.headers['host'] as string) || 'www.theciskincare.com';
   const origin = `https://${host}`;
+
+  // Firestore REST API (public apiKey; safe to embed like in the frontend config)
+  const FIREBASE_PROJECT_ID = 'ci-skincare-digital-platform';
+  const FIREBASE_API_KEY = 'AIzaSyAu1mLzhzY4c3Dkq6_C_WO1Qu4MYg4heo4';
+  const FIRESTORE_DOCS_BASE = `https://firestore.googleapis.com/v1/projects/${FIREBASE_PROJECT_ID}/databases/(default)/documents`;
+
+  const escapeHtml = (s: string) =>
+    String(s ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const readFirestoreValue = (field: any) => {
+    if (!field) return undefined;
+    if (field.stringValue != null) return field.stringValue;
+    if (field.integerValue != null) return field.integerValue;
+    if (field.doubleValue != null) return field.doubleValue;
+    if (field.booleanValue != null) return field.booleanValue;
+    if (field.timestampValue != null) return field.timestampValue;
+    return undefined;
+  };
 
   try {
     let name = 'C.I SKIN CARE | Luxury Beauty';
@@ -16,15 +37,34 @@ export default async function handler(req: any, res: any) {
     let isProduct = false;
 
     if (id) {
-      const ref = doc(db, 'products', id);
-      const snap = await getDoc(ref);
-      if (snap.exists()) {
-        const p = snap.data() as any;
-        name = `${p.name} – GH₵${Number(p.price).toFixed(2)} | C.I SKIN CARE`;
-        description = p.description || description;
-        image = p.image?.startsWith('http') ? p.image : `${origin}${p.image?.startsWith('/') ? '' : '/'}${p.image || 'logo.jpg'}`;
-        priceText = `GH₵${Number(p.price).toFixed(2)}`;
-        isProduct = true;
+      const docUrl = `${FIRESTORE_DOCS_BASE}/products/${encodeURIComponent(id)}?key=${encodeURIComponent(FIREBASE_API_KEY)}`;
+      const resp = await fetch(docUrl);
+      if (resp.ok) {
+        const data: any = await resp.json();
+        const fields = data?.fields || {};
+        const rawName = readFirestoreValue(fields.name);
+        const rawDesc = readFirestoreValue(fields.description);
+        const rawImage = readFirestoreValue(fields.image);
+        const rawPrice = readFirestoreValue(fields.price);
+
+        const parsedPrice = rawPrice != null ? Number(rawPrice) : NaN;
+        const hasValidPrice = Number.isFinite(parsedPrice);
+
+        if (rawName) {
+          name = `${rawName} – ${hasValidPrice ? `GH₵${parsedPrice.toFixed(2)}` : ''} | C.I SKIN CARE`.replace(' –  |', ' |');
+          description = rawDesc || description;
+          const img = rawImage || '';
+          image = String(img).startsWith('http')
+            ? String(img)
+            : `${origin}${String(img).startsWith('/') ? '' : '/'}${img || 'logo.jpg'}`;
+          if (hasValidPrice) {
+            priceText = `GH₵${parsedPrice.toFixed(2)}`;
+          }
+          isProduct = true;
+        } else {
+          name = `Product | C.I SKIN CARE`;
+          description = 'Discover science-backed luxury skincare.';
+        }
       } else {
         name = `Product | C.I SKIN CARE`;
         description = 'Discover science-backed luxury skincare.';
@@ -36,26 +76,32 @@ export default async function handler(req: any, res: any) {
 <meta property="product:price:currency" content="GHS">`
       : '';
 
+    // Escape dynamic content for HTML safety
+    const safeTitle = escapeHtml(name);
+    const safeDesc = escapeHtml(description);
+    const safeImage = escapeHtml(image);
+    const safeUrl = escapeHtml(url);
+
     const html = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${name}</title>
+<title>${safeTitle}</title>
 <meta property="og:type" content="${isProduct ? 'product' : 'website'}">
-<meta property="og:url" content="${url}">
-<meta property="og:title" content="${name}">
-<meta property="og:description" content="${description}">
-<meta property="og:image" content="${image}">
-<meta property="og:image:secure_url" content="${image}">
+<meta property="og:url" content="${safeUrl}">
+<meta property="og:title" content="${safeTitle}">
+<meta property="og:description" content="${safeDesc}">
+<meta property="og:image" content="${safeImage}">
+<meta property="og:image:secure_url" content="${safeImage}">
 <meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 ${productPriceMeta}
 <meta property="twitter:card" content="summary_large_image">
-<meta property="twitter:title" content="${name}">
-<meta property="twitter:description" content="${description}">
-<meta property="twitter:image" content="${image}">
+<meta property="twitter:title" content="${safeTitle}">
+<meta property="twitter:description" content="${safeDesc}">
+<meta property="twitter:image" content="${safeImage}">
 <link rel="icon" href="${origin}/logo.jpg">
 </head>
 <body>
