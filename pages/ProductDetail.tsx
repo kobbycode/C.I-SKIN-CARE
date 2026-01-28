@@ -1,6 +1,6 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useApp } from '../App';
 import { useProducts } from '../context/ProductContext';
 import { useReviews } from '../context/ReviewContext';
@@ -8,7 +8,8 @@ import { useNotification } from '../context/NotificationContext';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { addToCart, toggleWishlist, isInWishlist } = useApp();
+  const navigate = useNavigate();
+  const { addToCart, toggleWishlist, isInWishlist, setCartOpen } = useApp();
   const { products, loading } = useProducts();
   const { getApprovedReviewsByProduct, addReview } = useReviews();
   const { showNotification } = useNotification();
@@ -158,6 +159,15 @@ const ProductDetail: React.FC = () => {
       </div>
     );
   }
+
+  const handleBuyNow = () => {
+    if (!product) return;
+    const count = Number.isFinite(qty) ? Math.max(1, qty) : 1;
+    for (let i = 0; i < count; i++) addToCart({ ...product });
+    // addToCart opens the drawer; close it and take user straight to checkout
+    setCartOpen(false);
+    navigate('/checkout');
+  };
 
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -373,7 +383,10 @@ const ProductDetail: React.FC = () => {
               </button>
             </div>
 
-            <button className="w-full bg-gold-gradient text-primary font-black uppercase tracking-[0.2em] py-4 hover:opacity-90 transition-all rounded shadow-lg text-[10px]">
+            <button
+              onClick={handleBuyNow}
+              className="w-full bg-gold-gradient text-primary font-black uppercase tracking-[0.2em] py-4 hover:opacity-90 transition-all rounded shadow-lg text-[10px]"
+            >
               Complete Selection Now
             </button>
           </div>
