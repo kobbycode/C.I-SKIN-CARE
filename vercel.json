@@ -3,7 +3,7 @@
         {
             "source": "/product/:id",
             "has": [
-                { "type": "header", "key": "user-agent", "value": "(?i)(bot|crawler|spider|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|whatsapp|telegram|googlebot|bingbot|pinterest|applebot|discordbot|embed|slurp|duckduckbot|yandex|baiduspider|kakaotalk|line|snapchat|vkShare|w3c_validator)" }
+                { "type": "header", "key": "user-agent", "value": "(?i).*(bot|crawler|spider|facebookexternalhit|facebot|twitterbot|linkedinbot|slackbot|whatsapp|telegram|googlebot|bingbot|pinterest|applebot|discordbot|embed|slurp|duckduckbot|yandex|baiduspider|kakaotalk|line|snapchat|vkshare|w3c_validator).*" }
             ],
             "destination": "/api/og-product?id=:id"
         },
@@ -13,6 +13,13 @@
         }
     ],
     "headers": [
+        {
+            "source": "/product/(.*)",
+            "headers": [
+                { "key": "Cache-Control", "value": "no-store" },
+                { "key": "Vary", "value": "User-Agent" }
+            ]
+        },
         {
             "source": "/(.*)",
             "headers": [
