@@ -9,7 +9,7 @@ import { useNotification } from '../context/NotificationContext';
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToCart, toggleWishlist, isInWishlist } = useApp();
-  const { products } = useProducts();
+  const { products, loading } = useProducts();
   const { getApprovedReviewsByProduct, addReview } = useReviews();
   const { showNotification } = useNotification();
 
@@ -47,6 +47,15 @@ const ProductDetail: React.FC = () => {
       )
       .slice(0, 4); // Show up to 4 related products
   }, [product, products]);
+
+  // On direct visits from shared links, products load async. Show a loader until we know for sure.
+  if (loading) {
+    return (
+      <div className="pt-40 min-h-screen flex items-center justify-center">
+        <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!product) {
     return (

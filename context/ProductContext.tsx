@@ -51,8 +51,9 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Subscribe to changes
         const unsubscribe = onSnapshot(productsRef, (snapshot) => {
             const items: Product[] = [];
-            snapshot.forEach(doc => {
-                items.push(doc.data() as Product);
+            snapshot.forEach(docSnap => {
+                // Ensure we always have a stable id field (some docs may not store `id` inside the document)
+                items.push({ id: docSnap.id, ...(docSnap.data() as Omit<Product, 'id'>) } as Product);
             });
             setProducts(items);
             setLoading(false);
