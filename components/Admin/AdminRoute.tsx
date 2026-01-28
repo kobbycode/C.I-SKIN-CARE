@@ -23,7 +23,9 @@ export default function AdminRoute(props: { allow?: Role[]; children: React.Reac
   }
 
   if (!hasRole(allow)) {
-    return <Navigate to="/" replace />;
+    // If a logged-in user lacks staff permissions, keep them in the admin auth flow
+    // (instead of sending them to the public homepage).
+    return <Navigate to="/admin/login" replace state={{ from: location.pathname, reason: 'unauthorized' }} />;
   }
 
   return <>{children}</>;
