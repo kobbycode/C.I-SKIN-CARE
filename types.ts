@@ -39,6 +39,8 @@ export interface Order {
   date: string;
   time: string;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
+  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentReference?: string;
   total: number;
   items: CartItem[];
   shippingAddress: string;
@@ -57,9 +59,13 @@ export interface Category {
 
 export interface UserProfile {
   id: string;
+  /** Display username for staff/customer (not auth identifier) */
+  username?: string;
   fullName: string;
   email: string;
   statusLabel: string;
+  /** Authorization role for admin panel access */
+  role?: 'customer' | 'admin' | 'manager' | 'editor';
   skinType: string;
   skinTypeDetail: string;
   focusRitual: string;

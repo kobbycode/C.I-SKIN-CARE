@@ -18,7 +18,9 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onMobileClose }) => {
     { label: 'Orders', icon: 'shopping_cart', path: '/admin/orders' },
     { label: 'Customers', icon: 'group', path: '/admin/customers' },
     { label: 'Reviews', icon: 'star', path: '/admin/reviews' },
-    { label: 'Site Settings', icon: 'settings', path: '/admin/settings' }
+    { label: 'Site Settings', icon: 'settings', path: '/admin/settings' },
+    { label: 'Staff & Roles', icon: 'admin_panel_settings', path: '/admin/users' },
+    { label: 'Account', icon: 'manage_accounts', path: '/admin/account' }
   ];
 
   return (

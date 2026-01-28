@@ -14,6 +14,7 @@ import { JournalProvider } from './context/JournalContext';
 import { FAQProvider } from './context/FAQContext';
 import { CategoryProvider } from './context/CategoryContext';
 import { UserProvider } from './context/UserContext';
+import AdminRoute from './components/Admin/AdminRoute';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
@@ -44,6 +45,9 @@ const JournalManager = lazy(() => import('@/pages/Admin/JournalManager'));
 const AddProduct = lazy(() => import('./pages/Admin/AddProduct'));
 const Categories = lazy(() => import('./pages/Admin/Categories'));
 const FAQManager = lazy(() => import('./pages/Admin/FAQManager'));
+const AdminLogin = lazy(() => import('./pages/Admin/AdminLogin'));
+const AdminAccount = lazy(() => import('./pages/Admin/Account'));
+const AdminUsers = lazy(() => import('./pages/Admin/Users'));
 
 // Component for Suspense fallback
 const PageLoader = () => (
@@ -219,17 +223,20 @@ const MainLayout: React.FC = () => {
           <Route path="/journal" element={<Journal />} />
           <Route path="/journal/:id" element={<JournalDetail />} />
           <Route path="/loyalty" element={<Loyalty />} />
-          <Route path="/admin" element={<Dashboard />} />
-          <Route path="/admin/inventory" element={<Inventory />} />
-          <Route path="/admin/customers" element={<Customers />} />
-          <Route path="/admin/orders" element={<Orders />} />
-          <Route path="/admin/reviews" element={<AdminReviews />} />
-          <Route path="/admin/journal" element={<JournalManager />} />
-          <Route path="/admin/settings" element={<CMSSettings />} />
-          <Route path="/admin/inventory/add" element={<AddProduct />} />
-          <Route path="/admin/inventory/edit/:id" element={<AddProduct />} />
-          <Route path="/admin/categories" element={<Categories />} />
-          <Route path="/admin/faqs" element={<FAQManager />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
+          <Route path="/admin/inventory" element={<AdminRoute><Inventory /></AdminRoute>} />
+          <Route path="/admin/customers" element={<AdminRoute><Customers /></AdminRoute>} />
+          <Route path="/admin/orders" element={<AdminRoute><Orders /></AdminRoute>} />
+          <Route path="/admin/reviews" element={<AdminRoute><AdminReviews /></AdminRoute>} />
+          <Route path="/admin/journal" element={<AdminRoute><JournalManager /></AdminRoute>} />
+          <Route path="/admin/settings" element={<AdminRoute><CMSSettings /></AdminRoute>} />
+          <Route path="/admin/account" element={<AdminRoute><AdminAccount /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute allow={['admin']}><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/inventory/add" element={<AdminRoute><AddProduct /></AdminRoute>} />
+          <Route path="/admin/inventory/edit/:id" element={<AdminRoute><AddProduct /></AdminRoute>} />
+          <Route path="/admin/categories" element={<AdminRoute><Categories /></AdminRoute>} />
+          <Route path="/admin/faqs" element={<AdminRoute><FAQManager /></AdminRoute>} />
         </Routes>
       </div>
       {!isAdminPage && <Footer />}

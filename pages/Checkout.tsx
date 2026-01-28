@@ -25,7 +25,7 @@ const Checkout: React.FC = () => {
   const { cart, clearCart } = useApp();
   const { addOrder } = useOrders();
   const { showNotification } = useNotification();
-  const { currentUser, updateProfile } = useUser();
+  const { currentUser, getIdToken, updateProfile } = useUser();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState(1);
@@ -94,12 +94,13 @@ const Checkout: React.FC = () => {
   };
 
   const onPaymentSuccess = async (reference: any) => {
-    const orderSummary = {
+    const orderDraft = {
       customerName: `${formData.firstName} ${formData.lastName}`,
       customerEmail: formData.email,
       date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
       time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
       status: 'Pending' as const,
+      paymentStatus: 'pending' as const,
       total,
       items: [...cart],
       shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
@@ -114,13 +115,26 @@ const Checkout: React.FC = () => {
     };
 
     try {
-      const orderId = await addOrder(orderSummary);
-      showNotification('Order placed successfully!', 'success');
+      const token = await getIdToken();
+      if (!token) throw new Error('Not authenticated');
+      const ref = reference?.reference || reference?.trxref || reference;
+      const resp = await fetch('/api/paystack-verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ reference: ref, orderDraft }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) throw new Error(data?.error || 'Payment verification failed');
+
+      showNotification('Payment verified. Order placed!', 'success');
       clearCart();
-      navigate('/order-confirmation', { state: { orderSummary: { ...orderSummary, id: orderId } } });
+      navigate('/order-confirmation', { state: { orderSummary: { ...orderDraft, id: data.orderId } } });
     } catch (error) {
       console.error(error);
-      showNotification('Failed to record order. Please contact support.', 'error');
+      showNotification('Payment verification failed. Please contact support.', 'error');
     }
   };
 
@@ -153,6 +167,7 @@ const Checkout: React.FC = () => {
             date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
             time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
             status: 'Pending' as const,
+            paymentStatus: 'pending' as const,
             total,
             items: [...cart],
             shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
