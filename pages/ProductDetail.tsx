@@ -58,7 +58,11 @@ const ProductDetail: React.FC = () => {
   }
 
   const isFavorited = isInWishlist(product.id);
-  const shareUrl = encodeURIComponent(window.location.href);
+  // WhatsApp caches previews aggressively. Add a unique query param to force fresh scraping.
+  // This does NOT change the actual product route; it only affects shared URLs.
+  const shareBaseUrl = window.location.href;
+  const shareUniqueUrl = `${shareBaseUrl}${shareBaseUrl.includes('?') ? '&' : '?'}share=${Date.now()}`;
+  const shareUrl = encodeURIComponent(shareUniqueUrl);
   const shareTitle = encodeURIComponent(product.name);
   const shareImage = encodeURIComponent(product.image);
 
@@ -66,7 +70,7 @@ const ProductDetail: React.FC = () => {
     facebook: `https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`,
     x: `https://twitter.com/intent/tweet?url=${shareUrl}&text=${shareTitle}`,
     pinterest: `https://pinterest.com/pin/create/button/?url=${shareUrl}&media=${shareImage}&description=${shareTitle}`,
-    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${product.name} – GH₵${product.price.toFixed(2)}\n${window.location.href}`)}`
+    whatsapp: `https://wa.me/?text=${encodeURIComponent(`${product.name} – GH₵${product.price.toFixed(2)}\n${shareUniqueUrl}`)}`
   };
 
   const images = [product.image];
