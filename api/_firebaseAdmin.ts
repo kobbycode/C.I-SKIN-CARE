@@ -1,52 +1,44 @@
-import admin from 'firebase-admin';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
 function getServiceAccount() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   if (!raw) return null;
   try {
-    // Basic cleanup of surrounding quotes
     const cleaned = raw.trim().replace(/^['"]|['"]$/g, '');
-    return JSON.parse(cleaned);
+    const sa = JSON.parse(cleaned);
+    if (sa.private_key) sa.private_key = sa.private_key.replace(/\\n/g, '\n');
+    return sa;
   } catch (e) {
-    // If that fails, try replacing escaped newlines
-    const fixed = raw.trim().replace(/^['"]|['"]$/g, '').replace(/\\n/g, '\n');
-    return JSON.parse(fixed);
+    return null;
   }
 }
 
-export function getAdminApp(): admin.app.App {
-  if (admin.apps.length) return admin.apps[0]!;
+export function getAdminApp() {
+  const apps = getApps();
+  if (apps.length > 0) return apps[0];
 
   const sa = getServiceAccount();
-  if (!sa) throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON is missing');
+  if (!sa) throw new Error('Invalid Service Account JSON');
 
-  return admin.initializeApp({
-    credential: admin.credential.cert(sa)
+  return initializeApp({
+    credential: cert(sa)
   });
 }
 
-export function getAdminFirestore() {
-  return getAdminApp().firestore();
-}
-
 export function getAdminAuth() {
-  return getAdminApp().auth();
+  return getAuth(getAdminApp());
 }
 
-export async function requireAuth(req: any): Promise<{ uid: string; email?: string }> {
-  const authHeader = (req.headers?.authorization || req.headers?.Authorization || '') as string;
-  const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  if (!match) throw new Error('Missing token');
-
-  const token = match[1];
-  const decoded = await getAdminAuth().verifyIdToken(token);
-  return { uid: decoded.uid, email: decoded.email };
+export function getAdminFirestore() {
+  return getFirestore(getAdminApp());
 }
 
-export async function requireAdmin(req: any): Promise<{ uid: string }> {
+export async function requireAdmin(req: any) {
   const authHeader = (req.headers?.authorization || req.headers?.Authorization || '') as string;
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
-  if (!match) throw new Error('Missing token');
+  if (!match) throw new Error('Unauthorized: Missing token');
 
   const token = match[1];
   const decoded = await getAdminAuth().verifyIdToken(token);
@@ -54,9 +46,17 @@ export async function requireAdmin(req: any): Promise<{ uid: string }> {
 
   const db = getAdminFirestore();
   const snap = await db.collection('users').doc(uid).get();
-  const role = snap.exists ? (snap.data() as any).role : 'customer';
 
-  if (role !== 'admin') throw new Error('Forbidden');
+  if (!snap.exists) {
+    console.warn(`[requireAdmin] User ${uid} not found in Firestore`);
+    throw new Error('Forbidden: User record missing');
+  }
+
+  const role = snap.data()?.role || 'customer';
+  if (role !== 'admin') {
+    console.warn(`[requireAdmin] User ${uid} has role ${role}, not admin`);
+    throw new Error('Forbidden: Admin access required');
+  }
 
   return { uid };
 }
