@@ -1,63 +1,28 @@
 import admin from 'firebase-admin';
 
-function parseServiceAccount() {
+function getServiceAccount() {
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-  if (!raw) {
-    console.error('[firebaseAdmin] FIREBASE_SERVICE_ACCOUNT_JSON is missing');
-    return null;
-  }
-
-  let sa: any;
+  if (!raw) return null;
   try {
-    // Try direct parse first
-    sa = JSON.parse(raw.trim().replace(/^['"]|['"]$/g, ''));
-    console.log('[firebaseAdmin] JSON parsed successfully');
-  } catch (e: any) {
-    console.warn('[firebaseAdmin] Standard JSON parse failed, trying substitution', e.message);
-    try {
-      // Handle escaped newlines
-      const fixed = raw.trim()
-        .replace(/^['"]|['"]$/g, '')
-        .replace(/\\\\n/g, '\\n')
-        .replace(/\\n/g, '\n');
-      sa = JSON.parse(fixed);
-      console.log('[firebaseAdmin] JSON parsed with fixed newlines');
-    } catch (e2: any) {
-      console.error('[firebaseAdmin] Failed to parse SA JSON:', e2.message);
-      return null;
-    }
+    // Basic cleanup of surrounding quotes
+    const cleaned = raw.trim().replace(/^['"]|['"]$/g, '');
+    return JSON.parse(cleaned);
+  } catch (e) {
+    // If that fails, try replacing escaped newlines
+    const fixed = raw.trim().replace(/^['"]|['"]$/g, '').replace(/\\n/g, '\n');
+    return JSON.parse(fixed);
   }
-
-  // Final check on private key
-  if (sa && sa.private_key) {
-    sa.private_key = sa.private_key.replace(/\\n/g, '\n');
-  }
-
-  return sa;
 }
 
 export function getAdminApp(): admin.app.App {
-  if (admin.apps.length) {
-    return admin.apps[0]!;
-  }
+  if (admin.apps.length) return admin.apps[0]!;
 
-  console.log('[firebaseAdmin] Creating new instance...');
-  const sa = parseServiceAccount();
-  if (!sa) {
-    throw new Error('Service Account configuration is invalid or missing');
-  }
+  const sa = getServiceAccount();
+  if (!sa) throw new Error('FIREBASE_SERVICE_ACCOUNT_JSON is missing');
 
-  try {
-    console.log('[firebaseAdmin] Creating credential...');
-    const credential = admin.credential.cert(sa);
-    console.log('[firebaseAdmin] Credential created. Initializing app...');
-    return admin.initializeApp({
-      credential
-    });
-  } catch (e: any) {
-    console.error('[firebaseAdmin] CRITICAL INIT ERROR:', e.message);
-    throw e;
-  }
+  return admin.initializeApp({
+    credential: admin.credential.cert(sa)
+  });
 }
 
 export function getAdminFirestore() {
@@ -91,10 +56,7 @@ export async function requireAdmin(req: any): Promise<{ uid: string }> {
   const snap = await db.collection('users').doc(uid).get();
   const role = snap.exists ? (snap.data() as any).role : 'customer';
 
-  if (role !== 'admin') {
-    console.warn(`[requireAdmin] Access Denied: User ${uid} has role ${role}`);
-    throw new Error('Forbidden');
-  }
+  if (role !== 'admin') throw new Error('Forbidden');
 
   return { uid };
 }
