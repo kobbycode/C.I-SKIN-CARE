@@ -45,7 +45,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 const userRef = doc(db, 'users', firebaseUser.uid);
                 const snap = await getDoc(userRef);
                 if (snap.exists()) {
-                    setCurrentUser(snap.data() as UserProfile);
+                    const userData = snap.data() as UserProfile;
+                    // Sync email from Auth to Firestore if they differ (e.g., after email verification)
+                    if (firebaseUser.email && userData.email !== firebaseUser.email) {
+                        await setDoc(userRef, { email: firebaseUser.email }, { merge: true });
+                        userData.email = firebaseUser.email;
+                    }
+                    setCurrentUser(userData);
                 } else {
                     const username =
                         (firebaseUser.email?.split('@')[0] || firebaseUser.displayName || 'member')
