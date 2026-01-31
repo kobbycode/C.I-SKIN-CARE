@@ -147,10 +147,10 @@ const ProductDetail: React.FC = () => {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <img
+              <OptimizedImage
                 src={images[activeImageIdx]}
                 alt={product.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
+                className="w-full h-full group-hover:scale-105 transition-transform duration-1000"
               />
             )}
             <div className="absolute top-6 left-6 flex flex-col gap-2">

@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import UserGallery from '../components/UserGallery';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import OptimizedImage from '../components/OptimizedImage';
 
 const Home: React.FC = () => {
   const { siteConfig } = useSiteConfig();
@@ -31,10 +32,10 @@ const Home: React.FC = () => {
       m === 11 || m === 0 || m === 1
         ? 'Winter'
         : m >= 2 && m <= 4
-        ? 'Spring'
-        : m >= 5 && m <= 7
-        ? 'Summer'
-        : 'Autumn';
+          ? 'Spring'
+          : m >= 5 && m <= 7
+            ? 'Summer'
+            : 'Autumn';
     return `${season} Collection ${y}`;
   }, []);
 
@@ -64,10 +65,11 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <header className="relative h-[80vh] lg:h-screen overflow-hidden">
         <div className="absolute inset-0">
-          <img
-            alt={activeHero?.title || "Beautiful glowing skin"}
-            className="w-full h-full object-cover object-[center_25%]"
+          <OptimizedImage
             src={activeHero?.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuAboFWaO4tGfvMQ6x8YVJhB4MsX9dAZvyVpImJ-E-HQ5E0T6G3kprf7DBc12UgFaVPuHeEOkebv_0CJBJ_wQ4VbOtkKjBYLJ_dF_vQOsq9jMlTOLcKsMyexRCotCfntLS2pyoB4LRlymwjKRwEg4dgR7SJCdOC_JztikGLdytoTpzKHG-0hClG3QDNBaSwD3QxxksB6ZJ4NhHGCpAdfx3Y2ICUr635Lbhmi0u3gMw2mEeFkH8-ZukAvPyJRQjCEZgE6nmgU6H2u__Y"}
+            alt={activeHero?.title || "Beautiful glowing skin"}
+            className="w-full h-full"
+            loading="eager" // Hero image should load fast
           />
           <div className="absolute inset-0 bg-black/35"></div>
         </div>
@@ -118,7 +120,7 @@ const Home: React.FC = () => {
               ].map((col, i) => (
                 <div key={i} className="group cursor-pointer hero-zoom">
                   <div className="relative h-[500px] overflow-hidden">
-                    <img src={col.img} alt={col.title} className="w-full h-full object-cover transition-transform duration-700" />
+                    <OptimizedImage src={col.img} alt={col.title} className="w-full h-full transition-transform duration-700" />
                     <div className="absolute inset-0 bg-black/10 group-hover:bg-black/20 transition-all"></div>
                     <div className="absolute bottom-10 left-10 text-white">
                       <h3 className="font-display text-2xl mb-2">{col.title}</h3>
@@ -140,10 +142,10 @@ const Home: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-16">
               <div className="lg:w-1/2">
-                <img
+                <OptimizedImage
+                  src="/products/bel-eclat-tumericSet.jpg"
                   alt="Laboratory bottles and plants"
                   className="shadow-2xl grayscale-[20%] w-full rounded-2xl"
-                  src="/products/bel-eclat-tumericSet.jpg"
                 />
               </div>
               <div className="lg:w-1/2">

@@ -8,18 +8,22 @@ const Login: React.FC = () => {
   const { showNotification } = useNotification();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from || '/profile';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       await loginWithEmail(email, password);
       showNotification('Logged in successfully', 'success');
       navigate(from);
     } catch (err) {
       showNotification('Login failed. Check your credentials or register.', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -44,8 +48,12 @@ const Login: React.FC = () => {
             className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[12px] tracking-widest focus:ring-accent"
             required
           />
-          <button className="bg-primary text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px]">
-            Login
+          <button
+            disabled={isLoading}
+            className="w-full bg-primary text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 hover:brightness-110 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+          >
+            {isLoading && <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>}
+            {isLoading ? 'Logging into your ritual...' : 'Login'}
           </button>
         </form>
         <div className="mt-4">

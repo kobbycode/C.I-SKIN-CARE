@@ -9,18 +9,22 @@ const Register: React.FC = () => {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as any)?.from || '/profile';
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       await registerWithEmail({ fullName, email, password });
       showNotification('Account created • Logged in', 'success');
       navigate(from);
     } catch (err) {
       showNotification('Failed to register. Try again.', 'error');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -52,8 +56,12 @@ const Register: React.FC = () => {
             className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[12px] tracking-widest focus:ring-accent"
             required
           />
-          <button className="bg-primary text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px]">
-            Create Account
+          <button
+            disabled={isLoading}
+            className="w-full bg-primary text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 hover:brightness-110 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed transition-all"
+          >
+            {isLoading && <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>}
+            {isLoading ? 'Initiating Ritual...' : 'Create Account'}
           </button>
         </form>
         <div className="mt-4">

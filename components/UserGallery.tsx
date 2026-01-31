@@ -1,6 +1,6 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
+import OptimizedImage from './OptimizedImage';
 
 const FEED_ITEMS = [
     { id: 1, img: "/products/bel-eclat-hero.jpg", owner: "@sophia.beauty", tag: "Radiance Ritual" },
@@ -39,10 +39,10 @@ const UserGallery: React.FC = () => {
                             transition={{ delay: idx * 0.1 }}
                             className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer"
                         >
-                            <img
+                            <OptimizedImage
                                 src={item.img}
                                 alt={item.tag}
-                                className="w-full h-full object-cover grayscale-[30%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110"
+                                className="w-full h-full grayscale-[30%] group-hover:grayscale-0 transition-all duration-700 group-hover:scale-110"
                             />
                             <div className="absolute inset-0 bg-luxury-brown/40 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-4">
                                 <p className="text-gold font-black text-[8px] uppercase tracking-widest mb-1">{item.owner}</p>

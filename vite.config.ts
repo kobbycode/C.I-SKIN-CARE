@@ -16,7 +16,7 @@ export default defineConfig(({ mode }) => {
     },
     build: {
       outDir: 'dist',
-      sourcemap: false,
+      sourmap: false,
       minify: 'esbuild',
       rollupOptions: {
         output: {
@@ -29,7 +29,6 @@ export default defineConfig(({ mode }) => {
             if (id.includes('framer-motion')) return 'animation';
             if (id.includes('react-paystack')) return 'payments';
 
-            // Let Rollup decide for everything else to avoid circular chunks.
             return;
           }
         }

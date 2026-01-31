@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../App';
 import { useProducts } from '../context/ProductContext';
+import OptimizedImage from '../components/OptimizedImage';
 
 const Search: React.FC = () => {
   const { addToCart } = useApp();
@@ -81,10 +82,10 @@ const Search: React.FC = () => {
                 <div key={product.id} className="group flex flex-col">
                   <div className="relative aspect-[4/5] bg-primary/5 overflow-hidden mb-6">
                     <Link to={`/product/${product.id}`}>
-                      <img
+                      <OptimizedImage
                         src={product.image}
                         alt={product.name}
-                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                        className="w-full h-full transition-transform duration-1000 group-hover:scale-105"
                       />
                     </Link>
                     <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">

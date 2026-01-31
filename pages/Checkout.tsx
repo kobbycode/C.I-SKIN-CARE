@@ -9,6 +9,7 @@ import { useNotification } from '../context/NotificationContext';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Coupon } from '../types';
+import OptimizedImage from '../components/OptimizedImage';
 
 interface CheckoutFormData {
   email: string;
@@ -847,7 +848,7 @@ const Checkout: React.FC = () => {
               {cart.map((item) => (
                 <div key={item.id} className="flex gap-4">
                   <div className="w-20 h-20 bg-white dark:bg-stone-800 rounded-lg overflow-hidden shrink-0 border border-primary/5 relative">
-                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <OptimizedImage src={item.image} alt={item.name} className="w-full h-full" />
                     <span className="absolute -top-2 -right-2 bg-primary text-white text-[9px] w-5 h-5 rounded-full flex items-center justify-center font-bold">
                       {item.quantity}
                     </span>
