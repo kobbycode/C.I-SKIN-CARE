@@ -12,15 +12,26 @@ const Header: React.FC = () => {
 
   const navLinks = siteConfig.navLinks;
 
+  /* Close mobile menu on desktop resize */
+  React.useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <>
       <nav className="fixed w-full z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-stone-200 dark:border-stone-800 transition-colors">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-5 flex justify-between items-center">
 
-          {/* Mobile Menu Toggle */}
+          {/* Mobile Menu Toggle - Force hidden on desktop */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="lg:hidden flex items-center justify-center material-symbols-outlined text-secondary dark:text-primary text-[28px] font-light hover:text-accent transition-colors"
+            className="flex lg:!hidden items-center justify-center material-symbols-outlined text-secondary dark:text-primary text-[28px] font-light hover:text-accent transition-colors"
           >
             menu
           </button>
