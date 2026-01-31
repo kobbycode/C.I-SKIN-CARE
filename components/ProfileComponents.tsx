@@ -17,7 +17,7 @@ export const AccountSecurityEditor: React.FC = () => {
     const [changingPw, setChangingPw] = useState(false);
     const [changingEmail, setChangingEmail] = useState(false);
     const [savingProfile, setSavingProfile] = useState(false);
-    const [uploadingAvatar, setUploadingAvatar] = useState(false);
+    // Removed unused uploadingAvatar state
     const [showCurrentPw, setShowCurrentPw] = useState(false);
     const [showNewPw, setShowNewPw] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -93,32 +93,28 @@ export const AccountSecurityEditor: React.FC = () => {
     const saveProfileInfo = async () => {
         setSavingProfile(true);
         try {
-            await updateProfile({ fullName: fullName.trim(), username: username.trim() });
+            let updates: any = { fullName: fullName.trim(), username: username.trim() };
+
+            if (avatarFile && currentUser) {
+                const storageRef = ref(storage, `avatars/${currentUser.id}/${avatarFile.name}`);
+                await uploadBytes(storageRef, avatarFile);
+                const downloadURL = await getDownloadURL(storageRef);
+                updates.avatar = downloadURL;
+            }
+
+            await updateProfile(updates);
             showNotification('Profile updated successfully', 'success');
+
+            // Clear file selection after successful save
+            if (avatarFile) {
+                setAvatarFile(null);
+                setAvatarPreview(null);
+            }
         } catch (e) {
             console.error(e);
             showNotification('Failed to update profile', 'error');
         } finally {
             setSavingProfile(false);
-        }
-    };
-
-    const uploadAvatar = async () => {
-        if (!avatarFile || !currentUser) return;
-        setUploadingAvatar(true);
-        try {
-            const storageRef = ref(storage, `avatars/${currentUser.id}/${avatarFile.name}`);
-            await uploadBytes(storageRef, avatarFile);
-            const downloadURL = await getDownloadURL(storageRef);
-            await updateProfile({ avatar: downloadURL });
-            showNotification('Avatar updated successfully', 'success');
-            setAvatarFile(null);
-            setAvatarPreview(null);
-        } catch (e) {
-            console.error(e);
-            showNotification('Failed to upload avatar', 'error');
-        } finally {
-            setUploadingAvatar(false);
         }
     };
 
@@ -157,15 +153,6 @@ export const AccountSecurityEditor: React.FC = () => {
                                 }}
                                 className="text-xs"
                             />
-                            {avatarFile && (
-                                <button
-                                    disabled={uploadingAvatar}
-                                    onClick={uploadAvatar}
-                                    className={`mt-2 px-4 py-2 rounded text-[10px] font-bold uppercase tracking-widest ${uploadingAvatar ? 'bg-stone-300 text-white' : 'bg-accent text-white hover:bg-[#e19c00]'}`}
-                                >
-                                    {uploadingAvatar ? 'Uploading...' : 'Upload Avatar'}
-                                </button>
-                            )}
                         </div>
                     </div>
 
