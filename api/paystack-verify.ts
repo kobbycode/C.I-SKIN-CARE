@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getAdminFirestore, requireAuth } from './_firebaseAdmin.js';
+import { sendEmail } from './_sendEmail.js';
 
 type VerifyResponse = {
   status: boolean;
@@ -96,6 +97,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // 3. Create the order
       transaction.set(orderRef, orderDoc);
     });
+
+    // 4. Send confirmation email (don't await to avoid blocking response, or await for reliability)
+    try {
+      await sendEmail({
+        to: orderDoc.customerEmail,
+        type: 'order_confirmation',
+        order: orderDoc
+      });
+    } catch (emailError) {
+      console.error('Failed to send confirmation email:', emailError);
+      // We don't throw here because the order is already created and payment verified
+    }
 
     return res.status(200).json({ ok: true, orderId: orderRef.id });
   } catch (e: any) {

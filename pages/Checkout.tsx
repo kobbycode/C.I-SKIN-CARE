@@ -208,7 +208,42 @@ const Checkout: React.FC = () => {
     alert('Payment was cancelled. You can try again when ready.');
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const validateStock = async () => {
+    try {
+      const stockChecks = await Promise.all(cart.map(async (item) => {
+        const productRef = doc(db, 'products', item.id);
+        const productSnap = await getDoc(productRef);
+        if (!productSnap.exists()) return { ...item, exists: false, availableStock: 0 };
+
+        const data = productSnap.data();
+        let availableStock = 0;
+
+        if (item.selectedVariant) {
+          const variant = data.variants?.find((v: any) => v.id === item.selectedVariant?.id);
+          availableStock = variant?.stock ?? 0;
+        } else {
+          availableStock = data.stock ?? 0;
+        }
+
+        return { ...item, exists: true, availableStock };
+      }));
+
+      const outOfStockItems = stockChecks.filter(check => !check.exists || check.availableStock < check.quantity);
+
+      if (outOfStockItems.length > 0) {
+        const itemNames = outOfStockItems.map(i => i.name).join(', ');
+        showNotification(`The following items are no longer available in the requested quantity: ${itemNames}. Please update your bag.`, 'error');
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error('Stock validation error:', error);
+      showNotification('Failed to verify stock. Please try again.', 'error');
+      return false;
+    }
+  };
+
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!currentUser) {
@@ -222,49 +257,69 @@ const Checkout: React.FC = () => {
       return;
     }
 
-    if (selectedPayment === 'pay_on_delivery') {
-      (async () => {
-        try {
-          setIsProcessing(true);
-          const orderSummary = {
-            customerName: `${formData.firstName} ${formData.lastName}`,
-            customerEmail: formData.email,
-            date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
-            time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
-            status: 'Pending' as const,
-            paymentStatus: 'pending' as const,
-            total,
-            items: [...cart],
-            shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
-            paymentMethod: 'Pay on Delivery',
-            couponCode: appliedCoupon?.code,
-            discount: discountAmount
-          };
+    setIsProcessing(true);
 
-          // Increment coupon usage if applied
-          if (appliedCoupon) {
-            try {
-              const couponRef = doc(db, 'coupons', appliedCoupon.id);
-              await updateDoc(couponRef, { usedCount: increment(1) });
-            } catch (e) {
-              console.error('Failed to increment coupon usage', e);
-            }
-          }
-          const orderId = await addOrder(orderSummary);
-          showNotification('Order placed. Pay on delivery selected.', 'success');
-          clearCart();
-          navigate('/order-confirmation', { state: { orderSummary: { ...orderSummary, id: orderId } } });
-        } catch (error) {
-          console.error(error);
-          showNotification('Failed to record order. Please contact support.', 'error');
-        } finally {
-          setIsProcessing(false);
-        }
-      })();
+    // Final stock validation
+    const isStockAvailable = await validateStock();
+    if (!isStockAvailable) {
+      setIsProcessing(false);
       return;
     }
 
-    setIsProcessing(true);
+    if (selectedPayment === 'pay_on_delivery') {
+      try {
+        const orderSummary = {
+          customerName: `${formData.firstName} ${formData.lastName}`,
+          customerEmail: formData.email,
+          date: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
+          time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+          status: 'Pending' as const,
+          paymentStatus: 'pending' as const,
+          total,
+          items: [...cart],
+          shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
+          paymentMethod: 'Pay on Delivery',
+          couponCode: appliedCoupon?.code,
+          discount: discountAmount
+        };
+
+        // Increment coupon usage if applied
+        if (appliedCoupon) {
+          try {
+            const couponRef = doc(db, 'coupons', appliedCoupon.id);
+            await updateDoc(couponRef, { usedCount: increment(1) });
+          } catch (e) {
+            console.error('Failed to increment coupon usage', e);
+          }
+        }
+        const orderId = await addOrder(orderSummary);
+
+        // Trigger order confirmation email
+        try {
+          const token = await getIdToken();
+          await fetch('/api/send-order-email', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ order: { ...orderSummary, id: orderId }, type: 'order_confirmation' }),
+          });
+        } catch (emailError) {
+          console.error('Failed to trigger confirmation email:', emailError);
+        }
+
+        showNotification('Order placed. Pay on delivery selected.', 'success');
+        clearCart();
+        navigate('/order-confirmation', { state: { orderSummary: { ...orderSummary, id: orderId } } });
+      } catch (error) {
+        console.error(error);
+        showNotification('Failed to record order. Please contact support.', 'error');
+      } finally {
+        setIsProcessing(false);
+      }
+      return;
+    }
 
     // Initialize Paystack payment
     initializePayment({

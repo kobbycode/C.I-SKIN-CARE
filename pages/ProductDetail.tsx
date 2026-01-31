@@ -107,7 +107,10 @@ const ProductDetail: React.FC = () => {
     }
   };
 
-  const images = product ? [product.image] : [];
+  const images = useMemo(() => {
+    if (!product) return [];
+    return [product.image, ...(product.images || [])].filter(Boolean);
+  }, [product]);
 
   useEffect(() => {
     if (!product) return;
@@ -269,20 +272,34 @@ const ProductDetail: React.FC = () => {
         {/* Left: Product Gallery */}
         <div className="space-y-4">
           <div className="aspect-[4/5] bg-stone-50 dark:bg-stone-900 rounded-lg overflow-hidden relative group border border-primary/5">
-            <OptimizedImage
-              src={images[activeImageIdx]}
-              alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-              loading="eager"
-            />
+            {product.videoUrl && activeImageIdx === images.length ? (
+              <div className="w-full h-full">
+                {product.videoUrl.includes('youtube.com') || product.videoUrl.includes('youtu.be') ? (
+                  <iframe
+                    src={`https://www.youtube.com/embed/${product.videoUrl.split('v=')[1]?.split('&')[0] || product.videoUrl.split('/').pop()}`}
+                    className="w-full h-full"
+                    allowFullScreen
+                  ></iframe>
+                ) : (
+                  <video src={product.videoUrl} controls className="w-full h-full object-cover"></video>
+                )}
+              </div>
+            ) : (
+              <OptimizedImage
+                src={images[activeImageIdx]}
+                alt={product.name}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                loading="eager"
+              />
+            )}
             {product.status === 'Active' && (
               <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 text-[9px] uppercase tracking-widest font-bold border border-gold/30">
                 Best Seller
               </div>
             )}
           </div>
-          {images.length > 1 && (
-            <div className="grid grid-cols-4 gap-4">
+          {(images.length > 1 || product.videoUrl) && (
+            <div className="grid grid-cols-5 gap-4">
               {images.map((img, i) => (
                 <button
                   key={i}
@@ -292,6 +309,15 @@ const ProductDetail: React.FC = () => {
                   <img src={img} alt={`View ${i + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
+              {product.videoUrl && (
+                <button
+                  onClick={() => setActiveImageIdx(images.length)}
+                  className={`aspect-square rounded overflow-hidden border-2 transition-all flex flex-col items-center justify-center bg-stone-100 ${activeImageIdx === images.length ? 'border-primary' : 'border-transparent opacity-60 hover:opacity-100'}`}
+                >
+                  <span className="material-symbols-outlined text-stone-500">play_circle</span>
+                  <span className="text-[8px] font-bold uppercase tracking-tighter mt-1">Video</span>
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -322,77 +348,133 @@ const ProductDetail: React.FC = () => {
             <div className="mb-8">
               <label className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D] dark:text-stone-300 mb-3 block">Select Option</label>
               <div className="flex flex-wrap gap-3">
-                {product.variants.map((v) => (
-                  <button
-                    key={v.id}
-                    onClick={() => setSelectedVariant(v)}
-                    className={`px-4 py-3 rounded border text-xs font-bold uppercase tracking-wider transition-all min-w-[3rem] ${selectedVariant?.id === v.id
-                      ? 'bg-primary text-white border-primary shadow-md'
-                      : 'bg-transparent border-stone-200 dark:border-stone-700 text-stone-500 hover:border-primary hover:text-primary'
-                      }`}
-                  >
-                    {v.name}
-                  </button>
-                ))}
+                {product.variants.map((v) => {
+                  const variantOutOfStock = (v.stock ?? 0) <= 0;
+                  return (
+                    <button
+                      key={v.id}
+                      onClick={() => setSelectedVariant(v)}
+                      className={`px-4 py-3 rounded border text-xs font-bold uppercase tracking-wider transition-all min-w-[3rem] relative ${selectedVariant?.id === v.id
+                        ? 'bg-primary text-white border-primary shadow-md'
+                        : 'bg-transparent border-stone-200 dark:border-stone-700 text-stone-500 hover:border-primary hover:text-primary'
+                        } ${variantOutOfStock ? 'opacity-50' : ''}`}
+                    >
+                      {v.name}
+                      {variantOutOfStock && (
+                        <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[7px] px-1 py-0.5 rounded font-black uppercase tracking-tighter">Out</span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
+
+          {/* Coupon Compatibility Banner */}
+          {product.couponCodes && product.couponCodes.length > 0 && (
+            <div className="mb-8 p-4 bg-green-50/50 dark:bg-green-950/20 rounded-xl border border-green-100/50 dark:border-green-900/30">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="material-symbols-outlined text-green-600 text-sm">confirmation_number</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Eligible Ritual Savings</span>
+              </div>
+              <p className="text-[9px] text-green-600/80 uppercase font-bold tracking-widest leading-loose">
+                Use code(s): {product.couponCodes.map((code, idx) => (
+                  <span key={code} className="text-stone-900 dark:text-white bg-white dark:bg-stone-800 px-2 py-0.5 rounded border border-green-100 mx-1">{code}</span>
+                ))}
+              </p>
+            </div>
+          )}
+
+          {/* Stock Notification */}
+          {(() => {
+            const currentStock = selectedVariant ? (selectedVariant.stock ?? 0) : (product.stock ?? 0);
+            if (currentStock <= 0) {
+              return (
+                <div className="mb-8 flex items-center gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-100 dark:border-red-900/30">
+                  <span className="material-symbols-outlined text-lg">error</span>
+                  <p className="text-xs font-bold uppercase tracking-widest">Currently Sold Out</p>
+                </div>
+              );
+            }
+            if (currentStock <= 10) {
+              return (
+                <div className="mb-8 flex items-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-100 dark:border-amber-900/30">
+                  <span className="material-symbols-outlined text-lg">priority_high</span>
+                  <p className="text-xs font-bold uppercase tracking-widest">Only {currentStock} Left in Ritual Vault</p>
+                </div>
+              );
+            }
+            return null;
+          })()}
 
           <p className="text-stone-600 dark:text-stone-400 mb-8 leading-relaxed font-light">
             {product.description} Engineered with our proprietary cellular complex, this formulation targets visible signs of aging while providing an instant, luminous glow that lasts all day.
           </p>
 
-          {/* ... */}
-
           {/* Action Row */}
-          <div className="flex flex-col space-y-4 mb-10">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center border border-stone-200 dark:border-stone-700 rounded h-14 w-32 shrink-0">
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-4 hover:text-primary transition-colors">-</button>
-                <input
-                  type="number"
-                  value={qty}
-                  onChange={(e) => setQty(parseInt(e.target.value) || 1)}
-                  className="w-full text-center border-none bg-transparent focus:ring-0 font-bold"
-                />
-                <button onClick={() => setQty(qty + 1)} className="px-4 hover:text-primary transition-colors">+</button>
+          {(() => {
+            const currentStock = selectedVariant ? (selectedVariant.stock ?? 0) : (product.stock ?? 0);
+            const isOutOfStock = currentStock <= 0;
+
+            return (
+              <div className="flex flex-col space-y-4 mb-10">
+                <div className="flex items-center gap-4">
+                  <div className={`flex items-center border border-stone-200 dark:border-stone-700 rounded h-14 w-32 shrink-0 ${isOutOfStock ? 'opacity-30 pointer-events-none' : ''}`}>
+                    <button onClick={() => setQty(Math.max(1, qty - 1))} className="px-4 hover:text-primary transition-colors">-</button>
+                    <input
+                      type="number"
+                      value={qty}
+                      onChange={(e) => setQty(parseInt(e.target.value) || 1)}
+                      className="w-full text-center border-none bg-transparent focus:ring-0 font-bold"
+                    />
+                    <button onClick={() => setQty(qty + 1)} className="px-4 hover:text-primary transition-colors">+</button>
+                  </div>
+
+                  <button
+                    onClick={() => {
+                      if (product) {
+                        addToCart(product, selectedVariant || undefined, qty);
+                      }
+                    }}
+                    disabled={isOutOfStock}
+                    className={`flex-1 font-bold uppercase tracking-[0.2em] text-[10px] h-14 shadow-lg transition-all rounded ${isOutOfStock
+                      ? 'bg-stone-100 text-stone-400 cursor-not-allowed shadow-none'
+                      : 'bg-primary text-white hover:brightness-110'
+                      }`}
+                  >
+                    {isOutOfStock ? 'Awaiting Restock' : 'Add to Ritual Bag'}
+                  </button>
+
+                  <button
+                    onClick={() => toggleWishlist(product)}
+                    className="w-14 h-14 flex items-center justify-center border border-stone-200 dark:border-stone-800 rounded hover:bg-stone-50 dark:hover:bg-stone-900 transition-all group shrink-0"
+                    aria-label={isFavorited ? "Remove from Wishlist" : "Add to Wishlist"}
+                  >
+                    <span className={`material-symbols-outlined transition-all ${isFavorited ? 'text-accent fill-1' : 'text-stone-300 group-hover:text-accent'}`}>
+                      favorite
+                    </span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (product) {
+                      addToCart(product, selectedVariant || undefined, qty);
+                      setCartOpen(false);
+                      navigate('/checkout');
+                    }
+                  }}
+                  disabled={isOutOfStock}
+                  className={`w-full font-black uppercase tracking-[0.2em] py-4 transition-all rounded shadow-lg text-[10px] ${isOutOfStock
+                    ? 'bg-stone-200 text-stone-400 cursor-not-allowed shadow-none'
+                    : 'bg-gold-gradient text-primary hover:opacity-90'
+                    }`}
+                >
+                  {isOutOfStock ? 'Selection Unavailable' : 'Complete Selection Now'}
+                </button>
               </div>
-
-              <button
-                onClick={() => {
-                  if (product) {
-                    addToCart(product, selectedVariant || undefined, qty);
-                  }
-                }}
-                className="flex-1 bg-primary text-white font-bold uppercase tracking-[0.2em] text-[10px] h-14 hover:brightness-110 shadow-lg transition-all rounded"
-              >
-                Add to Ritual Bag
-              </button>
-
-              <button
-                onClick={() => toggleWishlist(product)}
-                className="w-14 h-14 flex items-center justify-center border border-stone-200 dark:border-stone-800 rounded hover:bg-stone-50 dark:hover:bg-stone-900 transition-all group shrink-0"
-                aria-label={isFavorited ? "Remove from Wishlist" : "Add to Wishlist"}
-              >
-                <span className={`material-symbols-outlined transition-all ${isFavorited ? 'text-accent fill-1' : 'text-stone-300 group-hover:text-accent'}`}>
-                  favorite
-                </span>
-              </button>
-            </div>
-
-            <button
-              onClick={() => {
-                if (product) {
-                  addToCart(product, selectedVariant || undefined, qty);
-                  setCartOpen(false);
-                  navigate('/checkout');
-                }
-              }}
-              className="w-full bg-gold-gradient text-primary font-black uppercase tracking-[0.2em] py-4 hover:opacity-90 transition-all rounded shadow-lg text-[10px]"
-            >
-              Complete Selection Now
-            </button>
-          </div>
+            );
+          })()}
 
           {/* Social Sharing Section */}
           <div className="flex flex-wrap items-center gap-4 py-6 border-t border-stone-100 dark:border-stone-800">

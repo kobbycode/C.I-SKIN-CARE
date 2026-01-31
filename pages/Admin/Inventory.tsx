@@ -246,9 +246,21 @@ const Inventory: React.FC = () => {
                     </div>
                   </div>
                   <p className="text-[10px] text-stone-400 font-medium uppercase tracking-wider mb-2">{p.category}</p>
-                  <span className={`w-fit px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.status === 'Active' ? 'bg-green-50 text-green-600' : p.status === 'Archived' ? 'bg-stone-800 text-white' : 'bg-stone-50 text-stone-400'}`}>
-                    {p.status || (p.stock && p.stock > 0 ? 'ACTIVE' : 'DRAFT')}
-                  </span>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider ${p.status === 'Active' ? 'bg-green-50 text-green-600' : p.status === 'Archived' ? 'bg-stone-800 text-white' : 'bg-stone-50 text-stone-400'}`}>
+                      {p.status || (p.stock && p.stock > 0 ? 'ACTIVE' : 'DRAFT')}
+                    </span>
+                    {p.variants && p.variants.length > 0 && (
+                      <span className="px-2 py-1 bg-amber-50 text-amber-600 rounded-full text-[8px] font-bold uppercase tracking-tighter">
+                        {p.variants.length} Variants
+                      </span>
+                    )}
+                    {p.images && p.images.length > 0 && (
+                      <span className="px-2 py-1 bg-stone-50 text-stone-500 rounded-full text-[8px] font-bold uppercase tracking-tighter">
+                        {p.images.length + 1} Images
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 pt-2 border-t border-stone-50">
@@ -314,7 +326,18 @@ const Inventory: React.FC = () => {
                       <img src={p.image} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" alt={p.name} />
                       <div className="flex flex-col min-w-0">
                         <span className="text-sm font-bold text-[#221C1D] truncate">{p.name}</span>
-                        <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{p.category}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{p.category}</span>
+                          {p.variants && p.variants.length > 0 && (
+                            <span className="text-[8px] font-bold text-[#F2A600] px-1.5 py-0.5 bg-amber-50 rounded uppercase tracking-tighter" title={`${p.variants.length} Variants`}>V</span>
+                          )}
+                          {p.images && p.images.length > 0 && (
+                            <span className="text-[8px] font-bold text-stone-400 px-1.5 py-0.5 bg-stone-50 rounded uppercase tracking-tighter" title={`${p.images.length + 1} Images`}>G</span>
+                          )}
+                          {p.videoUrl && (
+                            <span className="text-[8px] font-bold text-blue-400 px-1.5 py-0.5 bg-blue-50 rounded uppercase tracking-tighter" title="Has Video">PLAY</span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </td>

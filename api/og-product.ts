@@ -1,5 +1,6 @@
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default async function handler(req: any, res: any) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   const id = (req.query.id as string) || '';
   const host = (req.headers['host'] as string) || 'www.theciskincare.com';
   const origin = `https://${host}`;

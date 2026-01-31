@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useOrders } from '../../context/OrderContext';
+import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
-import { doc, updateDoc } from 'firebase/firestore';
+import { doc, updateDoc, runTransaction } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
 const Orders: React.FC = () => {
@@ -11,6 +12,8 @@ const Orders: React.FC = () => {
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
     const [activeTab, setActiveTab] = useState('All Orders');
     const [searchTerm, setSearchTerm] = useState('');
+    const [trackingNumber, setTrackingNumber] = useState('');
+    const { getIdToken } = useUser();
 
     const filteredOrders = useMemo(() => {
         let result = orders;
@@ -57,8 +60,40 @@ const Orders: React.FC = () => {
 
     const handleStatusUpdate = async (id: string, status: any) => {
         try {
-            await updateOrderStatus(id, status);
+            const orderRef = doc(db, 'orders', id);
+            const updates: any = { status };
+            if (status === 'Shipped' && trackingNumber) {
+                updates.trackingNumber = trackingNumber;
+            }
+
+            await updateDoc(orderRef, updates);
+
+            // Trigger email notification for Shipped and Delivered
+            if (status === 'Shipped' || status === 'Delivered') {
+                try {
+                    const token = await getIdToken();
+                    const emailType = status === 'Shipped' ? 'shipping_notification' : 'delivery_confirmation';
+                    const targetOrder = orders.find(o => o.id === id);
+                    if (targetOrder) {
+                        await fetch('/api/send-order-email', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: `Bearer ${token}`,
+                            },
+                            body: JSON.stringify({
+                                order: { ...targetOrder, ...updates },
+                                type: emailType
+                            }),
+                        });
+                    }
+                } catch (emailErr) {
+                    console.error('Failed to trigger status email:', emailErr);
+                }
+            }
+
             showNotification('Order status updated', 'success');
+            setTrackingNumber(''); // Reset tracking input
         } catch (error) {
             showNotification('Update failed', 'error');
         }
@@ -66,13 +101,47 @@ const Orders: React.FC = () => {
 
     const handleReturnAction = async (id: string, action: 'Approved' | 'Rejected') => {
         try {
-            const orderRef = doc(db, 'orders', id);
-            await updateDoc(orderRef, {
-                returnStatus: action,
-                // If approved, we might want to change the main status to 'Refunded' or keep it as Delivered?
-                // Let's set it to 'Refunded' if approved for clarity.
-                ...(action === 'Approved' ? { status: 'Refunded', paymentStatus: 'refunded' } : {})
+            const targetOrder = orders.find(o => o.id === id);
+            if (!targetOrder) throw new Error('Order not found');
+
+            await runTransaction(db, async (transaction) => {
+                const orderRef = doc(db, 'orders', id);
+
+                // 1. Update order
+                transaction.update(orderRef, {
+                    returnStatus: action,
+                    ...(action === 'Approved' ? { status: 'Refunded', paymentStatus: 'refunded' } : {})
+                });
+
+                // 2. If approved, restore stock
+                if (action === 'Approved') {
+                    const productRefs = targetOrder.items.map(item => doc(db, 'products', item.id));
+                    const productSnaps = await Promise.all(productRefs.map(ref => transaction.get(ref)));
+
+                    productSnaps.forEach((docSnap, index) => {
+                        if (!docSnap.exists()) return;
+
+                        const item = targetOrder.items[index];
+                        const productData = docSnap.data();
+
+                        if (item.selectedVariant) {
+                            const variants = [...(productData?.variants || [])];
+                            const variantIndex = variants.findIndex((v: any) => v.id === item.selectedVariant?.id);
+                            if (variantIndex !== -1) {
+                                variants[variantIndex] = {
+                                    ...variants[variantIndex],
+                                    stock: (variants[variantIndex].stock || 0) + item.quantity
+                                };
+                                transaction.update(productRefs[index], { variants });
+                            }
+                        } else {
+                            const currentStock = productData?.stock || 0;
+                            transaction.update(productRefs[index], { stock: currentStock + item.quantity });
+                        }
+                    });
+                }
             });
+
             showNotification(`Return request ${action}`, 'success');
         } catch (error) {
             console.error(error);
@@ -308,9 +377,21 @@ const Orders: React.FC = () => {
                                         </button>
                                     )}
                                     {selectedOrder.status === 'Processing' && (
-                                        <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Shipped')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#F2A600] text-black rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#D49100] transition-colors shadow-sm">
-                                            Dispatch Order
-                                        </button>
+                                        <div className="space-y-3">
+                                            <div className="flex flex-col gap-1.5">
+                                                <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest pl-1">Tracking Identifier (Optional)</label>
+                                                <input
+                                                    type="text"
+                                                    placeholder="e.g. DHL-123456"
+                                                    value={trackingNumber}
+                                                    onChange={(e) => setTrackingNumber(e.target.value)}
+                                                    className="w-full px-4 py-2 bg-stone-50 border border-stone-100 rounded-lg text-xs focus:outline-none focus:border-[#F2A600] transition-colors"
+                                                />
+                                            </div>
+                                            <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Shipped')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#F2A600] text-black rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#D49100] transition-colors shadow-sm">
+                                                Dispatch Order
+                                            </button>
+                                        </div>
                                     )}
                                     {selectedOrder.status === 'Shipped' && (
                                         <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Delivered')} className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition-colors shadow-sm">

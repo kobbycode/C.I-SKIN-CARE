@@ -196,57 +196,83 @@ const Shop: React.FC = () => {
           ) : (
             <>
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16">
-                {visibleProducts.map((product) => (
-                  <div key={product.id} className="group flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both">
-                    <div className="bg-white dark:bg-stone-900 rounded-2xl overflow-hidden border border-primary/5 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-full">
-                      {/* Image Area */}
-                      <div className="relative aspect-[4/5] overflow-hidden">
-                        <Link to={`/product/${product.id}`} className="block h-full">
-                          <OptimizedImage
-                            src={product.image}
-                            alt={product.name}
-                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                            loading="lazy"
-                          />
-                        </Link>
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500 pointer-events-none"></div>
-                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                          <WishlistButton product={product} />
-                        </div>
-                        <div className="absolute bottom-4 left-4 right-4 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-75">
-                          <button
-                            onClick={() => addToCart(product)}
-                            className="w-full bg-white/90 backdrop-blur-md text-secondary py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-gold hover:text-white transition-all shadow-2xl rounded-lg"
-                          >
-                            Quick Add to Ritual
-                          </button>
-                        </div>
-                      </div>
+                {visibleProducts.map((product) => {
+                  const isOutOfStock = product.variants && product.variants.length > 0
+                    ? product.variants.every(v => (v.stock ?? 0) <= 0)
+                    : (product.stock ?? 0) <= 0;
 
-                      {/* Info Area (Dark Brown Background) */}
-                      <div className="p-6 bg-luxury-brown text-white flex-1 flex flex-col justify-between">
-                        <div>
-                          <p className="text-[9px] text-gold uppercase tracking-[0.3em] font-black mb-2 opacity-80">{product.brand}</p>
-                          <Link to={`/product/${product.id}`}>
-                            <h3 className="font-display text-lg lg:text-xl group-hover:text-gold transition-colors leading-tight mb-3">
-                              {product.name}
-                            </h3>
+                  const isLowStock = !isOutOfStock && (product.variants && product.variants.length > 0
+                    ? product.variants.some(v => (v.stock ?? 0) > 0 && (v.stock ?? 0) <= 10)
+                    : (product.stock ?? 0) > 0 && (product.stock ?? 0) <= 10);
+
+                  return (
+                    <div key={product.id} className="group flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both">
+                      <div className={`bg-white dark:bg-stone-900 rounded-2xl overflow-hidden border border-primary/5 shadow-sm hover:shadow-xl transition-all duration-500 flex flex-col h-full ${isOutOfStock ? 'opacity-75 grayscale-[0.5]' : ''}`}>
+                        {/* Image Area */}
+                        <div className="relative aspect-[4/5] overflow-hidden">
+                          <Link to={`/product/${product.id}`} className="block h-full">
+                            <OptimizedImage
+                              src={product.image}
+                              alt={product.name}
+                              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
+                              loading="lazy"
+                            />
                           </Link>
+
+                          {/* Stock Badges */}
+                          {isOutOfStock ? (
+                            <div className="absolute top-4 left-4 bg-red-600 text-white px-3 py-1 text-[9px] uppercase tracking-widest font-bold z-10 rounded-sm">
+                              Out of Stock
+                            </div>
+                          ) : isLowStock && (
+                            <div className="absolute top-4 left-4 bg-amber-500 text-white px-3 py-1 text-[9px] uppercase tracking-widest font-bold z-10 rounded-sm">
+                              Limited Quantity
+                            </div>
+                          )}
+
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500 pointer-events-none"></div>
+                          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                            <WishlistButton product={product} />
+                          </div>
+                          <div className="absolute bottom-4 left-4 right-4 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-75">
+                            <button
+                              onClick={() => !isOutOfStock && addToCart(product)}
+                              disabled={isOutOfStock}
+                              className={`w-full py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-2xl rounded-lg ${isOutOfStock
+                                  ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                                  : 'bg-white/90 backdrop-blur-md text-secondary hover:bg-gold hover:text-white'
+                                }`}
+                            >
+                              {isOutOfStock ? 'Sold Out' : 'Quick Add to Ritual'}
+                            </button>
+                          </div>
                         </div>
-                        <div className="flex justify-between items-end pt-4 border-t border-white/10">
-                          <p className="text-gold font-bold tracking-widest">GH₵{product.price.toFixed(2)}</p>
-                          <div className="flex gap-1.5 items-center">
-                            {product.tags.slice(0, 1).map((tag) => (
-                              <span key={tag} className="text-[8px] border border-gold/30 text-gold/70 px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
-                                {tag}
-                              </span>
-                            ))}
+
+                        {/* Info Area (Dark Brown Background) */}
+                        <div className="p-6 bg-luxury-brown text-white flex-1 flex flex-col justify-between">
+                          <div>
+                            <p className="text-[9px] text-gold uppercase tracking-[0.3em] font-black mb-2 opacity-80">{product.brand}</p>
+                            <Link to={`/product/${product.id}`}>
+                              <h3 className="font-display text-lg lg:text-xl group-hover:text-gold transition-colors leading-tight mb-3">
+                                {product.name}
+                              </h3>
+                            </Link>
+                          </div>
+                          <div className="flex justify-between items-end pt-4 border-t border-white/10">
+                            <p className="text-gold font-bold tracking-widest">GH₵{product.price.toFixed(2)}</p>
+                            <div className="flex gap-1.5 items-center">
+                              {product.tags.slice(0, 1).map((tag) => (
+                                <span key={tag} className="text-[8px] border border-gold/30 text-gold/70 px-2 py-0.5 rounded-full uppercase font-bold tracking-tighter">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
 
               {/* Sentinel for infinite scroll */}

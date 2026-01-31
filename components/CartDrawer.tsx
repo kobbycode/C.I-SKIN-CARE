@@ -2,9 +2,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../App';
+import { useProducts } from '../context/ProductContext';
 
 const CartDrawer: React.FC = () => {
   const { cart, isCartOpen, setCartOpen, removeFromCart, updateQuantity } = useApp();
+  const { products } = useProducts();
   const navigate = useNavigate();
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
@@ -12,7 +14,25 @@ const CartDrawer: React.FC = () => {
   const remainingForFreeShipping = Math.max(0, freeShippingThreshold - subtotal);
   const shippingProgress = Math.min(100, (subtotal / freeShippingThreshold) * 100);
 
+  // Live stock validation for cart items
+  const cartWithStock = cart.map(item => {
+    const liveProduct = products.find(p => p.id === item.id);
+    const liveStock = item.selectedVariant
+      ? liveProduct?.variants?.find(v => v.id === item.selectedVariant?.id)?.stock ?? 0
+      : liveProduct?.stock ?? 0;
+
+    return {
+      ...item,
+      liveStock,
+      isOutOfStock: liveStock <= 0,
+      isLowStock: liveStock > 0 && liveStock <= 5
+    };
+  });
+
+  const hasOutOfStockItems = cartWithStock.some(item => item.isOutOfStock);
+
   const handleCheckout = () => {
+    if (hasOutOfStockItems) return;
     setCartOpen(false);
     navigate('/checkout');
   };
@@ -77,20 +97,30 @@ const CartDrawer: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-6">
-              {cart.map((item) => (
-                <div key={item.id} className="flex gap-4">
-                  <div className="w-24 h-24 bg-primary/5 rounded-lg overflow-hidden shrink-0">
+              {cartWithStock.map((item) => (
+                <div key={`${item.id}-${item.selectedVariant?.id || 'base'}`} className="flex gap-4">
+                  <div className={`w-24 h-24 bg-primary/5 rounded-lg overflow-hidden shrink-0 relative ${item.isOutOfStock ? 'opacity-50 grayscale' : ''}`}>
                     <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    {item.isOutOfStock && (
+                      <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                        <span className="text-[8px] font-black text-white uppercase tracking-tighter bg-red-600 px-1.5 py-0.5 rounded-sm">Sold Out</span>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="text-sm font-bold text-secondary dark:text-primary">{item.name}</h4>
+                        <div className="max-w-[160px]">
+                          <h4 className="text-sm font-bold text-secondary dark:text-primary truncate">{item.name}</h4>
                           {item.selectedVariant && (
                             <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-wider mt-1 inline-block">
                               {item.selectedVariant.name}
                             </span>
+                          )}
+                          {item.isLowStock && !item.isOutOfStock && (
+                            <p className="text-[10px] text-amber-600 font-bold uppercase tracking-tighter mt-1">
+                              Only {item.liveStock} available
+                            </p>
                           )}
                         </div>
                         <button
@@ -112,8 +142,9 @@ const CartDrawer: React.FC = () => {
                         >-</button>
                         <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, 1, item.selectedVariant?.id)}
-                          className="text-xs font-bold w-4 hover:text-primary"
+                          onClick={() => item.quantity < item.liveStock && updateQuantity(item.id, 1, item.selectedVariant?.id)}
+                          disabled={item.quantity >= item.liveStock}
+                          className={`text-xs font-bold w-4 ${item.quantity >= item.liveStock ? 'opacity-20 cursor-not-allowed' : 'hover:text-primary'}`}
                         >+</button>
                       </div>
                       <p className="text-sm font-bold text-secondary dark:text-primary">
@@ -129,6 +160,13 @@ const CartDrawer: React.FC = () => {
 
         {/* Footer */}
         <div className="p-6 bg-white dark:bg-background-dark border-t border-primary/10">
+          {hasOutOfStockItems && (
+            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-lg flex items-start gap-2">
+              <span className="material-symbols-outlined text-red-600 text-sm mt-0.5">error</span>
+              <p className="text-[10px] font-bold text-red-600 uppercase tracking-tight">Some items in your bag are currently unavailable. Please remove them to proceed.</p>
+            </div>
+          )}
+
           <div className="space-y-3 mb-6">
             <div className="flex justify-between text-sm">
               <span className="opacity-60">Subtotal</span>
@@ -151,11 +189,14 @@ const CartDrawer: React.FC = () => {
           </div>
           <button
             onClick={handleCheckout}
-            disabled={cart.length === 0}
-            className="w-full bg-gold-gradient text-white py-4 rounded font-bold uppercase tracking-widest text-xs hover:brightness-110 shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={cart.length === 0 || hasOutOfStockItems}
+            className={`w-full py-4 rounded font-bold uppercase tracking-widest text-xs shadow-lg transition-all flex items-center justify-center gap-2 ${hasOutOfStockItems
+              ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+              : 'bg-gold-gradient text-white hover:brightness-110'
+              }`}
           >
-            Secure Checkout
-            <span className="material-icons-outlined text-sm">arrow_forward</span>
+            {hasOutOfStockItems ? 'Resolve Ritual Bag' : 'Secure Checkout'}
+            {!hasOutOfStockItems && <span className="material-icons-outlined text-sm">arrow_forward</span>}
           </button>
           <p className="text-[10px] text-center mt-4 opacity-40 uppercase tracking-widest font-bold">
             <span className="material-icons-outlined text-[12px] align-middle mr-1">lock</span>
@@ -166,5 +207,6 @@ const CartDrawer: React.FC = () => {
     </div>
   );
 };
+
 
 export default CartDrawer;

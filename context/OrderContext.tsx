@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, onSnapshot, doc, writeBatch, getDocs, setDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, writeBatch, getDocs, setDoc, runTransaction } from 'firebase/firestore';
 import { Order } from '../types';
 
 interface OrderContextType {
@@ -36,7 +36,39 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
             const ordersRef = collection(db, 'orders');
             const docRef = doc(ordersRef);
             const newOrder = { ...order, id: docRef.id };
-            await setDoc(docRef, newOrder);
+
+            await runTransaction(db, async (transaction) => {
+                // 1. Read all product docs first
+                const productRefs = order.items.map(item => doc(db, 'products', item.id));
+                const productSnaps = await Promise.all(productRefs.map(ref => transaction.get(ref)));
+
+                // 2. Prepare stock updates
+                productSnaps.forEach((docSnap, index) => {
+                    if (!docSnap.exists()) return;
+
+                    const item = order.items[index];
+                    const productData = docSnap.data();
+
+                    if (item.selectedVariant) {
+                        const variants = [...(productData?.variants || [])];
+                        const variantIndex = variants.findIndex((v: any) => v.id === item.selectedVariant?.id);
+                        if (variantIndex !== -1) {
+                            variants[variantIndex] = {
+                                ...variants[variantIndex],
+                                stock: Math.max(0, (variants[variantIndex].stock || 0) - item.quantity)
+                            };
+                            transaction.update(productRefs[index], { variants });
+                        }
+                    } else {
+                        const currentStock = productData?.stock || 0;
+                        transaction.update(productRefs[index], { stock: Math.max(0, currentStock - item.quantity) });
+                    }
+                });
+
+                // 3. Set the order
+                transaction.set(docRef, newOrder);
+            });
+
             return docRef.id;
         } catch (error) {
             console.error("Error adding order:", error);

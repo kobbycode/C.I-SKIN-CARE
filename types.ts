@@ -14,6 +14,8 @@ export interface Product {
   description: string;
   category: string;
   image: string;
+  images?: string[];
+  videoUrl?: string;
   tags: string[];
   sku?: string;
   stock?: number;
@@ -23,6 +25,7 @@ export interface Product {
   concerns?: string[];
   cost?: number;
   variants?: ProductVariant[];
+  couponCodes?: string[];
 }
 
 export interface CartItem extends Product {
@@ -40,7 +43,7 @@ export interface Review {
   content: string;
   verified?: boolean;
   images?: string[];
-  status: 'pending' | 'approved' | 'rejected';
+  status: 'Pending' | 'Approved' | 'Rejected';
 }
 export interface Order {
   id: string;
@@ -64,6 +67,7 @@ export interface Order {
   deliveryNotes?: string;
   deliveryMapLink?: string;
   deliveryContactPhone?: string;
+  trackingNumber?: string;
 }
 
 export interface Category {
