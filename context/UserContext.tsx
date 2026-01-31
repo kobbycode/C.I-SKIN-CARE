@@ -40,7 +40,16 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             });
             setAllUsers(users);
         });
+
+        let unsubscribeCurrentUser: (() => void) | null = null;
+
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
+            // Clean up previous current user listener
+            if (unsubscribeCurrentUser) {
+                unsubscribeCurrentUser();
+                unsubscribeCurrentUser = null;
+            }
+
             if (firebaseUser) {
                 setFirebaseUser(firebaseUser);
                 const userRef = doc(db, 'users', firebaseUser.uid);
@@ -53,6 +62,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         userData.email = firebaseUser.email;
                     }
                     setCurrentUser(userData);
+
+                    // Set up realtime listener for current user's document
+                    unsubscribeCurrentUser = onSnapshot(userRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            const updatedUserData = docSnap.data() as UserProfile;
+                            setCurrentUser(updatedUserData);
+                        }
+                    });
                 } else {
                     const username =
                         (firebaseUser.email?.split('@')[0] || firebaseUser.displayName || 'member')
@@ -78,6 +95,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     };
                     await setDoc(userRef, newUser, { merge: true });
                     setCurrentUser(newUser);
+
+                    // Set up realtime listener for newly created user
+                    unsubscribeCurrentUser = onSnapshot(userRef, (docSnap) => {
+                        if (docSnap.exists()) {
+                            const updatedUserData = docSnap.data() as UserProfile;
+                            setCurrentUser(updatedUserData);
+                        }
+                    });
                 }
             } else {
                 setFirebaseUser(null);
@@ -88,6 +113,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return () => {
             unsubscribeUsers();
             unsubscribeAuth();
+            if (unsubscribeCurrentUser) {
+                unsubscribeCurrentUser();
+            }
         };
     }, []);
 

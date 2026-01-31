@@ -197,57 +197,61 @@ export const AccountSecurityEditor: React.FC = () => {
                 </div>
             </div>
 
-            {/* Security Verification */}
-            < div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl" >
-                <h2 className="font-display text-2xl text-secondary dark:text-white mb-2">Security Verification</h2>
-                <p className="text-xs opacity-60 mb-6">Required for changing sensitive account details like Email or Password.</p>
-                <div className="max-w-sm">
-                    <label className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">Current Password</label>
-                    <div className="relative">
-                        <input
-                            type={showCurrentPw ? "text" : "password"}
-                            value={currentPassword}
-                            onChange={(e) => setCurrentPassword(e.target.value)}
-                            placeholder="Enter your current password"
-                            className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-sm pr-10"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => setShowCurrentPw(!showCurrentPw)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary/60"
-                        >
-                            <span className="material-symbols-outlined text-lg">
-                                {showCurrentPw ? 'visibility_off' : 'visibility'}
-                            </span>
-                        </button>
+            {/* Security Verification (only for password users) */}
+            {!isGoogleUser && (
+                <div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+                    <h2 className="font-display text-2xl text-secondary dark:text-white mb-2">Security Verification</h2>
+                    <p className="text-xs opacity-60 mb-6">Required for changing sensitive account details like Email or Password.</p>
+                    <div className="max-w-sm">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">Current Password</label>
+                        <div className="relative">
+                            <input
+                                type={showCurrentPw ? "text" : "password"}
+                                value={currentPassword}
+                                onChange={(e) => setCurrentPassword(e.target.value)}
+                                placeholder="Enter your current password"
+                                className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-sm pr-10"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowCurrentPw(!showCurrentPw)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary/60"
+                            >
+                                <span className="material-symbols-outlined text-lg">
+                                    {showCurrentPw ? 'visibility_off' : 'visibility'}
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div >
+            )}
 
-            {/* Change Email */}
-            < div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl" >
-                <h2 className="font-display text-2xl text-secondary dark:text-white mb-6">Change Email</h2>
-                <div className="max-w-sm space-y-4">
-                    <div>
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">New Email Address</label>
-                        <input
-                            type="email"
-                            value={newEmail}
-                            onChange={(e) => setNewEmail(e.target.value)}
-                            placeholder="new@example.com"
-                            className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-sm"
-                        />
+            {/* Change Email (only for password users) */}
+            {!isGoogleUser && (
+                <div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+                    <h2 className="font-display text-2xl text-secondary dark:text-white mb-6">Change Email</h2>
+                    <div className="max-w-sm space-y-4">
+                        <div>
+                            <label className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">New Email Address</label>
+                            <input
+                                type="email"
+                                value={newEmail}
+                                onChange={(e) => setNewEmail(e.target.value)}
+                                placeholder="new@example.com"
+                                className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-sm"
+                            />
+                        </div>
+                        <button
+                            disabled={changingEmail || !currentPassword}
+                            onClick={initiateEmailChange}
+                            className={`px-6 py-3 rounded font-bold uppercase tracking-[0.2em] text-[10px] ${changingEmail || !currentPassword ? 'bg-stone-300 text-white' : 'bg-primary text-white hover:bg-accent'}`}
+                        >
+                            {changingEmail ? 'Sending Link...' : 'Send Verification Link'}
+                        </button>
+                        {!currentPassword && <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Enter current password above to enable</p>}
                     </div>
-                    <button
-                        disabled={changingEmail || !currentPassword}
-                        onClick={initiateEmailChange}
-                        className={`px-6 py-3 rounded font-bold uppercase tracking-[0.2em] text-[10px] ${changingEmail || !currentPassword ? 'bg-stone-300 text-white' : 'bg-primary text-white hover:bg-accent'}`}
-                    >
-                        {changingEmail ? 'Sending Link...' : 'Send Verification Link'}
-                    </button>
-                    {!currentPassword && <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Enter current password above to enable</p>}
                 </div>
-            </div >
+            )}
 
             {/* Change Password */}
             < div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl" >
@@ -290,8 +294,8 @@ export const AccountSecurityEditor: React.FC = () => {
                         </div>
                     )
                 }
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 
