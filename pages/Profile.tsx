@@ -1,18 +1,23 @@
 import { useApp } from '../App';
 import LoyaltyPortal from '../components/LoyaltyPortal';
+import { AccountSecurityEditor, NotificationPreferences } from '../components/ProfileComponents';
 import { useUser } from '../context/UserContext';
 import React, { useEffect, useState, useRef } from 'react';
 import { useOrders } from '../context/OrderContext';
 import { useNotification } from '../context/NotificationContext';
 import { Link, useNavigate } from 'react-router-dom';
+import { auth, storage } from '../firebaseConfig';
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import ConfirmModal from '../components/Admin/ConfirmModal';
 
 const Profile: React.FC = () => {
   const { toggleDarkMode, isDarkMode, wishlist, toggleWishlist } = useApp();
-  const { currentUser, loading: userLoading, logout } = useUser();
+  const { currentUser, loading: userLoading, logout, updateProfile, deleteAccount } = useUser();
   const { orders, loading: ordersLoading } = useOrders();
   const { showNotification } = useNotification();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'orders' | 'skin' | 'favorites' | 'addresses' | 'preferences'>('orders');
+  const [activeTab, setActiveTab] = useState<'orders' | 'skin' | 'favorites' | 'addresses' | 'preferences' | 'account'>('orders');
   const [signOutLoading, setSignOutLoading] = useState(false);
   const [jumpLoading, setJumpLoading] = useState(false);
   const ordersSectionRef = useRef<HTMLDivElement | null>(null);
@@ -20,6 +25,9 @@ const Profile: React.FC = () => {
   const favoritesSectionRef = useRef<HTMLDivElement | null>(null);
   const addressesSectionRef = useRef<HTMLDivElement | null>(null);
   const preferencesSectionRef = useRef<HTMLDivElement | null>(null);
+  const accountSectionRef = useRef<HTMLDivElement | null>(null);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   const loading = userLoading || ordersLoading;
 
@@ -30,7 +38,8 @@ const Profile: React.FC = () => {
       skin: skinSectionRef,
       favorites: favoritesSectionRef,
       addresses: addressesSectionRef,
-      preferences: preferencesSectionRef
+      preferences: preferencesSectionRef,
+      account: accountSectionRef
     };
     const target = sectionMap[activeTab]?.current;
     if (target) {
@@ -100,6 +109,10 @@ const Profile: React.FC = () => {
                 <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'preferences' ? 'bg-accent' : 'bg-transparent'}`}></span>
                 Preferences
               </li>
+              <li onClick={() => setActiveTab('account')} className={`cursor-pointer transition-colors flex items-center gap-3 ${activeTab === 'account' ? 'text-accent' : 'hover:text-accent'}`}>
+                <span className={`w-1.5 h-1.5 rounded-full ${activeTab === 'account' ? 'bg-accent' : 'bg-transparent'}`}></span>
+                Account & Security
+              </li>
             </ul>
           </nav>
 
@@ -112,25 +125,57 @@ const Profile: React.FC = () => {
               Toggle Interface: {isDarkMode ? 'Luminous' : 'Nocturnal'}
             </button>
             <button
-              disabled={signOutLoading}
-              onClick={async () => {
-                try {
-                  setSignOutLoading(true);
-                  await logout();
-                  showNotification('Signed out', 'success');
-                  navigate('/login');
-                } catch {
-                  showNotification('Failed to sign out', 'error');
-                } finally {
-                  setSignOutLoading(false);
-                }
-              }}
+              onClick={() => setIsLogoutModalOpen(true)}
               className={`mt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] ${signOutLoading ? 'text-stone-300' : 'text-red-400 hover:text-red-500'} transition-colors`}>
-              <span className="material-symbols-outlined text-sm">{signOutLoading ? 'progress_activity' : 'logout'}</span>
-              {signOutLoading ? 'Signing Out...' : 'Sign Out'}
+              <span className="material-symbols-outlined text-sm">logout</span>
+              Sign Out
             </button>
           </div>
         </aside>
+
+        <ConfirmModal
+          isOpen={isLogoutModalOpen}
+          title="Confirm Sign Out"
+          message="Are you sure you want to sign out of your account?"
+          confirmLabel="Sign Out"
+          cancelLabel="Stay Signed In"
+          variant="danger"
+          onConfirm={async () => {
+            try {
+              setSignOutLoading(true);
+              await logout();
+              showNotification('Signed out', 'success');
+              navigate('/login');
+            } catch {
+              showNotification('Failed to sign out', 'error');
+            } finally {
+              setSignOutLoading(false);
+              setIsLogoutModalOpen(false);
+            }
+          }}
+          onCancel={() => setIsLogoutModalOpen(false)}
+        />
+
+        <ConfirmModal
+          isOpen={isDeleteModalOpen}
+          title="Delete Account?"
+          message="This action cannot be undone. All your data, orders, and preferences will be permanently deleted."
+          confirmLabel="Delete Forever"
+          cancelLabel="Cancel"
+          variant="danger"
+          onConfirm={async () => {
+            try {
+              await deleteAccount();
+              showNotification('Account deleted', 'success');
+              navigate('/login');
+            } catch (e: any) {
+              showNotification(e?.message || 'Failed to delete account', 'error');
+            } finally {
+              setIsDeleteModalOpen(false);
+            }
+          }}
+          onCancel={() => setIsDeleteModalOpen(false)}
+        />
 
         {/* Content Area */}
         <section className="lg:col-span-9 space-y-16">
@@ -139,57 +184,57 @@ const Profile: React.FC = () => {
           <LoyaltyPortal />
 
           {activeTab === 'orders' && (
-          <div ref={ordersSectionRef} className="pt-8">
-            <div className="flex justify-between items-end mb-10">
-              <div>
-                <h2 className="font-display text-3xl text-secondary dark:text-white mb-2">My Orders</h2>
-                <p className="text-xs font-light opacity-60">Tracking your journey to radiance.</p>
+            <div ref={ordersSectionRef} className="pt-8">
+              <div className="flex justify-between items-end mb-10">
+                <div>
+                  <h2 className="font-display text-3xl text-secondary dark:text-white mb-2">My Orders</h2>
+                  <p className="text-xs font-light opacity-60">Tracking your journey to radiance.</p>
+                </div>
+                <button className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary/20 pb-1 hover:text-accent transition-colors">
+                  View All History
+                </button>
               </div>
-              <button className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary/20 pb-1 hover:text-accent transition-colors">
-                View All History
-              </button>
-            </div>
 
-            <div className="space-y-6">
-              {userOrders.length > 0 ? userOrders.map(order => (
-                <div key={order.id} className="bg-white dark:bg-stone-900 border border-primary/5 p-8 rounded-xl flex flex-col md:flex-row justify-between items-center gap-8 group hover:border-accent/20 transition-all">
-                  <div className="flex flex-col md:flex-row gap-8 items-center">
-                    <div className="w-16 h-16 bg-primary/5 rounded flex items-center justify-center">
-                      <span className="material-symbols-outlined text-accent text-3xl font-light">package_2</span>
+              <div className="space-y-6">
+                {userOrders.length > 0 ? userOrders.map(order => (
+                  <div key={order.id} className="bg-white dark:bg-stone-900 border border-primary/5 p-8 rounded-xl flex flex-col md:flex-row justify-between items-center gap-8 group hover:border-accent/20 transition-all">
+                    <div className="flex flex-col md:flex-row gap-8 items-center">
+                      <div className="w-16 h-16 bg-primary/5 rounded flex items-center justify-center">
+                        <span className="material-symbols-outlined text-accent text-3xl font-light">package_2</span>
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm tracking-widest uppercase mb-1">{order.id.slice(-6).toUpperCase()}</h4>
+                        <p className="text-[10px] opacity-40 uppercase tracking-widest">{order.date} • {order.items.length} Items</p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 className="font-bold text-sm tracking-widest uppercase mb-1">{order.id.slice(-6).toUpperCase()}</h4>
-                      <p className="text-[10px] opacity-40 uppercase tracking-widest">{order.date} • {order.items.length} Items</p>
+                    <div className="flex flex-col items-center md:items-end">
+                      <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full mb-2 ${order.status === 'Delivered' ? 'bg-green-500/10 text-green-600' : 'bg-orange-500/10 text-orange-600'
+                        }`}>
+                        {order.status}
+                      </span>
+                      <p className="font-display text-xl text-secondary dark:text-white">GH₵{order.total.toFixed(2)}</p>
                     </div>
+                    <button className="material-symbols-outlined text-stone-300 hover:text-accent transition-colors">chevron_right</button>
                   </div>
-                  <div className="flex flex-col items-center md:items-end">
-                    <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full mb-2 ${order.status === 'Delivered' ? 'bg-green-500/10 text-green-600' : 'bg-orange-500/10 text-orange-600'
-                      }`}>
-                      {order.status}
-                    </span>
-                    <p className="font-display text-xl text-secondary dark:text-white">GH₵{order.total.toFixed(2)}</p>
+                )) : (
+                  <div className="p-12 text-center opacity-30 italic uppercase tracking-widest border border-dashed border-primary/10 rounded-2xl">
+                    No rituals ordered yet.
                   </div>
-                  <button className="material-symbols-outlined text-stone-300 hover:text-accent transition-colors">chevron_right</button>
-                </div>
-              )) : (
-                <div className="p-12 text-center opacity-30 italic uppercase tracking-widest border border-dashed border-primary/10 rounded-2xl">
-                  No rituals ordered yet.
-                </div>
-              )}
+                )}
+              </div>
             </div>
-          </div>
           )}
 
           {activeTab === 'addresses' && (
-          <div ref={addressesSectionRef} className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
-            <div className="flex justify-between items-end mb-6">
-              <div>
-                <h2 className="font-display text-2xl text-secondary dark:text-white">Delivery Details</h2>
-                <p className="text-xs opacity-60">Manage your preferred delivery information.</p>
+            <div ref={addressesSectionRef} className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+              <div className="flex justify-between items-end mb-6">
+                <div>
+                  <h2 className="font-display text-2xl text-secondary dark:text-white">Delivery Details</h2>
+                  <p className="text-xs opacity-60">Manage your preferred delivery information.</p>
+                </div>
               </div>
+              <DeliveryDetailsEditor />
             </div>
-            <DeliveryDetailsEditor />
-          </div>
           )}
 
           {/* Skin Profile Highlights */}
@@ -298,29 +343,25 @@ const Profile: React.FC = () => {
                     {isDarkMode ? 'Switch to Luminous' : 'Switch to Nocturnal'}
                   </button>
                 </div>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-bold">Session</p>
-                    <p className="text-[10px] opacity-60">Sign out of your account.</p>
+                <NotificationPreferences />
+                <div className="border-t border-primary/10 pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold text-red-600">Delete Account</p>
+                      <p className="text-[10px] opacity-60">Permanently remove your account and all data.</p>
+                    </div>
+                    <button
+                      onClick={() => setIsDeleteModalOpen(true)}
+                      className="px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 transition-colors"
+                    >
+                      Delete Account
+                    </button>
                   </div>
-                  <button
-                    onClick={async () => {
-                      try {
-                        await logout();
-                        showNotification('Signed out', 'success');
-                        navigate('/login');
-                      } catch {
-                        showNotification('Failed to sign out', 'error');
-                      }
-                    }}
-                    className="px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-red-500 text-white hover:bg-red-600 transition-colors"
-                  >
-                    Sign Out
-                  </button>
                 </div>
               </div>
             </div>
           )}
+          {activeTab === 'account' && <div ref={accountSectionRef}><AccountSecurityEditor /></div>}
         </section>
       </div>
     </main>
@@ -502,7 +543,7 @@ const DeliveryDetailsEditor: React.FC = () => {
         // Reverse geocoding to find landmark/address
         const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
         const data = await response.json();
-        
+
         if (data && data.display_name) {
           setForm(prev => ({
             ...prev,

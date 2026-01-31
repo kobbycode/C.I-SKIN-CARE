@@ -85,4 +85,8 @@ export interface UserProfile {
   deliveryInstructions?: string;
   deliveryLocationLat?: number;
   deliveryLocationLng?: number;
+  // Notification preferences
+  notifyMarketing?: boolean;
+  notifyOrders?: boolean;
+  notifyNewsletter?: boolean;
 }

@@ -17,6 +17,7 @@ interface UserContextType {
     loginWithEmail: (email: string, password: string) => Promise<void>;
     loginWithGoogle: () => Promise<void>;
     logout: () => void;
+    deleteAccount: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -179,8 +180,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signOut(auth);
     };
 
+    const deleteAccount = async () => {
+        if (!currentUser || !firebaseUser) throw new Error('No user logged in');
+        // Delete Firestore document first
+        const userRef = doc(db, 'users', currentUser.id);
+        await setDoc(userRef, { deleted: true, deletedAt: new Date().toISOString() }, { merge: true });
+        // Delete Firebase Auth user
+        await firebaseUser.delete();
+    };
+
     return (
-        <UserContext.Provider value={{ currentUser, allUsers, loading, getIdToken, hasRole, updateProfile, registerWithEmail, loginWithEmail, loginWithGoogle, logout }}>
+        <UserContext.Provider value={{ currentUser, allUsers, loading, getIdToken, hasRole, updateProfile, registerWithEmail, loginWithEmail, loginWithGoogle, logout, deleteAccount }}>
             {children}
         </UserContext.Provider>
     );
