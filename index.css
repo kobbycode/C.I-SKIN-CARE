@@ -3,18 +3,6 @@
 @plugin "@tailwindcss/typography";
 @plugin "@tailwindcss/aspect-ratio";
 
-@theme {
-    --color-primary: #8B5E3C;
-    --color-gold: #D4AF37;
-    --color-accent: #D4AF37;
-    --color-luxury-brown: #3d2b1f;
-    --color-background-light: #FDFBF7;
-    --color-background-dark: #1A1614;
-
-    --font-display: "Cinzel", serif;
-    --font-sans: "Montserrat", sans-serif;
-}
-
 .gold-gradient {
     background: linear-gradient(45deg, #BF953F, #FCF6BA, #B38728, #FBF5B7, #AA771C);
     -webkit-background-clip: text;
