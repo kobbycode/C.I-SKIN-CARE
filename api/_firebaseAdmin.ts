@@ -1,57 +1,70 @@
-import { initializeApp, cert, getApps, getApp, App } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+import admin from 'firebase-admin';
+
+// Modular imports can sometimes fail in certain bundler configs, switching to standard for stability
+const { initializeApp, cert, getApps } = admin.app ? {
+  initializeApp: admin.initializeApp,
+  cert: admin.credential.cert,
+  getApps: () => admin.apps
+} : require('firebase-admin/app');
 
 function parseServiceAccount() {
   let raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   if (!raw) {
-    console.error('FIREBASE_SERVICE_ACCOUNT_JSON is not set');
+    console.error('[firebaseAdmin] FIREBASE_SERVICE_ACCOUNT_JSON is not set');
     return null;
   }
 
   raw = raw.trim();
-  console.log('Parsing Service Account, length:', raw.length);
+  console.log('[firebaseAdmin] Parsing Service Account, length:', raw.length);
 
   if ((raw.startsWith("'") && raw.endsWith("'")) || (raw.startsWith('"') && raw.endsWith('"'))) {
-    console.log('Removing surrounding quotes from SA JSON');
+    console.log('[firebaseAdmin] Removing surrounding quotes from SA JSON');
     raw = raw.slice(1, -1);
   }
 
+  let sa: any;
   try {
-    return JSON.parse(raw);
+    sa = JSON.parse(raw);
   } catch (e: any) {
-    console.warn('Initial JSON parse failed, trying escaped newline replacement');
+    console.warn('[firebaseAdmin] Initial JSON parse failed, trying escaped newline replacement');
     try {
-      // Support escaped JSON in env vars
       const processed = raw.replace(/\\\\n/g, '\\n').replace(/\\n/g, '\n');
-      return JSON.parse(processed);
+      sa = JSON.parse(processed);
     } catch (e2: any) {
-      console.error('Failed to parse Service Account JSON:', e2.message);
+      console.error('[firebaseAdmin] Failed to parse Service Account JSON:', e2.message);
       return null;
     }
   }
+
+  // Ensure private_key has real newlines
+  if (sa && sa.private_key && typeof sa.private_key === 'string') {
+    if (sa.private_key.includes('\\n')) {
+      console.log('[firebaseAdmin] Fixing escaped newlines in private_key');
+      sa.private_key = sa.private_key.replace(/\\n/g, '\n');
+    }
+  }
+
+  return sa;
 }
 
-export function getAdminApp(): App {
+export function getAdminApp() {
   const apps = getApps();
   if (apps.length) {
-    console.log('[firebaseAdmin] Using existing app');
     return apps[0];
   }
 
   console.log('[firebaseAdmin] Initializing new app...');
   const sa = parseServiceAccount();
   if (!sa) {
-    console.error('[firebaseAdmin] Parsing service account returned null');
     throw new Error('Missing or invalid FIREBASE_SERVICE_ACCOUNT_JSON');
   }
 
   try {
-    const app = initializeApp({
-      credential: cert(sa),
-    });
-    console.log('[firebaseAdmin] App initialized successfully');
-    return app;
+    // We use a separate constant to avoid any weird binding issues during init
+    const config = {
+      credential: cert(sa)
+    };
+    return initializeApp(config);
   } catch (e: any) {
     console.error('[firebaseAdmin] initializeApp failed:', e.message);
     throw e;
@@ -59,11 +72,11 @@ export function getAdminApp(): App {
 }
 
 export function getAdminFirestore() {
-  return getFirestore(getAdminApp());
+  return getAdminApp().firestore();
 }
 
 export function getAdminAuth() {
-  return getAuth(getAdminApp());
+  return getAdminApp().auth();
 }
 
 export async function requireAuth(req: any): Promise<{ uid: string; email?: string }> {
