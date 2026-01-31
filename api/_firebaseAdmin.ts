@@ -1,8 +1,14 @@
 import admin from 'firebase-admin';
 
 function parseServiceAccount() {
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  let raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
   if (!raw) return null;
+
+  raw = raw.trim();
+  if ((raw.startsWith("'") && raw.endsWith("'")) || (raw.startsWith('"') && raw.endsWith('"'))) {
+    raw = raw.slice(1, -1);
+  }
+
   try {
     return JSON.parse(raw);
   } catch {

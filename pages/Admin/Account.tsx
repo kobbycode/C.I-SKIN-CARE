@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -6,8 +7,9 @@ import { auth } from '../../firebaseConfig';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
 
 const Account: React.FC = () => {
-  const { currentUser, updateProfile } = useUser();
+  const { currentUser, updateProfile, logout } = useUser();
   const { showNotification } = useNotification();
+  const navigate = useNavigate();
 
   const initialUsername = useMemo(() => currentUser?.username || '', [currentUser?.username]);
   const initialFullName = useMemo(() => currentUser?.fullName || '', [currentUser?.fullName]);
@@ -69,8 +71,22 @@ const Account: React.FC = () => {
   return (
     <AdminLayout>
       <div className="max-w-2xl">
-        <h2 className="text-2xl md:text-3xl font-bold text-[#221C1D] mb-2">Account</h2>
-        <p className="text-stone-500 text-sm mb-8">Update your admin username and password.</p>
+        <div className="flex justify-between items-start mb-8">
+          <div>
+            <h2 className="text-2xl md:text-3xl font-bold text-[#221C1D] mb-2">Account</h2>
+            <p className="text-stone-500 text-sm">Update your admin username and password.</p>
+          </div>
+          <button
+            onClick={() => {
+              logout();
+              navigate('/admin/login');
+            }}
+            className="flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-100"
+          >
+            <span className="material-symbols-outlined text-lg">logout</span>
+            Logout
+          </button>
+        </div>
 
         <div className="bg-white border border-stone-100 rounded-xl p-6 mb-8">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Profile</h3>

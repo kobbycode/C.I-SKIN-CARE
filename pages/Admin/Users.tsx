@@ -34,8 +34,19 @@ const Users: React.FC = () => {
         },
         body: JSON.stringify({ email, password, fullName, username, role }),
       });
-      const data = await resp.json();
+
+      const contentType = resp.headers.get('content-type');
+      let data;
+      if (contentType && contentType.includes('application/json')) {
+        data = await resp.json();
+      } else {
+        const text = await resp.text();
+        console.error('Non-JSON response:', text);
+        throw new Error('A server error occurred. Please check logs.');
+      }
+
       if (!resp.ok) throw new Error(data?.error || 'Failed');
+
       showNotification('Staff user created', 'success');
       setEmail('');
       setPassword('');
@@ -62,7 +73,17 @@ const Users: React.FC = () => {
         },
         body: JSON.stringify({ uid, role: newRole }),
       });
-      const data = await resp.json();
+
+      const contentType = resp.headers.get('content-type');
+      let data;
+      if (contentType && contentType.includes('application/json')) {
+        data = await resp.json();
+      } else {
+        const text = await resp.text();
+        console.error('Non-JSON response:', text);
+        throw new Error('A server error occurred. Please check logs.');
+      }
+
       if (!resp.ok) throw new Error(data?.error || 'Failed');
       showNotification('Role updated', 'success');
     } catch (e: any) {
@@ -150,4 +171,3 @@ const Users: React.FC = () => {
 };
 
 export default Users;
-
