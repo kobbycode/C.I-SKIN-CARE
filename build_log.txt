@@ -1,51 +1,8 @@
 ﻿[36mvite v6.4.1 [32mbuilding for production...[36m[39m
 transforming...
-[32mΓ£ô[39m 1154 modules transformed.
-rendering chunks...
-computing gzip size...
-[2mdist/[22m[32mindex.html                            [39m[1m[2m  2.70 kB[22m[1m[22m[2m Γöé gzip:   0.94 kB[22m
-[2mdist/[22m[35massets/index-DECFSj6V.css             [39m[1m[2m 27.37 kB[22m[1m[22m[2m Γöé gzip:   5.40 kB[22m
-[2mdist/[22m[36massets/OptimizedImage-tXFfb40P.js     [39m[1m[2m  0.59 kB[22m[1m[22m[2m Γöé gzip:   0.39 kB[22m
-[2mdist/[22m[36massets/Skeletons-CqrPz7oI.js          [39m[1m[2m  1.25 kB[22m[1m[22m[2m Γöé gzip:   0.54 kB[22m
-[2mdist/[22m[36massets/ConfirmModal-Cd5HgwPp.js       [39m[1m[2m  1.68 kB[22m[1m[22m[2m Γöé gzip:   0.76 kB[22m
-[2mdist/[22m[36massets/AdminLogin-BH7E_gtv.js         [39m[1m[2m  2.21 kB[22m[1m[22m[2m Γöé gzip:   1.08 kB[22m
-[2mdist/[22m[36massets/Login-D63cp-53.js              [39m[1m[2m  2.33 kB[22m[1m[22m[2m Γöé gzip:   1.06 kB[22m
-[2mdist/[22m[36massets/FAQ-biriztmL.js                [39m[1m[2m  2.48 kB[22m[1m[22m[2m Γöé gzip:   1.05 kB[22m
-[2mdist/[22m[36massets/Register-wE2EviAr.js           [39m[1m[2m  2.61 kB[22m[1m[22m[2m Γöé gzip:   1.12 kB[22m
-[2mdist/[22m[36massets/RitualGuide-Cqc47Yfm.js        [39m[1m[2m  2.76 kB[22m[1m[22m[2m Γöé gzip:   1.15 kB[22m
-[2mdist/[22m[36massets/SkinQuizResults-Vq6YHDLs.js    [39m[1m[2m  3.73 kB[22m[1m[22m[2m Γöé gzip:   1.53 kB[22m
-[2mdist/[22m[36massets/JournalDetail-ucnxiUPt.js      [39m[1m[2m  4.70 kB[22m[1m[22m[2m Γöé gzip:   1.40 kB[22m
-[2mdist/[22m[36massets/Search-RA-SEZn0.js             [39m[1m[2m  5.09 kB[22m[1m[22m[2m Γöé gzip:   1.81 kB[22m
-[2mdist/[22m[36massets/Loyalty-30QnyfX4.js            [39m[1m[2m  5.11 kB[22m[1m[22m[2m Γöé gzip:   1.70 kB[22m
-[2mdist/[22m[36massets/OrderConfirmation-D5_WZD7t.js  [39m[1m[2m  5.56 kB[22m[1m[22m[2m Γöé gzip:   1.56 kB[22m
-[2mdist/[22m[36massets/Story-B4e-B00b.js              [39m[1m[2m  5.67 kB[22m[1m[22m[2m Γöé gzip:   1.67 kB[22m
-[2mdist/[22m[36massets/AdminLayout-Cug8QPH3.js        [39m[1m[2m  5.74 kB[22m[1m[22m[2m Γöé gzip:   1.84 kB[22m
-[2mdist/[22m[36massets/Journal-bUYjd2wh.js            [39m[1m[2m  6.32 kB[22m[1m[22m[2m Γöé gzip:   1.98 kB[22m
-[2mdist/[22m[36massets/Reviews-D4q3C93M.js            [39m[1m[2m  6.89 kB[22m[1m[22m[2m Γöé gzip:   2.12 kB[22m
-[2mdist/[22m[36massets/SkinQuiz-CDhx2NG1.js           [39m[1m[2m  7.36 kB[22m[1m[22m[2m Γöé gzip:   3.17 kB[22m
-[2mdist/[22m[36massets/Contact-JE4An8_3.js            [39m[1m[2m  8.01 kB[22m[1m[22m[2m Γöé gzip:   2.52 kB[22m
-[2mdist/[22m[36massets/Reviews-ac3ggvmO.js            [39m[1m[2m  8.13 kB[22m[1m[22m[2m Γöé gzip:   2.63 kB[22m
-[2mdist/[22m[36massets/Shop-UqKuTsKc.js               [39m[1m[2m  8.59 kB[22m[1m[22m[2m Γöé gzip:   3.10 kB[22m
-[2mdist/[22m[36massets/Account-SpaX-V8d.js            [39m[1m[2m  8.64 kB[22m[1m[22m[2m Γöé gzip:   2.51 kB[22m
-[2mdist/[22m[36massets/Coupons-5Xx-IN1i.js            [39m[1m[2m  9.47 kB[22m[1m[22m[2m Γöé gzip:   2.68 kB[22m
-[2mdist/[22m[36massets/Categories-C1oaDikc.js         [39m[1m[2m  9.61 kB[22m[1m[22m[2m Γöé gzip:   2.48 kB[22m
-[2mdist/[22m[36massets/JournalManager-B3ZIU4C-.js     [39m[1m[2m 10.03 kB[22m[1m[22m[2m Γöé gzip:   2.81 kB[22m
-[2mdist/[22m[36massets/OrderDetail-DQRsi2cf.js        [39m[1m[2m 10.08 kB[22m[1m[22m[2m Γöé gzip:   3.05 kB[22m
-[2mdist/[22m[36massets/FAQManager-Cfv8ZEQx.js         [39m[1m[2m 10.39 kB[22m[1m[22m[2m Γöé gzip:   2.83 kB[22m
-[2mdist/[22m[36massets/Home-aRWvfNLT.js               [39m[1m[2m 12.49 kB[22m[1m[22m[2m Γöé gzip:   4.29 kB[22m
-[2mdist/[22m[36massets/Users-B9i9gpvi.js              [39m[1m[2m 12.96 kB[22m[1m[22m[2m Γöé gzip:   3.44 kB[22m
-[2mdist/[22m[36massets/Inventory-Bn2evuTv.js          [39m[1m[2m 15.85 kB[22m[1m[22m[2m Γöé gzip:   3.77 kB[22m
-[2mdist/[22m[36massets/Customers-BovATRGq.js          [39m[1m[2m 16.01 kB[22m[1m[22m[2m Γöé gzip:   3.65 kB[22m
-[2mdist/[22m[36massets/Orders-BhB7MwEI.js             [39m[1m[2m 17.95 kB[22m[1m[22m[2m Γöé gzip:   4.51 kB[22m
-[2mdist/[22m[36massets/ProductDetail-C-2QKJOW.js      [39m[1m[2m 18.17 kB[22m[1m[22m[2m Γöé gzip:   5.19 kB[22m
-[2mdist/[22m[36massets/AddProduct-DbX8FE8B.js         [39m[1m[2m 22.38 kB[22m[1m[22m[2m Γöé gzip:   4.95 kB[22m
-[2mdist/[22m[36massets/CMSSettings-Bd6zXAvs.js        [39m[1m[2m 30.44 kB[22m[1m[22m[2m Γöé gzip:   5.74 kB[22m
-[2mdist/[22m[36massets/Profile-QHwvcMKJ.js            [39m[1m[2m 40.62 kB[22m[1m[22m[2m Γöé gzip:   9.12 kB[22m
-[2mdist/[22m[36massets/proxy-C8p77gYl.js              [39m[1m[2m117.07 kB[22m[1m[22m[2m Γöé gzip:  38.39 kB[22m
-[2mdist/[22m[36massets/Checkout-8eOZ3ENR.js           [39m[1m[2m148.88 kB[22m[1m[22m[2m Γöé gzip:  50.12 kB[22m
-[2mdist/[22m[36massets/Dashboard-CSwvfym7.js          [39m[1m[2m354.05 kB[22m[1m[22m[2m Γöé gzip: 104.80 kB[22m
-[2mdist/[22m[36massets/index-CobdNaiu.js              [39m[1m[33m814.09 kB[39m[22m[2m Γöé gzip: 214.24 kB[22m
-node.exe : [33m
+[32mΓ£ô[39m 4 modules transformed.
+node.exe : [31mΓ£ù[39m Build 
+failed in 314ms
 At line:1 char:1
 + & "C:\Program 
 Files\nodejs/node.exe" 
@@ -54,23 +11,39 @@ Files\nodejs/node_mo ...
 + ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~
-    + CategoryInfo          :  
-   NotSpecified: ([33m:Strin  
-  g) [], RemoteException
-    + FullyQualifiedErrorId :  
-   NativeCommandError
+    + CategoryInfo          : 
+No    tSpecified: 
+([31mΓ£ù[39m B    uild 
+failed in 314ms:String)     
+[], RemoteException
+    + FullyQualifiedErrorId : 
+Na    tiveCommandError
  
-(!) Some chunks are larger 
-than 500 kB after 
-minification. Consider:
-- Using dynamic import() to 
-code-split the application
-- Use build.rollupOptions.outpu
-t.manualChunks to improve 
-chunking: https://rollupjs.org/
-configuration-options/#output-m
-anualchunks
-- Adjust chunk size limit for 
-this warning via build.chunkSiz
-eWarningLimit.[39m
-[32mΓ£ô built in 7.35s[39m
+[31merror during build:
+[31m[@tailwindcss/vite:generat
+e:build] Cannot convert 
+undefined or null to 
+object[31m
+file: [36mC:/Users/danie/Downl
+oads/c.i-skin-care/index.css[3
+1m
+    at B.generate (file:///C:/U
+sers/danie/Downloads/c.i-skin-c
+are/node_modules/@tailwindcss/v
+ite/dist/index.mjs:1:5598)
+    at async Object.transform (
+file:///C:/Users/danie/Download
+s/c.i-skin-care/node_modules/@t
+ailwindcss/vite/dist/index.mjs:
+1:3630)
+    at async transform (file://
+/C:/Users/danie/Downloads/c.i-s
+kin-care/node_modules/rollup/di
+st/es/shared/node-entry.js:2123
+9:16)
+    at async 
+ModuleLoader.addModuleSource (f
+ile:///C:/Users/danie/Downloads
+/c.i-skin-care/node_modules/rol
+lup/dist/es/shared/node-entry.j
+s:21453:36)[39m
