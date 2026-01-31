@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getAdminAuth, getAdminFirestore } from './_firebaseAdmin';
+import { getAdminAuth, getAdminFirestore } from './_firebaseAdmin.js';
 
 /**
  * One-time bootstrap endpoint to create the first admin.

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getAdminFirestore, requireAuth } from './_firebaseAdmin';
+import { getAdminFirestore, requireAuth } from './_firebaseAdmin.js';
 
 type VerifyResponse = {
   status: boolean;
