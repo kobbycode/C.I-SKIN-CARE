@@ -24,8 +24,8 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onMobileClose }) => {
   ];
 
   return (
-    <aside className="w-72 lg:w-64 bg-[#221C1D] text-white flex flex-col h-full shrink-0 shadow-2xl lg:shadow-none">
-      <div className="p-8 flex flex-col h-full relative">
+    <aside className="w-72 lg:w-64 bg-[#221C1D] text-white flex flex-col h-full shrink-0 shadow-2xl lg:shadow-none overflow-y-auto custom-scrollbar">
+      <div className="p-8 flex flex-col min-h-full relative">
         {/* Mobile Close Button */}
         <button
           onClick={onMobileClose}
