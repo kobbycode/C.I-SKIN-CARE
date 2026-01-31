@@ -66,7 +66,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         pointsTier: 'Bronze',
                         pointsToNextTier: 100,
                         joinedDate: new Date().toISOString(),
-                        avatar: ''
+                        avatar: '',
+                        registrationMethod: 'web'
                     };
                     await setDoc(userRef, newUser, { merge: true });
                     setCurrentUser(newUser);
@@ -123,7 +124,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             pointsTier: 'Bronze',
             pointsToNextTier: 100,
             joinedDate: new Date().toISOString(),
-            avatar: ''
+            avatar: '',
+            registrationMethod: 'web'
         };
         await setDoc(userRef, newUser, { merge: true });
         setCurrentUser(newUser);
@@ -159,7 +161,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 pointsTier: 'Bronze',
                 pointsToNextTier: 100,
                 joinedDate: new Date().toISOString(),
-                avatar: firebaseUser.photoURL || ''
+                avatar: firebaseUser.photoURL || '',
+                registrationMethod: 'web'
             };
             await setDoc(userRef, newUser, { merge: true });
             setCurrentUser(newUser);

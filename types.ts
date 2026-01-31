@@ -65,7 +65,8 @@ export interface UserProfile {
   email: string;
   statusLabel: string;
   /** Authorization role for admin panel access */
-  role?: 'customer' | 'admin' | 'manager' | 'editor';
+  role?: 'customer' | 'super-admin' | 'admin' | 'manager' | 'editor';
+  registrationMethod?: 'admin' | 'web';
   skinType: string;
   skinTypeDetail: string;
   focusRitual: string;
