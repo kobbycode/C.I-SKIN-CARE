@@ -80,7 +80,23 @@ const Profile: React.FC = () => {
         <aside className="lg:col-span-3 space-y-12">
           <div className="flex flex-col items-center lg:items-start text-center lg:text-left">
             <div className="w-24 h-24 rounded-full bg-primary/10 border-2 border-accent mb-6 flex items-center justify-center overflow-hidden">
-              <span className="material-symbols-outlined text-5xl text-accent font-light">account_circle</span>
+              {currentUser.avatar ? (
+                <img
+                  src={currentUser.avatar}
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement?.querySelector('.fallback-icon')?.classList.remove('hidden');
+                  }}
+                />
+              ) : (
+                <span className="material-symbols-outlined text-5xl text-accent font-light">account_circle</span>
+              )}
+              {/* Fallback icon that shows if image fails (hidden by default if avatar exists) */}
+              {currentUser.avatar && (
+                <span className="material-symbols-outlined text-5xl text-accent font-light fallback-icon hidden">account_circle</span>
+              )}
             </div>
             <h1 className="font-display text-2xl text-secondary dark:text-white mb-1">{currentUser.fullName}</h1>
             <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">{currentUser.statusLabel}</p>
