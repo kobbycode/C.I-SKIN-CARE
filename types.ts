@@ -1,4 +1,12 @@
 
+export interface ProductVariant {
+  id: string;
+  name: string; // e.g. "50ml", "Small"
+  price: number;
+  stock?: number;
+  sku?: string;
+}
+
 export interface Product {
   id: string;
   name: string;
@@ -14,23 +22,25 @@ export interface Product {
   skinTypes?: string[];
   concerns?: string[];
   cost?: number;
+  variants?: ProductVariant[];
 }
 
 export interface CartItem extends Product {
   quantity: number;
+  selectedVariant?: ProductVariant;
 }
 
 export interface Review {
   id: string;
   productId: string;
   author: string;
-  rating: number;
+  rating: number; // 1-5
   date: string;
-  title: string;
+  title?: string;
   content: string;
-  verified: boolean;
+  verified?: boolean;
   images?: string[];
-  status: 'Pending' | 'Approved' | 'Rejected';
+  status: 'pending' | 'approved' | 'rejected';
 }
 export interface Order {
   id: string;
@@ -39,8 +49,14 @@ export interface Order {
   date: string;
   time: string;
   status: 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled';
-  paymentStatus?: 'pending' | 'paid' | 'failed' | 'refunded';
+  paymentStatus: 'pending' | 'paid' | 'failed';
   paymentReference?: string;
+  couponCode?: string;
+  discount?: number;
+  returnRequested?: boolean;
+  returnReason?: string;
+  returnStatus?: 'Pending' | 'Approved' | 'Rejected';
+  returnDate?: string;
   total: number;
   items: CartItem[];
   shippingAddress: string;
@@ -89,4 +105,17 @@ export interface UserProfile {
   notifyMarketing?: boolean;
   notifyOrders?: boolean;
   notifyNewsletter?: boolean;
+  wishlist?: string[]; // Array of Product IDs
+}
+
+export interface Coupon {
+  id: string; // The code itself will be the document ID
+  code: string;
+  type: 'percentage' | 'fixed';
+  value: number;
+  minOrderAmount?: number;
+  expirationDate?: string; // ISO string
+  usageLimit?: number;
+  usedCount: number;
+  status: 'active' | 'disabled';
 }

@@ -85,9 +85,16 @@ const CartDrawer: React.FC = () => {
                   <div className="flex-1 flex flex-col justify-between">
                     <div>
                       <div className="flex justify-between items-start">
-                        <h4 className="text-sm font-bold text-secondary dark:text-primary">{item.name}</h4>
+                        <div>
+                          <h4 className="text-sm font-bold text-secondary dark:text-primary">{item.name}</h4>
+                          {item.selectedVariant && (
+                            <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-wider mt-1 inline-block">
+                              {item.selectedVariant.name}
+                            </span>
+                          )}
+                        </div>
                         <button
-                          onClick={() => removeFromCart(item.id)}
+                          onClick={() => removeFromCart(item.id, item.selectedVariant?.id)}
                           className="material-icons-outlined text-xs text-secondary/40 hover:text-red-500 transition-colors"
                         >
                           delete
@@ -100,12 +107,12 @@ const CartDrawer: React.FC = () => {
                     <div className="flex justify-between items-end">
                       <div className="flex items-center gap-3 px-3 py-1 bg-primary/5 rounded-full">
                         <button
-                          onClick={() => updateQuantity(item.id, -1)}
+                          onClick={() => updateQuantity(item.id, -1, item.selectedVariant?.id)}
                           className="text-xs font-bold w-4 hover:text-primary"
                         >-</button>
                         <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
                         <button
-                          onClick={() => updateQuantity(item.id, 1)}
+                          onClick={() => updateQuantity(item.id, 1, item.selectedVariant?.id)}
                           className="text-xs font-bold w-4 hover:text-primary"
                         >+</button>
                       </div>

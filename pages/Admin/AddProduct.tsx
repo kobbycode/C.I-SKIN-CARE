@@ -6,7 +6,7 @@ import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { collection, doc, setDoc } from 'firebase/firestore';
 import { useProducts } from '../../context/ProductContext';
 import { useNotification } from '../../context/NotificationContext';
-import { Product } from '../../types';
+import { Product, ProductVariant } from '../../types';
 
 const AddProduct: React.FC = () => {
     const navigate = useNavigate();
@@ -69,7 +69,7 @@ const AddProduct: React.FC = () => {
 
         setIsSubmitting(true);
         try {
-            const storageRef = ref(storage, `products/${Date.now()}_${file.name}`);
+            const storageRef = ref(storage, `products / ${Date.now()}_${file.name} `);
             const snapshot = await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(snapshot.ref);
             handleChange('image', downloadURL);
@@ -245,10 +245,10 @@ const AddProduct: React.FC = () => {
                                                 key={type}
                                                 type="button"
                                                 onClick={() => toggleArrayItem('skinTypes', type)}
-                                                className={`px-5 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all ${formData.skinTypes?.includes(type)
-                                                    ? 'bg-[#F2A600] text-black border-[#F2A600]'
-                                                    : 'border-stone-100 hover:border-[#F2A600] hover:text-[#F2A600]'
-                                                    }`}
+                                                className={`px - 5 py - 2 rounded - full border text - [10px] font - bold uppercase tracking - wider transition - all ${formData.skinTypes?.includes(type)
+                                                        ? 'bg-[#F2A600] text-black border-[#F2A600]'
+                                                        : 'border-stone-100 hover:border-[#F2A600] hover:text-[#F2A600]'
+                                                    } `}
                                             >
                                                 {type}
                                             </button>
@@ -264,10 +264,10 @@ const AddProduct: React.FC = () => {
                                                 key={concern}
                                                 type="button"
                                                 onClick={() => toggleArrayItem('concerns', concern)}
-                                                className={`px-5 py-2 rounded-full border text-[10px] font-bold uppercase tracking-wider transition-all ${formData.concerns?.includes(concern)
-                                                    ? 'bg-[#F2A600] text-black border-[#F2A600]'
-                                                    : 'border-stone-100 hover:border-[#F2A600] hover:text-[#F2A600]'
-                                                    }`}
+                                                className={`px - 5 py - 2 rounded - full border text - [10px] font - bold uppercase tracking - wider transition - all ${formData.concerns?.includes(concern)
+                                                        ? 'bg-[#F2A600] text-black border-[#F2A600]'
+                                                        : 'border-stone-100 hover:border-[#F2A600] hover:text-[#F2A600]'
+                                                    } `}
                                             >
                                                 {concern}
                                             </button>

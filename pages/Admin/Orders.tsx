@@ -2,6 +2,8 @@ import React, { useState, useMemo } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useOrders } from '../../context/OrderContext';
 import { useNotification } from '../../context/NotificationContext';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../../firebaseConfig';
 
 const Orders: React.FC = () => {
     const { orders, updateOrderStatus, loading } = useOrders();
@@ -15,7 +17,13 @@ const Orders: React.FC = () => {
 
         // Filter by tab
         if (activeTab !== 'All Orders') {
-            result = result.filter(o => activeTab.includes(o.status));
+            if (activeTab.startsWith('Returns')) {
+                result = result.filter(o => o.returnRequested);
+            } else {
+                // Extract status from "Pending (5)" format -> "Pending"
+                const status = activeTab.split(' (')[0];
+                result = result.filter(o => o.status === status);
+            }
         }
 
         // Filter by search
@@ -56,6 +64,22 @@ const Orders: React.FC = () => {
         }
     };
 
+    const handleReturnAction = async (id: string, action: 'Approved' | 'Rejected') => {
+        try {
+            const orderRef = doc(db, 'orders', id);
+            await updateDoc(orderRef, {
+                returnStatus: action,
+                // If approved, we might want to change the main status to 'Refunded' or keep it as Delivered?
+                // Let's set it to 'Refunded' if approved for clarity.
+                ...(action === 'Approved' ? { status: 'Refunded', paymentStatus: 'refunded' } : {})
+            });
+            showNotification(`Return request ${action}`, 'success');
+        } catch (error) {
+            console.error(error);
+            showNotification('Failed to update return status', 'error');
+        }
+    };
+
     return (
         <AdminLayout>
             <div className="flex flex-col xl:flex-row gap-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -88,7 +112,7 @@ const Orders: React.FC = () => {
                     <div className="bg-white border border-stone-100 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.02)] overflow-hidden mb-8">
                         <div className="p-6 border-b border-stone-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
                             <div className="flex gap-6 overflow-x-auto pb-2 md:pb-0 scrollbar-hide border-b md:border-none border-stone-50">
-                                {['All Orders', `Pending (${orders.filter(o => o.status === 'Pending').length})`, `Processing (${orders.filter(o => o.status === 'Processing').length})`, 'Shipped'].map((tab) => (
+                                {['All Orders', `Pending (${orders.filter(o => o.status === 'Pending').length})`, `Processing (${orders.filter(o => o.status === 'Processing').length})`, 'Shipped', `Returns (${orders.filter(o => o.returnRequested).length})`].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
@@ -293,6 +317,22 @@ const Orders: React.FC = () => {
                                             Confirm Delivery
                                         </button>
                                     )}
+
+                                    {/* Return Actions */}
+                                    {selectedOrder.returnRequested && selectedOrder.returnStatus === 'Pending' && (
+                                        <div className="space-y-3 pt-4 border-t border-stone-100">
+                                            <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Return Request: {selectedOrder.returnReason}</p>
+                                            <div className="flex gap-3">
+                                                <button onClick={() => handleReturnAction(selectedOrder.id, 'Approved')} className="flex-1 py-3 bg-stone-800 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors">
+                                                    Approve Return
+                                                </button>
+                                                <button onClick={() => handleReturnAction(selectedOrder.id, 'Rejected')} className="flex-1 py-3 border border-red-200 text-red-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-colors">
+                                                    Reject
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     <button className="w-full flex items-center justify-center gap-2 py-3 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-400 uppercase tracking-widest hover:bg-stone-50 transition-colors">
                                         <span className="material-symbols-outlined text-lg">print</span>
                                         Manifest

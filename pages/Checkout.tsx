@@ -6,6 +6,9 @@ import { useApp } from '../App';
 import { useOrders } from '../context/OrderContext';
 import { useUser } from '../context/UserContext';
 import { useNotification } from '../context/NotificationContext';
+import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
+import { Coupon } from '../types';
 
 interface CheckoutFormData {
   email: string;
@@ -51,10 +54,16 @@ const Checkout: React.FC = () => {
   });
   const [geoCoords, setGeoCoords] = useState<{ lat: number; lng: number } | null>(null);
 
+  // Coupon State
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
+  const [discountAmount, setDiscountAmount] = useState(0);
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal >= 200 ? 0 : 15.0;
   const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const total = Math.max(0, subtotal + shipping + tax - discountAmount);
 
   // Paystack configuration
   const paystackConfig = {
@@ -86,6 +95,50 @@ const Checkout: React.FC = () => {
 
   const initializePayment = usePaystackPayment(paystackConfig);
 
+  const applyCoupon = async () => {
+    if (!couponCode) return;
+    setIsValidatingCoupon(true);
+    try {
+      const code = couponCode.toUpperCase().replace(/\s/g, '');
+      const docRef = doc(db, 'coupons', code);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) throw new Error('Invalid coupon code');
+
+      const coupon = docSnap.data() as Coupon;
+
+      if (coupon.status !== 'active') throw new Error('This coupon is no longer active');
+      if (coupon.expirationDate && new Date(coupon.expirationDate) < new Date()) throw new Error('This coupon has expired');
+      if (coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) throw new Error('This coupon has reached its usage limit');
+      if (coupon.minOrderAmount && subtotal < coupon.minOrderAmount) throw new Error(`Minimum order of GH₵${coupon.minOrderAmount} required`);
+
+      let calculatedDiscount = 0;
+      if (coupon.type === 'percentage') {
+        calculatedDiscount = (subtotal * (coupon.value / 100));
+      } else {
+        calculatedDiscount = coupon.value;
+      }
+
+      setAppliedCoupon(coupon);
+      setDiscountAmount(calculatedDiscount);
+      showNotification(`Coupon applied! You saved GH₵${calculatedDiscount.toFixed(2)}`, 'success');
+      setCouponCode('');
+    } catch (error: any) {
+      console.error(error);
+      showNotification(error.message || 'Failed to apply coupon', 'error');
+      setAppliedCoupon(null);
+      setDiscountAmount(0);
+    } finally {
+      setIsValidatingCoupon(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setAppliedCoupon(null);
+    setDiscountAmount(0);
+    showNotification('Coupon removed', 'success');
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
       ...formData,
@@ -108,11 +161,23 @@ const Checkout: React.FC = () => {
         selectedPayment === 'mtn_momo'
           ? 'MTN MoMo via Paystack'
           : selectedPayment === 'telecel_cash'
-          ? 'Telecel Cash via Paystack'
-          : selectedPayment === 'airteltigo_money'
-          ? 'AirtelTigo Money via Paystack'
-          : 'Paystack'
+            ? 'Telecel Cash via Paystack'
+            : selectedPayment === 'airteltigo_money'
+              ? 'AirtelTigo Money via Paystack'
+              : 'Paystack',
+      couponCode: appliedCoupon?.code,
+      discount: discountAmount
     };
+
+    // Increment coupon usage if applied
+    if (appliedCoupon) {
+      try {
+        const couponRef = doc(db, 'coupons', appliedCoupon.id);
+        await updateDoc(couponRef, { usedCount: increment(1) });
+      } catch (e) {
+        console.error('Failed to increment coupon usage', e);
+      }
+    }
 
     try {
       const token = await getIdToken();
@@ -171,8 +236,20 @@ const Checkout: React.FC = () => {
             total,
             items: [...cart],
             shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
-            paymentMethod: 'Pay on Delivery'
+            paymentMethod: 'Pay on Delivery',
+            couponCode: appliedCoupon?.code,
+            discount: discountAmount
           };
+
+          // Increment coupon usage if applied
+          if (appliedCoupon) {
+            try {
+              const couponRef = doc(db, 'coupons', appliedCoupon.id);
+              await updateDoc(couponRef, { usedCount: increment(1) });
+            } catch (e) {
+              console.error('Failed to increment coupon usage', e);
+            }
+          }
           const orderId = await addOrder(orderSummary);
           showNotification('Order placed. Pay on delivery selected.', 'success');
           clearCart();
@@ -704,6 +781,11 @@ const Checkout: React.FC = () => {
                   </div>
                   <div className="flex-1 flex flex-col justify-center">
                     <h4 className="text-[11px] font-bold uppercase tracking-wider line-clamp-1">{item.name}</h4>
+                    {item.selectedVariant && (
+                      <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded uppercase tracking-wider mt-1 inline-block mb-1">
+                        {item.selectedVariant.name}
+                      </span>
+                    )}
                     <p className="text-[9px] opacity-60 uppercase tracking-widest mt-1">{item.category}</p>
                     <p className="text-xs font-bold mt-2 text-primary">GH₵{item.price.toFixed(2)}</p>
                   </div>
@@ -724,6 +806,12 @@ const Checkout: React.FC = () => {
                 <span className="opacity-60">Estimated Taxes</span>
                 <span>GH₵{tax.toFixed(2)}</span>
               </div>
+              {discountAmount > 0 && (
+                <div className="flex justify-between text-xs font-medium uppercase tracking-widest text-[#F2A600]">
+                  <span className="opacity-80">Discount ({appliedCoupon?.code})</span>
+                  <span>-GH₵{discountAmount.toFixed(2)}</span>
+                </div>
+              )}
               <div className="pt-6 mt-3 border-t border-primary/20 flex justify-between items-center">
                 <span className="text-sm font-black uppercase tracking-[0.2em]">Total Ritual</span>
                 <span className="text-2xl font-display font-bold text-primary">GH₵{total.toFixed(2)}</span>
@@ -731,15 +819,33 @@ const Checkout: React.FC = () => {
             </div>
 
             {/* Promo Code */}
-            <div className="mt-8 flex gap-3">
-              <input
-                placeholder="Ritual Code"
-                className="flex-1 bg-white dark:bg-stone-800 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent text-stone-800 dark:text-stone-200"
-              />
-              <button className="px-6 border border-primary/20 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-primary/5 transition-colors">
-                Apply
-              </button>
-            </div>
+            {appliedCoupon ? (
+              <div className="mt-8 bg-[#F2A600]/10 border border-[#F2A600] rounded-lg p-4 flex justify-between items-center">
+                <div>
+                  <p className="text-[#F2A600] text-xs font-bold uppercase tracking-widest">Code Applied</p>
+                  <p className="text-white text-sm font-bold">{appliedCoupon.code}</p>
+                </div>
+                <button onClick={removeCoupon} className="text-stone-400 hover:text-white">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            ) : (
+              <div className="mt-8 flex gap-3">
+                <input
+                  placeholder="Ritual Code"
+                  value={couponCode}
+                  onChange={(e) => setCouponCode(e.target.value)}
+                  className="flex-1 bg-white dark:bg-stone-800 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent text-stone-800 dark:text-stone-200"
+                />
+                <button
+                  onClick={applyCoupon}
+                  disabled={isValidatingCoupon || !couponCode}
+                  className="px-6 border border-primary/20 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-primary/5 transition-colors disabled:opacity-50"
+                >
+                  {isValidatingCoupon ? '...' : 'Apply'}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Social Proof/Assurance */}

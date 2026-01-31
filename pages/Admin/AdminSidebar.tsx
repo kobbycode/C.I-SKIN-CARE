@@ -13,6 +13,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onMobileClose }) => {
     { label: 'Dashboard', icon: 'grid_view', path: '/admin' },
     { label: 'Inventory', icon: 'inventory_2', path: '/admin/inventory' },
     { label: 'Categories', icon: 'category', path: '/admin/categories' },
+    { label: 'Coupons', icon: 'local_offer', path: '/admin/coupons' },
     { label: 'FAQ Manager', icon: 'quiz', path: '/admin/faqs' },
     { label: 'Skin Journal', icon: 'edit_note', path: '/admin/journal' },
     { label: 'Orders', icon: 'shopping_cart', path: '/admin/orders' },

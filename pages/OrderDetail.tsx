@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useOrders } from '../context/OrderContext';
 import { useUser } from '../context/UserContext';
+import { useNotification } from '../context/NotificationContext';
+import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebaseConfig';
 import { Order } from '../types';
 
 const OrderDetail: React.FC = () => {
@@ -10,6 +13,37 @@ const OrderDetail: React.FC = () => {
     const { currentUser } = useUser();
     const navigate = useNavigate();
     const [order, setOrder] = useState<Order | null>(null);
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [returnReason, setReturnReason] = useState('');
+    const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
+    const { showNotification } = useNotification();
+
+    const handleReturnSubmit = async () => {
+        if (!order || !returnReason) return;
+        setIsSubmittingReturn(true);
+        try {
+            const orderRef = doc(db, 'orders', order.id);
+            // Verify return eligibility (client-side check, should be enforced by rules/admin too)
+            if (order.status !== 'Delivered') throw new Error('Order must be delivered to be returned');
+
+            await updateDoc(orderRef, {
+                returnRequested: true,
+                returnReason: returnReason,
+                returnStatus: 'Pending',
+                returnDate: new Date().toISOString()
+            });
+
+            // Optimistic update (Context snapshop will eventually catch up)
+            setOrder(prev => prev ? ({ ...prev, returnRequested: true, returnReason, returnStatus: 'Pending' }) : null);
+            showNotification('Return request submitted for review', 'success');
+            setShowReturnModal(false);
+        } catch (error: any) {
+            console.error(error);
+            showNotification(error.message || 'Failed to submit return request', 'error');
+        } finally {
+            setIsSubmittingReturn(false);
+        }
+    };
 
     useEffect(() => {
         if (orders.length > 0 && id) {
@@ -58,8 +92,8 @@ const OrderDetail: React.FC = () => {
                                     Order #{order.id.slice(0, 8).toUpperCase()}
                                 </h1>
                                 <span className={`px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-full ${order.status === 'Delivered' ? 'bg-green-500/10 text-green-600' :
-                                        order.status === 'Cancelled' ? 'bg-red-500/10 text-red-600' :
-                                            'bg-orange-500/10 text-orange-600'
+                                    order.status === 'Cancelled' ? 'bg-red-500/10 text-red-600' :
+                                        'bg-orange-500/10 text-orange-600'
                                     }`}>
                                     {order.status}
                                 </span>
@@ -114,11 +148,90 @@ const OrderDetail: React.FC = () => {
                                 <p>Method: <span className="font-bold text-secondary dark:text-white capitalize">{order.paymentMethod}</span></p>
                                 <p>Status: <span className={`font-bold capitalize ${order.paymentStatus === 'paid' ? 'text-green-600' : 'text-orange-600'}`}>{order.paymentStatus || 'Pending'}</span></p>
                                 {order.paymentReference && <p className="text-xs">Ref: {order.paymentReference}</p>}
+
+                                {order.discount && order.discount > 0 && (
+                                    <p className="text-green-600 font-bold">Discount Applied: -GH₵{order.discount.toFixed(2)}</p>
+                                )}
                             </div>
                         </div>
                     </div>
+
+                    {/* Return Request Section */}
+                    {order.status === 'Delivered' && !order.returnRequested && (
+                        <div className="p-8 border-t border-primary/10 bg-stone-50 dark:bg-stone-950/50">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h4 className="font-bold text-sm text-secondary dark:text-white">Need to return an item?</h4>
+                                    <p className="text-xs opacity-60 mt-1">Accepting returns within 30 days of delivery.</p>
+                                </div>
+                                <button
+                                    onClick={() => setShowReturnModal(true)}
+                                    className="px-6 py-3 border border-stone-200 dark:border-stone-700 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors"
+                                >
+                                    Request Return
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Return Status Banner */}
+                    {order.returnRequested && (
+                        <div className="p-6 bg-orange-50 dark:bg-orange-950/20 border-t border-orange-100 dark:border-orange-900/50">
+                            <div className="flex items-start gap-4">
+                                <span className="material-symbols-outlined text-orange-500">assignment_return</span>
+                                <div>
+                                    <h4 className="font-bold text-sm text-orange-700 dark:text-orange-400">Return Requested</h4>
+                                    <p className="text-xs text-orange-600/80 dark:text-orange-400/80 mt-1">
+                                        Status: <span className="font-bold uppercase">{order.returnStatus || 'Pending Review'}</span>
+                                    </p>
+                                    <p className="text-[10px] italic mt-2 opacity-70">Reason: {order.returnReason}</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
+
+            {/* Return Modal */}
+            {showReturnModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-stone-900 rounded-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+                        <div className="p-6 border-b border-primary/10">
+                            <h3 className="font-display text-xl">Request Return</h3>
+                            <p className="text-xs opacity-60 mt-1">Order #{order.id.slice(0, 8).toUpperCase()}</p>
+                        </div>
+                        <div className="p-6 space-y-4">
+                            <p className="text-sm opacity-80 leading-relaxed">
+                                We're sorry the ritual didn't meet your expectations. Please describe the issue below, and our concierge team will review your request.
+                            </p>
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2 block">Reason for Return</label>
+                                <textarea
+                                    className="w-full bg-primary/5 border-primary/10 rounded-lg p-3 text-sm focus:ring-accent min-h-[100px]"
+                                    placeholder="e.g. Item damaged, Incorrect item sent..."
+                                    value={returnReason}
+                                    onChange={(e) => setReturnReason(e.target.value)}
+                                />
+                            </div>
+                        </div>
+                        <div className="p-6 bg-stone-50 dark:bg-stone-950/50 flex gap-3">
+                            <button
+                                onClick={() => setShowReturnModal(false)}
+                                className="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest hover:bg-stone-200 dark:hover:bg-stone-800 rounded transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleReturnSubmit}
+                                disabled={!returnReason || isSubmittingReturn}
+                                className="flex-1 py-3 bg-stone-900 dark:bg-white text-white dark:text-stone-900 rounded text-[10px] font-bold uppercase tracking-widest hover:opacity-90 transition-opacity disabled:opacity-50"
+                            >
+                                {isSubmittingReturn ? 'Submitting...' : 'Submit Request'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 };

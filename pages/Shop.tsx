@@ -210,6 +210,9 @@ const Shop: React.FC = () => {
                           />
                         </Link>
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-500 pointer-events-none"></div>
+                        <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                          <WishlistButton product={product} />
+                        </div>
                         <div className="absolute bottom-4 left-4 right-4 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 delay-75">
                           <button
                             onClick={() => addToCart(product)}
@@ -266,6 +269,25 @@ const Shop: React.FC = () => {
         </div>
       </div>
     </main>
+  );
+};
+
+const WishlistButton: React.FC<{ product: any }> = ({ product }) => {
+  const { toggleWishlist, isInWishlist } = useApp();
+  const isFavorited = isInWishlist(product.id);
+
+  return (
+    <button
+      onClick={(e) => {
+        e.preventDefault();
+        toggleWishlist(product);
+      }}
+      className="p-2 bg-white/90 backdrop-blur rounded-full hover:bg-white text-stone-400 hover:text-red-500 transition-colors shadow-sm"
+    >
+      <span className={`material-symbols-outlined text-[20px] ${isFavorited ? 'fill-1 text-red-500' : ''}`}>
+        favorite
+      </span>
+    </button>
   );
 };
 

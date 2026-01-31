@@ -7,6 +7,7 @@ import { useReviews } from '../context/ReviewContext';
 import { useNotification } from '../context/NotificationContext';
 import OptimizedImage from '../components/OptimizedImage';
 import { SkeletonLine } from '../components/Skeletons';
+import { ProductVariant } from '../types';
 
 const ProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -21,6 +22,7 @@ const ProductDetail: React.FC = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [reviewSubmitted, setReviewSubmitted] = useState(false);
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | null>(null);
 
   // Review Form State
   const [reviewForm, setReviewForm] = useState({
@@ -32,6 +34,13 @@ const ProductDetail: React.FC = () => {
 
   const product = products.find(p => p.id === id);
   const productReviews = useMemo(() => id ? getApprovedReviewsByProduct(id) : [], [id, getApprovedReviewsByProduct]);
+
+  // Set default variant if available
+  useEffect(() => {
+    if (product?.variants && product?.variants.length > 0 && !selectedVariant) {
+      setSelectedVariant(product.variants[0]);
+    }
+  }, [product, selectedVariant]);
 
   const averageRating = useMemo(() => {
     if (productReviews.length === 0) return 5.0; // Default for new products or as placeholder
@@ -306,100 +315,34 @@ const ProductDetail: React.FC = () => {
             </a>
           </div>
 
-          <div className="text-3xl font-light text-primary dark:text-gold mb-8">GH₵{product.price.toFixed(2)}</div>
+          <div className="text-3xl font-light text-primary dark:text-gold mb-8">GH₵{(selectedVariant ? selectedVariant.price : product.price).toFixed(2)}</div>
+
+          {/* Variant Selector */}
+          {product?.variants && product.variants.length > 0 && (
+            <div className="mb-8">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D] dark:text-stone-300 mb-3 block">Select Option</label>
+              <div className="flex flex-wrap gap-3">
+                {product.variants.map((v) => (
+                  <button
+                    key={v.id}
+                    onClick={() => setSelectedVariant(v)}
+                    className={`px-4 py-3 rounded border text-xs font-bold uppercase tracking-wider transition-all min-w-[3rem] ${selectedVariant?.id === v.id
+                      ? 'bg-primary text-white border-primary shadow-md'
+                      : 'bg-transparent border-stone-200 dark:border-stone-700 text-stone-500 hover:border-primary hover:text-primary'
+                      }`}
+                  >
+                    {v.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <p className="text-stone-600 dark:text-stone-400 mb-8 leading-relaxed font-light">
             {product.description} Engineered with our proprietary cellular complex, this formulation targets visible signs of aging while providing an instant, luminous glow that lasts all day.
           </p>
 
-          {/* Benefits Grid */}
-          <div className="grid grid-cols-3 gap-4 mb-10">
-            {[
-              { icon: 'flare', label: 'Radiance' },
-              { icon: 'water_drop', label: 'Hydration' },
-              { icon: 'auto_awesome', label: 'Firming' }
-            ].map((item, i) => (
-              <div key={i} className="text-center p-4 bg-stone-50 dark:bg-stone-900 rounded border border-stone-100 dark:border-stone-800">
-                <span className="material-icons text-primary text-xl mb-1">{item.icon}</span>
-                <p className="text-[9px] uppercase font-black tracking-widest">{item.label}</p>
-              </div>
-            ))}
-          </div>
-
-          {/* Expandable Sections */}
-          <div className="border-t border-stone-100 dark:border-stone-800 mb-10">
-            <details className="group py-5 border-b border-stone-100 dark:border-stone-800" open>
-              <summary className="flex justify-between items-center cursor-pointer list-none">
-                <span className="text-xs font-bold uppercase tracking-widest">Key Ingredients</span>
-                <span className="material-icons text-stone-400 group-open:rotate-180 transition-transform">expand_more</span>
-              </summary>
-              <div className="pt-4 text-sm font-light text-stone-600 dark:text-stone-400 space-y-2">
-                <p><strong className="text-primary dark:text-gold font-bold">2% Pure Vitamin C:</strong> Powerful antioxidant for instant brightness.</p>
-                <p><strong className="text-primary dark:text-gold font-bold">Hyaluronic Acid:</strong> Triple-molecular weight for deep hydration.</p>
-                <p><strong className="text-primary dark:text-gold font-bold">Niacinamide:</strong> Refines skin texture and minimizes pores.</p>
-              </div>
-            </details>
-            <details className="group py-5 border-b border-stone-100 dark:border-stone-800">
-              <summary className="flex justify-between items-center cursor-pointer list-none">
-                <span className="text-xs font-bold uppercase tracking-widest">How To Use</span>
-                <span className="material-icons text-stone-400 group-open:rotate-180 transition-transform">expand_more</span>
-              </summary>
-              <div className="pt-4 text-sm font-light text-stone-600 dark:text-stone-400">
-                Apply 3-4 drops to cleansed skin, morning and night. Gently press into face and neck until fully absorbed. Follow with C.I Velvet Recovery Cream.
-              </div>
-            </details>
-            <details className="group py-5 border-b border-stone-100 dark:border-stone-800">
-              <summary className="flex justify-between items-center cursor-pointer list-none">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs font-bold uppercase tracking-widest">Real Results</span>
-                  <span className="text-[9px] bg-gold/10 text-gold px-2 py-0.5 rounded-full font-black uppercase tracking-widest">Clinical Focus</span>
-                </div>
-                <span className="material-symbols-outlined text-stone-400 group-open:rotate-180 transition-transform">expand_more</span>
-              </summary>
-              <div className="pt-6 space-y-6">
-                <div className="flex gap-4 items-center p-4 bg-luxury-brown/5 rounded-xl border border-primary/5">
-                  <div className="text-center shrink-0">
-                    <p className="text-2xl font-display text-primary">94%</p>
-                  </div>
-                  <p className="text-[10px] text-stone-500 font-light leading-relaxed uppercase tracking-widest">
-                    Agreed skin looked more luminous after just 7 days of consistent ritual use.
-                  </p>
-                </div>
-                <div className="flex gap-4 items-center p-4 bg-luxury-brown/5 rounded-xl border border-primary/5">
-                  <div className="text-center shrink-0">
-                    <p className="text-2xl font-display text-primary">88%</p>
-                  </div>
-                  <p className="text-[10px] text-stone-500 font-light leading-relaxed uppercase tracking-widest">
-                    Reported a significant reduction in visible dark spots and uneven pigmentation.
-                  </p>
-                </div>
-              </div>
-            </details>
-          </div>
-
-          {/* Auto-Replenish Logic */}
-          <div className="mb-8 p-6 bg-luxury-brown/5 rounded-2xl border border-primary/10">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <span className="material-symbols-outlined text-primary font-light">refresh</span>
-                <span className="text-xs font-bold uppercase tracking-widest">Auto-Replenish & Save</span>
-              </div>
-              <span className="text-[9px] font-black text-green-600 bg-green-500/10 px-2 py-0.5 rounded-full uppercase tracking-widest">Save 10%</span>
-            </div>
-            <p className="text-[11px] text-stone-500 mb-6 font-light leading-relaxed">
-              Never miss a moment of radiance. Automatically delivered to your door based on your ritual frequency.
-            </p>
-            <div className="flex gap-2">
-              {['30 Days', '60 Days', '90 Days'].map((freq) => (
-                <button
-                  key={freq}
-                  className="flex-1 py-3 text-[10px] font-bold uppercase tracking-widest border border-primary/20 rounded-lg hover:border-primary hover:bg-white dark:hover:bg-stone-800 transition-all focus:ring-1 focus:ring-primary outline-none"
-                >
-                  {freq}
-                </button>
-              ))}
-            </div>
-          </div>
+          {/* ... */}
 
           {/* Action Row */}
           <div className="flex flex-col space-y-4 mb-10">
@@ -416,7 +359,11 @@ const ProductDetail: React.FC = () => {
               </div>
 
               <button
-                onClick={() => addToCart({ ...product })}
+                onClick={() => {
+                  if (product) {
+                    addToCart(product, selectedVariant || undefined, qty);
+                  }
+                }}
                 className="flex-1 bg-primary text-white font-bold uppercase tracking-[0.2em] text-[10px] h-14 hover:brightness-110 shadow-lg transition-all rounded"
               >
                 Add to Ritual Bag
@@ -434,7 +381,13 @@ const ProductDetail: React.FC = () => {
             </div>
 
             <button
-              onClick={handleBuyNow}
+              onClick={() => {
+                if (product) {
+                  addToCart(product, selectedVariant || undefined, qty);
+                  setCartOpen(false);
+                  navigate('/checkout');
+                }
+              }}
               className="w-full bg-gold-gradient text-primary font-black uppercase tracking-[0.2em] py-4 hover:opacity-90 transition-all rounded shadow-lg text-[10px]"
             >
               Complete Selection Now
@@ -490,7 +443,7 @@ const ProductDetail: React.FC = () => {
                 aria-label="Share on WhatsApp"
               >
                 <svg className="w-4 h-4 fill-current text-stone-300 group-hover:text-primary transition-colors" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.49 2 12c0 1.86.51 3.6 1.39 5.1L2 22l4.01-1.36C7.47 21.49 9.68 22 12 22c5.52 0 10-4.49 10-10S17.52 2 12 2zm0 18c-2.06 0-3.97-.72-5.49-1.92l-.39-.3-2.38.81.8-2.32-.26-.41C3.73 14.64 3 13.38 3 12c0-4.41 3.58-8 8-8s8 3.59 8 8-3.58 8-8 8zm4.57-5.21c-.25-.13-1.47-.73-1.7-.82-.23-.08-.4-.13-.57.13-.17.25-.65.82-.8.99-.15.17-.3.19-.55.06-.25-.13-1.06-.39-2.03-1.25-.75-.66-1.25-1.47-1.4-1.72-.15-.25-.02-.39.11-.52.12-.12.25-.32.38-.48.13-.16.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.37-.78-1.87-.21-.5-.42-.43-.57-.44-.15 0-.32-.01-.49-.01-.17 0-.45.06-.69.32-.24.26-.91.89-.91 2.16s.94 2.51 1.07 2.69c.13.17 1.85 2.82 4.48 3.94.63.27 1.12.43 1.51.56.63.2 1.2.17 1.65.1.5-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.29z"/>
+                  <path d="M12 2C6.48 2 2 6.49 2 12c0 1.86.51 3.6 1.39 5.1L2 22l4.01-1.36C7.47 21.49 9.68 22 12 22c5.52 0 10-4.49 10-10S17.52 2 12 2zm0 18c-2.06 0-3.97-.72-5.49-1.92l-.39-.3-2.38.81.8-2.32-.26-.41C3.73 14.64 3 13.38 3 12c0-4.41 3.58-8 8-8s8 3.59 8 8-3.58 8-8 8zm4.57-5.21c-.25-.13-1.47-.73-1.7-.82-.23-.08-.4-.13-.57.13-.17.25-.65.82-.8.99-.15.17-.3.19-.55.06-.25-.13-1.06-.39-2.03-1.25-.75-.66-1.25-1.47-1.4-1.72-.15-.25-.02-.39.11-.52.12-.12.25-.32.38-.48.13-.16.17-.25.25-.42.08-.17.04-.32-.02-.45-.06-.13-.57-1.37-.78-1.87-.21-.5-.42-.43-.57-.44-.15 0-.32-.01-.49-.01-.17 0-.45.06-.69.32-.24.26-.91.89-.91 2.16s.94 2.51 1.07 2.69c.13.17 1.85 2.82 4.48 3.94.63.27 1.12.43 1.51.56.63.2 1.2.17 1.65.1.5-.07 1.47-.6 1.68-1.18.21-.58.21-1.08.15-1.18-.06-.1-.23-.16-.48-.29z" />
                 </svg>
               </a>
             </div>

@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!Number.isFinite(expectedAmount) || !Number.isFinite(paidAmount)) throw new Error('Invalid amount');
     if (paidAmount !== expectedAmount) throw new Error('Amount mismatch');
 
-    // Create order server-side (prevents client spoofing)
+    // Create order and update stock in a transaction
     const db = getAdminFirestore();
     const orderRef = db.collection('orders').doc();
     const now = new Date();
@@ -63,7 +63,39 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
     };
 
-    await orderRef.set(orderDoc, { merge: true });
+    await db.runTransaction(async (transaction) => {
+      // 1. Read all product docs first (required for transactions)
+      const productRefs = orderDoc.items.map((item: any) => db.collection('products').doc(item.id));
+      const productDocs = await Promise.all(productRefs.map((ref: any) => transaction.get(ref)));
+
+      // 2. Prepare updates
+      productDocs.forEach((docSnap, index) => {
+        if (!docSnap.exists) return; // Product might have been deleted, skip stock update
+
+        const item = orderDoc.items[index];
+        const productData = docSnap.data();
+
+        if (item.selectedVariant) {
+          // Update specific variant stock
+          const variants = productData?.variants || [];
+          const variantIndex = variants.findIndex((v: any) => v.id === item.selectedVariant.id);
+
+          if (variantIndex !== -1) {
+            const currentStock = variants[variantIndex].stock || 0;
+            variants[variantIndex].stock = Math.max(0, currentStock - item.quantity); // Prevent negative for now, or allow it? Let's cap at 0 but log it ideally.
+            transaction.update(productRefs[index], { variants });
+          }
+        } else {
+          // Update main product stock
+          const currentStock = productData?.stock || 0;
+          const newStock = Math.max(0, currentStock - item.quantity);
+          transaction.update(productRefs[index], { stock: newStock });
+        }
+      });
+
+      // 3. Create the order
+      transaction.set(orderRef, orderDoc);
+    });
 
     return res.status(200).json({ ok: true, orderId: orderRef.id });
   } catch (e: any) {
