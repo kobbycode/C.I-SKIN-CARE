@@ -1,4 +1,6 @@
-import admin from 'firebase-admin';
+import { initializeApp, cert, getApps, getApp, App } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import { getFirestore } from 'firebase-admin/firestore';
 
 function parseServiceAccount() {
   let raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
@@ -30,20 +32,23 @@ function parseServiceAccount() {
   }
 }
 
-export function getAdminApp() {
-  if (admin.apps.length) {
+export function getAdminApp(): App {
+  const apps = getApps();
+  if (apps.length) {
     console.log('[firebaseAdmin] Using existing app');
-    return admin.app();
+    return apps[0];
   }
+
   console.log('[firebaseAdmin] Initializing new app...');
   const sa = parseServiceAccount();
   if (!sa) {
     console.error('[firebaseAdmin] Parsing service account returned null');
     throw new Error('Missing or invalid FIREBASE_SERVICE_ACCOUNT_JSON');
   }
+
   try {
-    const app = admin.initializeApp({
-      credential: admin.credential.cert(sa),
+    const app = initializeApp({
+      credential: cert(sa),
     });
     console.log('[firebaseAdmin] App initialized successfully');
     return app;
@@ -54,11 +59,11 @@ export function getAdminApp() {
 }
 
 export function getAdminFirestore() {
-  return getAdminApp().firestore();
+  return getFirestore(getAdminApp());
 }
 
 export function getAdminAuth() {
-  return getAdminApp().auth();
+  return getAuth(getAdminApp());
 }
 
 export async function requireAuth(req: any): Promise<{ uid: string; email?: string }> {
@@ -82,9 +87,13 @@ export async function requireAdmin(req: any): Promise<{ uid: string }> {
 
   const db = getAdminFirestore();
   const snap = await db.collection('users').doc(uid).get();
-  const role = (snap.exists ? (snap.data() as any).role : undefined) || 'customer';
-  if (role !== 'admin') throw new Error('Forbidden');
+  const userData = snap.exists ? snap.data() : null;
+  const role = userData?.role || 'customer';
+
+  if (role !== 'admin') {
+    console.warn(`[requireAdmin] Access denied for user ${uid}. Role: ${role}`);
+    throw new Error('Forbidden');
+  }
 
   return { uid };
 }
-
