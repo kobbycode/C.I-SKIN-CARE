@@ -17,6 +17,12 @@ const Users: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  // Edit State
+  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editForm, setEditForm] = useState({ fullName: '', email: '', username: '', password: '' });
+  const [updating, setUpdating] = useState(false);
+  const [showEditPassword, setShowEditPassword] = useState(false);
+
   const staff = useMemo(
     () => allUsers.filter(u => (u.role || 'customer') !== 'customer'),
     [allUsers]
@@ -93,29 +99,57 @@ const Users: React.FC = () => {
     }
   };
 
-  const deleteUser = async (uid: string) => {
-    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+  const saveEdit = async () => {
+    if (!editingUser) return;
+    setUpdating(true);
     try {
       const token = await getIdToken();
       if (!token) throw new Error('Not authenticated');
-      const resp = await fetch('/api/admin-delete-user', {
+
+      const payload: any = {
+        uid: editingUser.id,
+        fullName: editForm.fullName,
+        email: editForm.email,
+        username: editForm.username,
+      };
+      if (editForm.password) payload.password = editForm.password;
+
+      const resp = await fetch('/api/admin-update-user', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ uid }),
+        body: JSON.stringify(payload),
       });
 
       if (!resp.ok) {
         const data = await resp.json();
-        throw new Error(data?.error || 'Failed');
+        throw new Error(data.error || 'Failed to update user');
       }
-      showNotification('User deleted', 'success');
+
+      showNotification('User updated successfully', 'success');
+      setEditingUser(null);
+      // Ideally trigger reload, but real-time listener might update it? 
+      // Context uses onSnapshot? Yes context useUser listens to allUsers? 
+      // check context/UserContext.tsx. Yes, "users" collection snapshot.
+      // So UI will update automatically.
     } catch (e: any) {
       console.error(e);
-      showNotification(e?.message || 'Failed to delete user', 'error');
+      showNotification(e.message || 'Update failed', 'error');
+    } finally {
+      setUpdating(false);
     }
+  };
+
+  const openEdit = (user: any) => {
+    setEditingUser(user);
+    setEditForm({
+      fullName: user.fullName,
+      email: user.email,
+      username: user.username || '',
+      password: ''
+    });
   };
 
   return (
@@ -180,6 +214,7 @@ const Users: React.FC = () => {
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-[10px] uppercase tracking-widest text-stone-500">
+                  <th className="text-left py-2 pl-4">Avatar</th>
                   <th className="text-left py-2">Name</th>
                   <th className="text-left py-2">Email</th>
                   <th className="text-left py-2">Role</th>
@@ -190,14 +225,27 @@ const Users: React.FC = () => {
               <tbody>
                 {staff.map((u) => (
                   <tr key={u.id} className="border-t border-stone-100">
-                    <td className="py-3">{u.fullName}</td>
+                    <td className="py-3 pl-4">
+                      <div className="w-8 h-8 rounded-full bg-stone-100 overflow-hidden flex items-center justify-center border border-stone-200">
+                        {u.avatar ? (
+                          <img src={u.avatar} className="w-full h-full object-cover" alt="" />
+                        ) : (
+                          <span className="material-symbols-outlined text-stone-300 text-lg">account_circle</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="py-3">
+                      <span className={u.id === currentUser?.id ? "font-bold text-primary" : ""}>
+                        {u.fullName} {u.id === currentUser?.id && "(You)"}
+                      </span>
+                    </td>
                     <td className="py-3">{u.email}</td>
                     <td className="py-3">
                       <select
-                        className="bg-stone-50 border border-stone-200 rounded px-3 py-2 text-sm appearance-none pr-8 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_0.5rem_center] bg-[size:1.5em_1.5em] bg-no-repeat"
+                        className="bg-stone-50 border border-stone-200 rounded px-2 py-1 text-xs appearance-none pr-6 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_0.2rem_center] bg-[size:1.2em_1.2em] bg-no-repeat disabled:opacity-50"
                         value={(u.role || 'customer') as Role}
                         onChange={(e) => updateRole(u.id, e.target.value as Role)}
-                        disabled={currentUser?.role !== 'super-admin'}
+                        disabled={currentUser?.role !== 'super-admin' || u.id === currentUser?.id}
                       >
                         <option value="super-admin">super-admin</option>
                         <option value="admin">admin</option>
@@ -207,19 +255,30 @@ const Users: React.FC = () => {
                       </select>
                     </td>
                     <td className="py-3">
-                      <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${u.registrationMethod === 'admin' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}>
+                      <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${u.registrationMethod === 'admin' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}>
                         {u.registrationMethod === 'admin' ? 'Admin' : 'Web'}
                       </span>
                     </td>
                     <td className="py-3 text-right">
                       {currentUser?.role === 'super-admin' && (
-                        <button
-                          onClick={() => deleteUser(u.id)}
-                          className="p-2 text-stone-300 hover:text-red-600 transition-colors"
-                          title="Delete User"
-                        >
-                          <span className="material-symbols-outlined text-lg">delete</span>
-                        </button>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => openEdit(u)}
+                            className="p-1.5 text-stone-300 hover:text-primary transition-colors disabled:opacity-20"
+                            title="Edit User"
+                            disabled={false} // Allow editing self? Sure.
+                          >
+                            <span className="material-symbols-outlined text-lg">edit</span>
+                          </button>
+                          <button
+                            onClick={() => deleteUser(u.id)}
+                            className="p-1.5 text-stone-300 hover:text-red-600 transition-colors disabled:opacity-20"
+                            title="Delete User"
+                            disabled={u.id === currentUser?.id}
+                          >
+                            <span className="material-symbols-outlined text-lg">delete</span>
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>
@@ -236,7 +295,90 @@ const Users: React.FC = () => {
           </div>
         </div>
       </div>
-    </AdminLayout>
+    </div>
+
+      {/* Edit Modal */ }
+  {
+    editingUser && (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+            <h3 className="font-display text-xl text-[#221C1D]">Edit User Details</h3>
+            <button onClick={() => setEditingUser(null)} className="text-stone-400 hover:text-stone-600">
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+          <div className="p-8 space-y-4">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Full Name</label>
+              <input
+                className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
+                value={editForm.fullName}
+                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Username</label>
+                <input
+                  className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
+                  value={editForm.username}
+                  onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Email</label>
+                <input
+                  className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-dashed border-stone-200">
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-red-500 mb-2">Reset Password</label>
+              <p className="text-xs text-stone-400 mb-3">Leave blank to keep existing password. Entering a value here will immediately change the user's password.</p>
+              <div className="relative">
+                <input
+                  type={showEditPassword ? "text" : "password"}
+                  className="w-full bg-red-50 border border-red-100 rounded px-4 py-3 text-sm focus:border-red-500 focus:ring-0 outline-none transition-colors pr-10"
+                  placeholder="New Password (optional)"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowEditPassword(!showEditPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {showEditPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+          <div className="p-6 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
+            <button
+              onClick={() => setEditingUser(null)}
+              className="px-6 py-2.5 rounded-lg text-stone-500 font-bold text-xs uppercase tracking-wider hover:bg-stone-200 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={saveEdit}
+              disabled={updating}
+              className="px-6 py-2.5 rounded-lg bg-[#221C1D] text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors disabled:opacity-50"
+            >
+              {updating ? 'Saving Changes...' : 'Save Updates'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+    </AdminLayout >
   );
 };
 

@@ -7,9 +7,6 @@ import { useOrders } from '../context/OrderContext';
 import { useNotification } from '../context/NotificationContext';
 import { useProducts } from '../context/ProductContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { auth, storage } from '../firebaseConfig';
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ConfirmModal from '../components/Admin/ConfirmModal';
 
 const Profile: React.FC = () => {

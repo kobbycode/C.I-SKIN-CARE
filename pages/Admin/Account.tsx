@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
-import { auth } from '../../firebaseConfig';
+import { auth, storage } from '../../firebaseConfig';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import ConfirmModal from '../../components/Admin/ConfirmModal';
 
 const Account: React.FC = () => {
@@ -18,6 +19,8 @@ const Account: React.FC = () => {
   const [username, setUsername] = useState(initialUsername);
   const [fullName, setFullName] = useState(initialFullName);
   const [saving, setSaving] = useState(false);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -39,16 +42,38 @@ const Account: React.FC = () => {
   const saveProfile = async () => {
     setSaving(true);
     try {
-      await updateProfile({
+      let updates: any = {
         username: username.trim(),
         fullName: fullName.trim(),
-      });
+      };
+
+      if (avatarFile && currentUser) {
+        const storageRef = ref(storage, `avatars/${currentUser.id}/${avatarFile.name}`);
+        await uploadBytes(storageRef, avatarFile);
+        const downloadURL = await getDownloadURL(storageRef);
+        updates.avatar = `${downloadURL}?t=${new Date().getTime()}`;
+      }
+
+      await updateProfile(updates);
       showNotification('Account details updated', 'success');
+      setAvatarFile(null);
     } catch (e) {
       console.error(e);
       showNotification('Failed to update account details', 'error');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAvatarFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -144,6 +169,23 @@ const Account: React.FC = () => {
           <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Profile</h3>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="md:col-span-2 flex justify-center mb-6">
+              <div className="relative group">
+                <div className="w-24 h-24 rounded-full bg-stone-100 border-2 border-stone-200 overflow-hidden flex items-center justify-center">
+                  {avatarPreview ? (
+                    <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                  ) : currentUser?.avatar ? (
+                    <img src={currentUser.avatar} alt="Profile" className="w-full h-full object-cover" key={currentUser.avatar} />
+                  ) : (
+                    <span className="material-symbols-outlined text-4xl text-stone-300">account_circle</span>
+                  )}
+                  <label className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
+                    <span className="material-symbols-outlined text-white">edit</span>
+                    <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                  </label>
+                </div>
+              </div>
+            </div>
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2">Username</label>
               <input
