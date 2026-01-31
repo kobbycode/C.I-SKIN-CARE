@@ -47,16 +47,16 @@ const Contact: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen bg-[#FDFCFB] pt-40 pb-24">
+    <main className="min-h-screen bg-[#FDFCFB] dark:bg-background-dark pt-40 pb-24 transition-colors duration-300">
       {/* Hero Header */}
       <header className="max-w-4xl mx-auto text-center px-6 mb-20">
         <span className="text-[10px] uppercase tracking-[0.4em] text-[#A68966] mb-4 block font-black">
           Get in Touch
         </span>
-        <h1 className="font-display text-5xl md:text-6xl text-[#221C1D] mb-8 leading-tight">
+        <h1 className="font-display text-5xl md:text-6xl text-[#221C1D] dark:text-white mb-8 leading-tight transition-colors">
           Connect With Our Specialists
         </h1>
-        <p className="text-base text-stone-500 font-light leading-relaxed max-w-2xl mx-auto">
+        <p className="text-base text-stone-500 dark:text-stone-400 font-light leading-relaxed max-w-2xl mx-auto transition-colors">
           Experience the essence of luxury skincare. Whether you have questions
           about our formulations or need a personalized routine, we're here to assist you.
         </p>
@@ -64,14 +64,14 @@ const Contact: React.FC = () => {
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
         {/* Contact Form Card */}
-        <section className="bg-white p-10 md:p-14 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] border border-stone-100">
+        <section className="bg-white dark:bg-stone-900 p-10 md:p-14 rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.03)] dark:shadow-none border border-stone-100 dark:border-stone-800 transition-colors">
           {isSubmitted ? (
             <div className="text-center py-16 animate-in fade-in zoom-in duration-500">
               <span className="material-symbols-outlined text-[#A68966] text-7xl mb-6 font-light">
                 mark_email_read
               </span>
-              <h3 className="font-display text-3xl mb-4 text-[#221C1D]">Message Received</h3>
-              <p className="text-stone-500 leading-relaxed mb-10 text-sm">
+              <h3 className="font-display text-3xl mb-4 text-[#221C1D] dark:text-white transition-colors">Message Received</h3>
+              <p className="text-stone-500 dark:text-stone-400 leading-relaxed mb-10 text-sm transition-colors">
                 Thank you for reaching out. One of our skincare specialists will
                 review your inquiry and respond within 24 hours.
               </p>
@@ -86,27 +86,27 @@ const Contact: React.FC = () => {
             <form className="space-y-8" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] mb-3">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] dark:text-stone-300 mb-3 transition-colors">
                     First Name
                   </label>
                   <input
                     required
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] transition-all"
+                    className="w-full bg-[#FDFCFB] dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] dark:text-white transition-all"
                     type="text"
                     placeholder=""
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] mb-3">
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] dark:text-stone-300 mb-3 transition-colors">
                     Last Name
                   </label>
                   <input
                     required
                     value={formData.lastName}
                     onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] transition-all"
+                    className="w-full bg-[#FDFCFB] dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] dark:text-white transition-all"
                     type="text"
                     placeholder=""
                   />
@@ -114,28 +114,28 @@ const Contact: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] mb-3">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] dark:text-stone-300 mb-3 transition-colors">
                   Email Address
                 </label>
                 <input
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] transition-all"
+                  className="w-full bg-[#FDFCFB] dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] dark:text-white transition-all"
                   type="email"
                   placeholder=""
                 />
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] mb-3">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] dark:text-stone-300 mb-3 transition-colors">
                   Subject
                 </label>
                 <div className="relative">
                   <select
                     value={formData.subject}
                     onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
-                    className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] appearance-none transition-all"
+                    className="w-full bg-[#FDFCFB] dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] text-sm text-[#221C1D] dark:text-white appearance-none transition-all"
                   >
                     <option>Product Inquiry</option>
                     <option>Order Status</option>
@@ -149,14 +149,14 @@ const Contact: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] mb-3">
+                <label className="block text-[10px] font-black uppercase tracking-widest text-[#221C1D] dark:text-stone-300 mb-3 transition-colors">
                   Your Message
                 </label>
                 <textarea
                   required
                   value={formData.message}
                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                  className="w-full bg-[#FDFCFB] border border-stone-100 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] min-h-[160px] resize-none text-sm text-[#221C1D] transition-all"
+                  className="w-full bg-[#FDFCFB] dark:bg-stone-800 border border-stone-100 dark:border-stone-700 rounded-xl px-4 py-4 outline-none focus:ring-1 focus:ring-[#A68966] min-h-[160px] resize-none text-sm text-[#221C1D] dark:text-white transition-all"
                   placeholder=""
                 ></textarea>
               </div>
@@ -179,7 +179,7 @@ const Contact: React.FC = () => {
         {/* Info Column */}
         <section className="lg:pl-12 py-10 space-y-16">
           <div>
-            <h2 className="font-display text-4xl text-[#221C1D] mb-12 border-l-[3px] border-[#A68966] pl-6">
+            <h2 className="font-display text-4xl text-[#221C1D] dark:text-white mb-12 border-l-[3px] border-[#A68966] pl-6 transition-colors">
               Visit Our Flagship
             </h2>
             <div className="space-y-12">
@@ -201,14 +201,14 @@ const Contact: React.FC = () => {
                 }
               ].map((item, i) => (
                 <div key={i} className="flex items-start gap-8 group">
-                  <div className="w-12 h-12 rounded-full bg-[#A68966]/5 flex items-center justify-center shrink-0 border border-[#A68966]/10 group-hover:bg-[#A68966] group-hover:text-white transition-all duration-500">
+                  <div className="w-12 h-12 rounded-full bg-[#A68966]/5 dark:bg-[#A68966]/10 flex items-center justify-center shrink-0 border border-[#A68966]/10 group-hover:bg-[#A68966] group-hover:text-white transition-all duration-500">
                     <span className="material-symbols-outlined text-[#A68966] group-hover:text-white transition-colors">{item.icon}</span>
                   </div>
                   <div>
                     <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-[#A68966] mb-3">
                       {item.label}
                     </h4>
-                    <p className="text-sm font-light text-stone-500 leading-relaxed whitespace-pre-line">
+                    <p className="text-sm font-light text-stone-500 dark:text-stone-400 leading-relaxed whitespace-pre-line transition-colors">
                       {item.text}
                     </p>
                   </div>
@@ -218,11 +218,11 @@ const Contact: React.FC = () => {
           </div>
 
           {/* Map Embed */}
-          <div className="pt-12 border-t border-stone-100">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400 mb-6 font-bold">
+          <div className="pt-12 border-t border-stone-100 dark:border-stone-800 transition-colors">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 mb-6 font-bold transition-colors">
               Find Us Locally
             </h4>
-            <div className="w-full aspect-video rounded-3xl overflow-hidden border border-stone-100 shadow-sm transition-shadow hover:shadow-md">
+            <div className="w-full aspect-video rounded-3xl overflow-hidden border border-stone-100 dark:border-stone-800 shadow-sm transition-shadow hover:shadow-md">
               <iframe
                 title="C.I Skin Care Location"
                 width="100%"
@@ -237,8 +237,8 @@ const Contact: React.FC = () => {
             </div>
           </div>
 
-          <div className="pt-12 border-t border-stone-100">
-            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400 mb-8 font-bold">
+          <div className="pt-12 border-t border-stone-100 dark:border-stone-800 transition-colors">
+            <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-stone-400 dark:text-stone-500 mb-8 font-bold transition-colors">
               Follow Our Journey
             </h4>
             <div className="flex gap-4">
@@ -248,7 +248,7 @@ const Contact: React.FC = () => {
                   href={social.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-12 h-12 border border-stone-200 rounded-full flex items-center justify-center text-[#A68966] hover:border-[#A68966] hover:bg-[#A68966]/5 transition-all duration-300"
+                  className="w-12 h-12 border border-stone-200 dark:border-stone-700 rounded-full flex items-center justify-center text-[#A68966] hover:border-[#A68966] hover:bg-[#A68966]/5 transition-all duration-300"
                 >
                   <SocialIcon platform={social.platform} className="w-[18px] h-[18px]" />
                 </a>
