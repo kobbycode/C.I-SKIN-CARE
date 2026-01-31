@@ -61,6 +61,32 @@ export async function requireAdmin(req: any) {
   return { uid };
 }
 
+export async function requireSuperAdmin(req: any) {
+  const authHeader = (req.headers?.authorization || req.headers?.Authorization || '') as string;
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) throw new Error('Unauthorized: Missing token');
+
+  const token = match[1];
+  const decoded = await getAdminAuth().verifyIdToken(token);
+  const uid = decoded.uid;
+
+  const db = getAdminFirestore();
+  const snap = await db.collection('users').doc(uid).get();
+
+  if (!snap.exists) {
+    console.warn(`[requireSuperAdmin] User ${uid} not found in Firestore`);
+    throw new Error('Forbidden: User record missing');
+  }
+
+  const role = snap.data()?.role || 'customer';
+  if (role !== 'super-admin') {
+    console.warn(`[requireSuperAdmin] User ${uid} has role ${role}, not super-admin`);
+    throw new Error('Forbidden: Super Admin access required');
+  }
+
+  return { uid };
+}
+
 export async function requireAuth(req: any) {
   const authHeader = (req.headers?.authorization || req.headers?.Authorization || '') as string;
   const match = authHeader.match(/^Bearer\s+(.+)$/i);
