@@ -1,7 +1,7 @@
 
 import React, { useState, createContext, useContext, useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
-import { CartItem, Product } from './types';
+import { CartItem, Product, ProductVariant } from './types';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
@@ -45,6 +45,7 @@ const AdminReviews = lazy(() => import('./pages/Admin/Reviews'));
 const JournalManager = lazy(() => import('@/pages/Admin/JournalManager'));
 const AddProduct = lazy(() => import('./pages/Admin/AddProduct'));
 const Categories = lazy(() => import('./pages/Admin/Categories'));
+const Coupons = lazy(() => import('./pages/Admin/Coupons.tsx'));
 const FAQManager = lazy(() => import('./pages/Admin/FAQManager'));
 const AdminLogin = lazy(() => import('./pages/Admin/AdminLogin'));
 const AdminAccount = lazy(() => import('./pages/Admin/Account'));
@@ -60,9 +61,9 @@ const PageLoader = () => (
 // Context for global state
 interface AppContextType {
   cart: CartItem[];
-  addToCart: (product: Product) => void;
-  removeFromCart: (id: string) => void;
-  updateQuantity: (id: string, delta: number) => void;
+  addToCart: (product: Product, variant?: ProductVariant, initialQty?: number) => void;
+  removeFromCart: (id: string, variantId?: string) => void;
+  updateQuantity: (id: string, delta: number, variantId?: string) => void;
   isCartOpen: boolean;
   setCartOpen: (open: boolean) => void;
   isDarkMode: boolean;
@@ -81,28 +82,30 @@ export const useApp = () => {
   return context;
 };
 
-const App: React.FC = () => {
+import { WishlistProvider, useWishlist } from './context/WishlistContext';
+
+// ... (Imports remain the same, ensure WishlistProvider is imported)
+
+// Extract AppContent to handle state that depends on other providers
+const AppContent: React.FC = () => {
+  // Cart and DarkMode state remain here
   const [cart, setCart] = useState<CartItem[]>(() => {
     const saved = localStorage.getItem('cart');
     return saved ? JSON.parse(saved) : [];
   });
-  const [wishlist, setWishlist] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('wishlist');
-    return saved ? JSON.parse(saved) : [];
-  });
+
   const [isCartOpen, setCartOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const saved = localStorage.getItem('darkMode');
     return saved ? JSON.parse(saved) : false;
   });
 
+  // Use the specific hooks from providers
+  const { wishlist, toggleWishlist, isInWishlist, clearWishlist } = useWishlist();
+
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cart));
   }, [cart]);
-
-  useEffect(() => {
-    localStorage.setItem('wishlist', JSON.stringify(wishlist));
-  }, [wishlist]);
 
   useEffect(() => {
     localStorage.setItem('darkMode', JSON.stringify(isDarkMode));
@@ -113,24 +116,41 @@ const App: React.FC = () => {
     }
   }, [isDarkMode]);
 
-  const addToCart = (product: Product) => {
+  const addToCart = (product: Product, variant?: ProductVariant, initialQty: number = 1) => {
     setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
+      // Find item with matching ID AND Variant ID
+      const existing = prev.find(item =>
+        item.id === product.id &&
+        item.selectedVariant?.id === variant?.id
+      );
+
       if (existing) {
-        return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+        return prev.map(item =>
+          (item.id === product.id && item.selectedVariant?.id === variant?.id)
+            ? { ...item, quantity: item.quantity + initialQty }
+            : item
+        );
       }
-      return [...prev, { ...product, quantity: 1 }];
+
+      // Add new item with variant info
+      return [...prev, {
+        ...product,
+        quantity: initialQty,
+        selectedVariant: variant,
+        // Override price if variant has specific price
+        price: variant?.price || product.price
+      }];
     });
     setCartOpen(true);
   };
 
-  const removeFromCart = (id: string) => {
-    setCart(prev => prev.filter(item => item.id !== id));
+  const removeFromCart = (id: string, variantId?: string) => {
+    setCart(prev => prev.filter(item => !(item.id === id && item.selectedVariant?.id === variantId)));
   };
 
-  const updateQuantity = (id: string, delta: number) => {
+  const updateQuantity = (id: string, delta: number, variantId?: string) => {
     setCart(prev => prev.map(item => {
-      if (item.id === id) {
+      if (item.id === id && item.selectedVariant?.id === variantId) {
         const newQty = Math.max(1, item.quantity + delta);
         return { ...item, quantity: newQty };
       }
@@ -138,21 +158,8 @@ const App: React.FC = () => {
     }));
   };
 
-  const toggleWishlist = (product: Product) => {
-    setWishlist(prev => {
-      const exists = prev.some(item => item.id === product.id);
-      if (exists) {
-        return prev.filter(item => item.id !== product.id);
-      }
-      return [...prev, product];
-    });
-  };
-
-  const isInWishlist = (id: string) => wishlist.some(item => item.id === id);
-
-  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
-
   const clearCart = () => setCart([]);
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
 
   return (
     <AppContext.Provider value={{
@@ -161,33 +168,43 @@ const App: React.FC = () => {
       isDarkMode, toggleDarkMode,
       wishlist, toggleWishlist, isInWishlist, clearCart
     }}>
-      <SiteConfigProvider>
-        <NotificationProvider>
-          <ProductProvider>
-            <ReviewProvider>
-              <OrderProvider>
-                <JournalProvider>
-                  <FAQProvider>
-                    <CategoryProvider>
-                      <UserProvider>
-                        <BrowserRouter>
-                          <ScrollToTop />
-                          <Suspense fallback={<PageLoader />}>
-                            <MainLayout />
-                          </Suspense>
-                        </BrowserRouter>
-                      </UserProvider>
-                    </CategoryProvider>
-                  </FAQProvider>
-                </JournalProvider>
-              </OrderProvider>
-            </ReviewProvider>
-          </ProductProvider>
-        </NotificationProvider>
-      </SiteConfigProvider>
+      <BrowserRouter>
+        <ScrollToTop />
+        <Suspense fallback={<PageLoader />}>
+          <MainLayout />
+        </Suspense>
+      </BrowserRouter>
     </AppContext.Provider>
   );
 };
+
+const App: React.FC = () => {
+  return (
+    <SiteConfigProvider>
+      <NotificationProvider>
+        <ProductProvider>
+          <ReviewProvider>
+            <OrderProvider>
+              <JournalProvider>
+                <FAQProvider>
+                  <CategoryProvider>
+                    <UserProvider>
+                      <WishlistProvider>
+                        <AppContent />
+                      </WishlistProvider>
+                    </UserProvider>
+                  </CategoryProvider>
+                </FAQProvider>
+              </JournalProvider>
+            </OrderProvider>
+          </ReviewProvider>
+        </ProductProvider>
+      </NotificationProvider>
+    </SiteConfigProvider>
+  );
+};
+
+export default App;
 
 const ScrollToTop = () => {
   const { pathname } = useLocation();
@@ -238,6 +255,7 @@ const MainLayout: React.FC = () => {
           <Route path="/admin/inventory/add" element={<AdminRoute><AddProduct /></AdminRoute>} />
           <Route path="/admin/inventory/edit/:id" element={<AdminRoute><AddProduct /></AdminRoute>} />
           <Route path="/admin/categories" element={<AdminRoute><Categories /></AdminRoute>} />
+          <Route path="/admin/coupons" element={<AdminRoute><Coupons /></AdminRoute>} />
           <Route path="/admin/faqs" element={<AdminRoute><FAQManager /></AdminRoute>} />
         </Routes>
       </div>
@@ -246,5 +264,3 @@ const MainLayout: React.FC = () => {
     </div>
   );
 };
-
-export default App;
