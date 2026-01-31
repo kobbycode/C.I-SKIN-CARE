@@ -4,7 +4,7 @@ import AdminLayout from '../../components/Admin/AdminLayout';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
 import { auth } from '../../firebaseConfig';
-import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth';
 import ConfirmModal from '../../components/Admin/ConfirmModal';
 
 const Account: React.FC = () => {
@@ -25,6 +25,8 @@ const Account: React.FC = () => {
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState(currentUser?.email || '');
+  const [changingEmail, setChangingEmail] = useState(false);
 
   if (!currentUser) {
     return (
@@ -69,6 +71,41 @@ const Account: React.FC = () => {
       showNotification(e?.message || 'Failed to update password', 'error');
     } finally {
       setChangingPw(false);
+    }
+  };
+
+  const initiateEmailChange = async () => {
+    if (!newEmail || newEmail === currentUser?.email) {
+      showNotification('Please enter a different email address', 'info');
+      return;
+    }
+
+    // Simple email regex for basic validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newEmail)) {
+      showNotification('Please enter a valid email address', 'error');
+      return;
+    }
+
+    setChangingEmail(true);
+    try {
+      const fbUser = auth.currentUser;
+      if (!fbUser?.email) throw new Error('Missing auth user');
+      if (!currentPassword) throw new Error('Current password required for security verification');
+
+      const cred = EmailAuthProvider.credential(fbUser.email, currentPassword);
+      await reauthenticateWithCredential(fbUser, cred);
+      await verifyBeforeUpdateEmail(fbUser, newEmail);
+
+      showNotification('Verification link sent to ' + newEmail + '. Please confirm from your new inbox.', 'info');
+      setCurrentPassword('');
+    } catch (e: any) {
+      console.error(e);
+      let msg = e?.message || 'Failed to initiate email change';
+      if (e?.code === 'auth/wrong-password') msg = 'Incorrect current password';
+      showNotification(msg, 'error');
+    } finally {
+      setChangingEmail(false);
     }
   };
 
@@ -138,29 +175,61 @@ const Account: React.FC = () => {
           </div>
         </div>
 
+        <div className="bg-white border border-stone-100 rounded-xl p-6 mb-8">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Security Verification</h3>
+          <p className="text-stone-500 text-[10px] mb-4 uppercase tracking-wider">Required for changing sensitive account details like Email or Password.</p>
+          <div className="max-w-sm">
+            <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2">Current password</label>
+            <div className="relative">
+              <input
+                type={showCurrentPw ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                placeholder="Confirm password to make changes"
+                className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPw(!showCurrentPw)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+              >
+                <span className="material-symbols-outlined text-lg">
+                  {showCurrentPw ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white border border-stone-100 rounded-xl p-6 mb-8">
+          <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Change Email</h3>
+          <div className="grid grid-cols-1 gap-4 max-w-sm">
+            <div>
+              <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2">New Email Address</label>
+              <input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="new@example.com"
+                className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm"
+              />
+            </div>
+          </div>
+          <div className="mt-6">
+            <button
+              disabled={changingEmail || !currentPassword}
+              onClick={initiateEmailChange}
+              className="px-6 py-3 rounded bg-primary text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+            >
+              {changingEmail ? 'Sending Link...' : 'Send Verification Link'}
+            </button>
+            {!currentPassword && <p className="text-[9px] text-red-500 mt-2 font-bold uppercase tracking-widest">Enter current password above to enable</p>}
+          </div>
+        </div>
+
         <div className="bg-white border border-stone-100 rounded-xl p-6">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Change password</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2">Current password</label>
-              <div className="relative">
-                <input
-                  type={showCurrentPw ? "text" : "password"}
-                  value={currentPassword}
-                  onChange={(e) => setCurrentPassword(e.target.value)}
-                  className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm pr-10"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowCurrentPw(!showCurrentPw)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
-                >
-                  <span className="material-symbols-outlined text-lg">
-                    {showCurrentPw ? 'visibility_off' : 'visibility'}
-                  </span>
-                </button>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 gap-4 max-w-sm">
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2">New password</label>
               <div className="relative">
@@ -184,9 +253,9 @@ const Account: React.FC = () => {
           </div>
           <div className="mt-6">
             <button
-              disabled={changingPw}
+              disabled={changingPw || !currentPassword}
               onClick={changePassword}
-              className="px-6 py-3 rounded bg-primary text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
+              className="px-6 py-3 rounded bg-[#221C1D] text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
             >
               {changingPw ? 'Updating...' : 'Update password'}
             </button>
