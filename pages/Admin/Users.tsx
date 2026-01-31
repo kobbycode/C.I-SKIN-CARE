@@ -6,7 +6,7 @@ import { useNotification } from '../../context/NotificationContext';
 type Role = 'customer' | 'super-admin' | 'admin' | 'manager' | 'editor';
 
 const Users: React.FC = () => {
-  const { allUsers, getIdToken } = useUser();
+  const { allUsers, getIdToken, currentUser } = useUser();
   const { showNotification } = useNotification();
 
   const [email, setEmail] = useState('');
@@ -93,6 +93,31 @@ const Users: React.FC = () => {
     }
   };
 
+  const deleteUser = async (uid: string) => {
+    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    try {
+      const token = await getIdToken();
+      if (!token) throw new Error('Not authenticated');
+      const resp = await fetch('/api/admin-delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ uid }),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json();
+        throw new Error(data?.error || 'Failed');
+      }
+      showNotification('User deleted', 'success');
+    } catch (e: any) {
+      console.error(e);
+      showNotification(e?.message || 'Failed to delete user', 'error');
+    }
+  };
+
   return (
     <AdminLayout>
       <div className="flex flex-col gap-10">
@@ -101,47 +126,53 @@ const Users: React.FC = () => {
           <p className="text-stone-500 text-sm">Create staff logins and assign access roles.</p>
         </div>
 
-        <div className="bg-white border border-stone-100 rounded-xl p-6">
-          <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Add staff member</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
-            <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Username (optional)" value={username} onChange={(e) => setUsername(e.target.value)} />
-            <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <div className="relative">
-              <input
-                className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm pr-10"
-                type={showPassword ? "text" : "password"}
-                placeholder="Temporary password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
+        {currentUser?.role === 'super-admin' ? (
+          <div className="bg-white border border-stone-100 rounded-xl p-6">
+            <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Add staff member</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Username (optional)" value={username} onChange={(e) => setUsername(e.target.value)} />
+              <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+              <div className="relative">
+                <input
+                  className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm pr-10"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Temporary password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {showPassword ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
+              <select className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" value={role} onChange={(e) => setRole(e.target.value as Role)}>
+                <option value="super-admin">Super Admin (full access + roles)</option>
+                <option value="admin">Admin</option>
+                <option value="manager">Manager</option>
+                <option value="editor">Editor</option>
+              </select>
+            </div>
+            <div className="mt-6">
               <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                disabled={submitting}
+                onClick={createStaff}
+                className="px-6 py-3 rounded bg-[#221C1D] text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
               >
-                <span className="material-symbols-outlined text-lg">
-                  {showPassword ? 'visibility_off' : 'visibility'}
-                </span>
+                {submitting ? 'Creating...' : 'Create staff login'}
               </button>
             </div>
-            <select className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              <option value="super-admin">Super Admin (full access + roles)</option>
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
-              <option value="editor">Editor</option>
-            </select>
           </div>
-          <div className="mt-6">
-            <button
-              disabled={submitting}
-              onClick={createStaff}
-              className="px-6 py-3 rounded bg-[#221C1D] text-white text-[10px] font-black uppercase tracking-widest disabled:opacity-50"
-            >
-              {submitting ? 'Creating...' : 'Create staff login'}
-            </button>
+        ) : (
+          <div className="bg-stone-50 border border-stone-100 rounded-xl p-6 text-center">
+            <p className="text-stone-400 text-sm italic">Only Super Admins can create new staff logins.</p>
           </div>
-        </div>
+        )}
 
         <div className="bg-white border border-stone-100 rounded-xl p-6">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Staff list</h3>
@@ -152,6 +183,8 @@ const Users: React.FC = () => {
                   <th className="text-left py-2">Name</th>
                   <th className="text-left py-2">Email</th>
                   <th className="text-left py-2">Role</th>
+                  <th className="text-left py-2">Source</th>
+                  <th className="text-right py-2">Action</th>
                 </tr>
               </thead>
               <tbody>
@@ -164,6 +197,7 @@ const Users: React.FC = () => {
                         className="bg-stone-50 border border-stone-200 rounded px-3 py-2 text-sm"
                         value={(u.role || 'customer') as Role}
                         onChange={(e) => updateRole(u.id, e.target.value as Role)}
+                        disabled={currentUser?.role !== 'super-admin'}
                       >
                         <option value="super-admin">super-admin</option>
                         <option value="admin">admin</option>
@@ -172,11 +206,27 @@ const Users: React.FC = () => {
                         <option value="customer">customer</option>
                       </select>
                     </td>
+                    <td className="py-3">
+                      <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded ${u.registrationMethod === 'admin' ? 'bg-purple-50 text-purple-600' : 'bg-blue-50 text-blue-600'}`}>
+                        {u.registrationMethod === 'admin' ? 'Admin' : 'Web'}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right">
+                      {currentUser?.role === 'super-admin' && (
+                        <button
+                          onClick={() => deleteUser(u.id)}
+                          className="p-2 text-stone-300 hover:text-red-600 transition-colors"
+                          title="Delete User"
+                        >
+                          <span className="material-symbols-outlined text-lg">delete</span>
+                        </button>
+                      )}
+                    </td>
                   </tr>
                 ))}
                 {staff.length === 0 && (
                   <tr>
-                    <td className="py-6 opacity-50" colSpan={3}>
+                    <td className="py-6 opacity-50" colSpan={5}>
                       No staff users yet.
                     </td>
                   </tr>

@@ -1,11 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getAdminAuth, getAdminFirestore, requireAdmin } from './_firebaseAdmin.js';
+import { getAdminAuth, getAdminFirestore, requireSuperAdmin } from './_firebaseAdmin.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    await requireAdmin(req);
+    await requireSuperAdmin(req);
 
     const { email, password, fullName, username, role } = (req.body || {}) as any;
     if (!email || !password || !fullName) {
@@ -42,6 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         focusRitual: 'None',
         focusRitualDetail: '',
         avatar: '',
+        registrationMethod: 'admin',
       },
       { merge: true }
     );
