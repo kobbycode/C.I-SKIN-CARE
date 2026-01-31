@@ -5,6 +5,7 @@ import { useUser } from '../context/UserContext';
 import React, { useEffect, useState, useRef } from 'react';
 import { useOrders } from '../context/OrderContext';
 import { useNotification } from '../context/NotificationContext';
+import { useProducts } from '../context/ProductContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, storage } from '../firebaseConfig';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword, verifyBeforeUpdateEmail } from 'firebase/auth';
@@ -15,6 +16,7 @@ const Profile: React.FC = () => {
   const { toggleDarkMode, isDarkMode, wishlist, toggleWishlist } = useApp();
   const { currentUser, loading: userLoading, logout, updateProfile, deleteAccount } = useUser();
   const { orders, loading: ordersLoading } = useOrders();
+  const { products } = useProducts();
   const { showNotification } = useNotification();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'orders' | 'skin' | 'favorites' | 'addresses' | 'preferences' | 'account'>('orders');
@@ -213,13 +215,13 @@ const Profile: React.FC = () => {
 
               <div className="space-y-6">
                 {userOrders.length > 0 ? userOrders.map(order => (
-                  <div key={order.id} className="bg-white dark:bg-stone-900 border border-primary/5 p-8 rounded-xl flex flex-col md:flex-row justify-between items-center gap-8 group hover:border-accent/20 transition-all">
+                  <Link to={`/order/${order.id}`} key={order.id} className="bg-white dark:bg-stone-900 border border-primary/5 p-8 rounded-xl flex flex-col md:flex-row justify-between items-center gap-8 group hover:border-accent/20 transition-all block">
                     <div className="flex flex-col md:flex-row gap-8 items-center">
                       <div className="w-16 h-16 bg-primary/5 rounded flex items-center justify-center">
                         <span className="material-symbols-outlined text-accent text-3xl font-light">package_2</span>
                       </div>
                       <div>
-                        <h4 className="font-bold text-sm tracking-widest uppercase mb-1">{order.id.slice(-6).toUpperCase()}</h4>
+                        <h4 className="font-bold text-sm tracking-widest uppercase mb-1">{order.id.slice(0, 8).toUpperCase()}</h4>
                         <p className="text-[10px] opacity-40 uppercase tracking-widest">{order.date} • {order.items.length} Items</p>
                       </div>
                     </div>
@@ -231,7 +233,7 @@ const Profile: React.FC = () => {
                       <p className="font-display text-xl text-secondary dark:text-white">GH₵{order.total.toFixed(2)}</p>
                     </div>
                     <button className="material-symbols-outlined text-stone-300 hover:text-accent transition-colors">chevron_right</button>
-                  </div>
+                  </Link>
                 )) : (
                   <div className="p-12 text-center opacity-30 italic uppercase tracking-widest border border-dashed border-primary/10 rounded-2xl">
                     No rituals ordered yet.
@@ -284,26 +286,26 @@ const Profile: React.FC = () => {
           <div>
             <h2 className="font-display text-2xl text-secondary dark:text-white mb-8">Personalized for {currentUser.fullName.split(' ')[0]}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
-              <div className="flex gap-6 items-center p-6 bg-white dark:bg-stone-950 border border-primary/5 rounded-2xl group hover:shadow-xl transition-all cursor-pointer">
-                <div className="w-24 h-24 rounded-lg bg-primary/5 overflow-hidden shrink-0">
-                  <img src="/products/gluta-master-set.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                </div>
-                <div>
-                  <h4 className="font-display text-lg mb-1">Gluta Master Set</h4>
-                  <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-2">GH₵280.00</p>
-                  <span className="text-[9px] uppercase tracking-widest opacity-40 font-bold border-b border-primary/20 pb-0.5">Perfect for Mid-day Hydration</span>
-                </div>
-              </div>
-              <div className="flex gap-6 items-center p-6 bg-white dark:bg-stone-950 border border-primary/5 rounded-2xl group hover:shadow-xl transition-all cursor-pointer">
-                <div className="w-24 h-24 rounded-lg bg-primary/5 overflow-hidden shrink-0">
-                  <img src="/products/5d-gluta-diamond-box.jpg" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                </div>
-                <div>
-                  <h4 className="font-display text-lg mb-1">Diamond Facial Ritual</h4>
-                  <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-2">GH₵92.00</p>
-                  <span className="text-[9px] uppercase tracking-widest opacity-40 font-bold border-b border-primary/20 pb-0.5">Targets Early Fatigue</span>
-                </div>
-              </div>
+              {(currentUser.skinType && currentUser.skinType !== 'Unknown'
+                ? products.filter(p => p.skinTypes?.includes(currentUser.skinType)).slice(0, 2)
+                : products.filter(p => p.tags.includes('Best Seller')).slice(0, 2)
+              ).map(product => (
+                <Link to={`/product/${product.id}`} key={product.id} className="flex gap-6 items-center p-6 bg-white dark:bg-stone-950 border border-primary/5 rounded-2xl group hover:shadow-xl transition-all cursor-pointer block">
+                  <div className="w-24 h-24 rounded-lg bg-primary/5 overflow-hidden shrink-0">
+                    <img src={product.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                  </div>
+                  <div>
+                    <h4 className="font-display text-lg mb-1">{product.name}</h4>
+                    <p className="text-[10px] text-primary uppercase font-bold tracking-widest mb-2">GH₵{product.price.toFixed(2)}</p>
+                    <span className="text-[9px] uppercase tracking-widest opacity-40 font-bold border-b border-primary/20 pb-0.5">
+                      {product.skinTypes?.join(', ') || 'All Skin Types'}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+              {products.length === 0 && (
+                <div className="col-span-2 text-center text-xs opacity-50 italic">Loading recommendations...</div>
+              )}
             </div>
           </div>
           {activeTab === 'skin' && <div ref={skinSectionRef}><SkinProfileEditor /></div>}
