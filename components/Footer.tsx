@@ -17,7 +17,7 @@ const Footer: React.FC = () => {
             <Link to="/" className="flex items-center gap-3 mb-8">
               <img
                 alt="C.I SKIN CARE Logo"
-                className="h-10 w-auto"
+                className="h-10 w-auto rounded-full"
                 src="/logo.jpg"
               />
               <span className="font-display text-xl tracking-[0.2em] font-medium text-primary">C.I SKIN CARE</span>
