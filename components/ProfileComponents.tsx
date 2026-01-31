@@ -92,16 +92,22 @@ export const AccountSecurityEditor: React.FC = () => {
 
     const saveProfileInfo = async () => {
         setSavingProfile(true);
+        console.log("Starting profile save...");
         try {
             let updates: any = { fullName: fullName.trim(), username: username.trim() };
 
             if (avatarFile && currentUser) {
+                console.log("Uploading avatar:", avatarFile.name);
                 const storageRef = ref(storage, `avatars/${currentUser.id}/${avatarFile.name}`);
                 await uploadBytes(storageRef, avatarFile);
                 const downloadURL = await getDownloadURL(storageRef);
-                updates.avatar = downloadURL;
+                console.log("Avatar uploaded, URL:", downloadURL);
+
+                // Add timestamp to query param to bust cache
+                updates.avatar = `${downloadURL}?t=${new Date().getTime()}`;
             }
 
+            console.log("Updating profile with:", updates);
             await updateProfile(updates);
             showNotification('Profile updated successfully', 'success');
 
@@ -111,7 +117,7 @@ export const AccountSecurityEditor: React.FC = () => {
                 setAvatarPreview(null);
             }
         } catch (e) {
-            console.error(e);
+            console.error("Profile save error:", e);
             showNotification('Failed to update profile', 'error');
         } finally {
             setSavingProfile(false);
@@ -129,12 +135,27 @@ export const AccountSecurityEditor: React.FC = () => {
                             {avatarPreview ? (
                                 <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
                             ) : currentUser?.avatar ? (
-                                <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" />
+                                <img
+                                    key={currentUser.avatar} // Force re-render on URL change
+                                    src={currentUser.avatar}
+                                    alt="Profile"
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                        console.error("Error loading avatar:", currentUser.avatar);
+                                        // e.currentTarget.style.display = 'none'; // Don't hide, let it try or show broken
+                                        // Show fallback icon instead of empty space
+                                        e.currentTarget.parentElement?.classList.add('bg-red-50');
+                                    }}
+                                />
                             ) : (
                                 <span className="material-symbols-outlined text-4xl text-accent">account_circle</span>
                             )}
                         </div>
                         <div className="flex-1">
+                            {/* Debug info - remove later */}
+                            <div className="text-[10px] text-gray-400 hidden">
+                                Debug: {currentUser?.avatar ? 'Has avatar URL' : 'No avatar URL'}
+                            </div>
                             <input
                                 type="file"
                                 accept="image/*"
