@@ -142,6 +142,34 @@ const Users: React.FC = () => {
     }
   };
 
+  const deleteUser = async (uid: string) => {
+    if (!globalThis.confirm('Are you sure you want to delete this user? This cannot be undone.')) return;
+
+    try {
+      const token = await getIdToken();
+      if (!token) throw new Error('Not authenticated');
+
+      const resp = await fetch('/api/admin-delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ uid }),
+      });
+
+      if (!resp.ok) {
+        const data = await resp.json();
+        throw new Error(data.error || 'Failed to delete user');
+      }
+
+      showNotification('User deleted successfully', 'success');
+    } catch (e: any) {
+      console.error(e);
+      showNotification(e.message || 'Delete failed', 'error');
+    }
+  };
+
   const openEdit = (user: any) => {
     setEditingUser(user);
     setEditForm({
@@ -295,89 +323,88 @@ const Users: React.FC = () => {
           </div>
         </div>
       </div>
-    </div>
 
-      {/* Edit Modal */ }
-  {
-    editingUser && (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-          <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
-            <h3 className="font-display text-xl text-[#221C1D]">Edit User Details</h3>
-            <button onClick={() => setEditingUser(null)} className="text-stone-400 hover:text-stone-600">
-              <span className="material-symbols-outlined">close</span>
-            </button>
-          </div>
-          <div className="p-8 space-y-4">
-            <div>
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Full Name</label>
-              <input
-                className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
-                value={editForm.fullName}
-                onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Username</label>
-                <input
-                  className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
-                  value={editForm.username}
-                  onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
-                />
+      {/* Edit Modal */}
+      {
+        editingUser && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+              <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50">
+                <h3 className="font-display text-xl text-[#221C1D]">Edit User Details</h3>
+                <button onClick={() => setEditingUser(null)} className="text-stone-400 hover:text-stone-600">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
               </div>
-              <div>
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Email</label>
-                <input
-                  className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                />
-              </div>
-            </div>
+              <div className="p-8 space-y-4">
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Full Name</label>
+                  <input
+                    className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
+                    value={editForm.fullName}
+                    onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Username</label>
+                    <input
+                      className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
+                      value={editForm.username}
+                      onChange={(e) => setEditForm({ ...editForm, username: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-1">Email</label>
+                    <input
+                      className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors"
+                      value={editForm.email}
+                      onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                    />
+                  </div>
+                </div>
 
-            <div className="pt-4 border-t border-dashed border-stone-200">
-              <label className="block text-[10px] font-bold uppercase tracking-widest text-red-500 mb-2">Reset Password</label>
-              <p className="text-xs text-stone-400 mb-3">Leave blank to keep existing password. Entering a value here will immediately change the user's password.</p>
-              <div className="relative">
-                <input
-                  type={showEditPassword ? "text" : "password"}
-                  className="w-full bg-red-50 border border-red-100 rounded px-4 py-3 text-sm focus:border-red-500 focus:ring-0 outline-none transition-colors pr-10"
-                  placeholder="New Password (optional)"
-                  value={editForm.password}
-                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
-                />
+                <div className="pt-4 border-t border-dashed border-stone-200">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-red-500 mb-2">Reset Password</label>
+                  <p className="text-xs text-stone-400 mb-3">Leave blank to keep existing password. Entering a value here will immediately change the user's password.</p>
+                  <div className="relative">
+                    <input
+                      type={showEditPassword ? "text" : "password"}
+                      className="w-full bg-red-50 border border-red-100 rounded px-4 py-3 text-sm focus:border-red-500 focus:ring-0 outline-none transition-colors pr-10"
+                      placeholder="New Password (optional)"
+                      value={editForm.password}
+                      onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEditPassword(!showEditPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                    >
+                      <span className="material-symbols-outlined text-lg">
+                        {showEditPassword ? 'visibility_off' : 'visibility'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <div className="p-6 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
                 <button
-                  type="button"
-                  onClick={() => setShowEditPassword(!showEditPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                  onClick={() => setEditingUser(null)}
+                  className="px-6 py-2.5 rounded-lg text-stone-500 font-bold text-xs uppercase tracking-wider hover:bg-stone-200 transition-colors"
                 >
-                  <span className="material-symbols-outlined text-lg">
-                    {showEditPassword ? 'visibility_off' : 'visibility'}
-                  </span>
+                  Cancel
+                </button>
+                <button
+                  onClick={saveEdit}
+                  disabled={updating}
+                  className="px-6 py-2.5 rounded-lg bg-[#221C1D] text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors disabled:opacity-50"
+                >
+                  {updating ? 'Saving Changes...' : 'Save Updates'}
                 </button>
               </div>
             </div>
           </div>
-          <div className="p-6 bg-stone-50 border-t border-stone-100 flex justify-end gap-3">
-            <button
-              onClick={() => setEditingUser(null)}
-              className="px-6 py-2.5 rounded-lg text-stone-500 font-bold text-xs uppercase tracking-wider hover:bg-stone-200 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={saveEdit}
-              disabled={updating}
-              className="px-6 py-2.5 rounded-lg bg-[#221C1D] text-white font-bold text-xs uppercase tracking-wider hover:bg-black transition-colors disabled:opacity-50"
-            >
-              {updating ? 'Saving Changes...' : 'Save Updates'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+        )
+      }
     </AdminLayout >
   );
 };
