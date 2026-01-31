@@ -6,15 +6,20 @@ export default function handler(req: any, res: any) {
 
     const steps: string[] = [];
     try {
+        const apps = admin.apps;
+        if (apps.length) return res.status(200).json({ ok: true, msg: 'already init', count: apps.length });
+
         steps.push('parsing');
         const sa = JSON.parse(saRaw.trim().replace(/^['"]|['"]$/g, ''));
-        steps.push('parsed');
 
-        steps.push('cert start');
-        const cr = admin.credential.cert(sa);
-        steps.push('cert done');
+        steps.push('cert');
+        const credential = admin.credential.cert(sa);
 
-        res.status(200).json({ ok: true, steps });
+        steps.push('init start');
+        const app = admin.initializeApp({ credential });
+        steps.push('init done');
+
+        res.status(200).json({ ok: true, steps, name: app.name });
     } catch (e: any) {
         res.status(200).json({ ok: false, error: e.message, steps });
     }
