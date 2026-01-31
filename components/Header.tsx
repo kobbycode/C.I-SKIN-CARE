@@ -39,7 +39,7 @@ const Header: React.FC = () => {
           <Link to="/" className="flex items-center gap-2 md:gap-4 ml-2 lg:ml-0">
             <img
               alt="C.I SKIN CARE Logo"
-              className="h-8 md:h-10 w-auto"
+              className="h-8 md:h-10 w-auto rounded-full"
               src="/logo.jpg"
             />
             <span className="font-display text-sm md:text-xl font-medium tracking-[0.15em] text-secondary dark:text-primary whitespace-nowrap">C.I SKIN CARE</span>
