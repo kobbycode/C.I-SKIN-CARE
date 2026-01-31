@@ -20,7 +20,7 @@ const Header: React.FC = () => {
           {/* Mobile Menu Toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="lg:hidden material-symbols-outlined text-secondary dark:text-primary text-[28px] font-light hover:text-accent transition-colors"
+            className="lg:hidden flex items-center justify-center material-symbols-outlined text-secondary dark:text-primary text-[28px] font-light hover:text-accent transition-colors"
           >
             menu
           </button>
