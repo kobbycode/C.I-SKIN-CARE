@@ -9,22 +9,21 @@ export default async function handler(req: any, res: any) {
         const credential = admin.credential.cert(sa);
 
         // Check if already init
-        let app;
-        if (admin.apps.length > 0) {
-            app = admin.apps[0];
-        } else {
-            app = admin.initializeApp({ credential });
-        }
-
+        let app = admin.apps.length > 0 ? admin.apps[0] : admin.initializeApp({ credential });
         const auth = app.auth();
+
+        const token = req.query.token;
+        if (!token) return res.status(200).json({ ok: true, msg: 'No token provided, but Auth loaded', appName: app.name });
+
+        const decoded = await auth.verifyIdToken(token);
 
         res.status(200).json({
             ok: true,
-            msg: 'Auth initialized',
-            appName: app.name,
-            hasAuth: !!auth
+            msg: 'Token verified',
+            uid: decoded.uid,
+            email: decoded.email
         });
     } catch (e: any) {
-        res.status(500).json({ ok: false, error: e.message });
+        res.status(200).json({ ok: false, error: e.message });
     }
 }
