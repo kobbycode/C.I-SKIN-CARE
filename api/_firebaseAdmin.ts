@@ -60,3 +60,16 @@ export async function requireAdmin(req: any) {
 
   return { uid };
 }
+
+export async function requireAuth(req: any) {
+  const authHeader = (req.headers?.authorization || req.headers?.Authorization || '') as string;
+  const match = authHeader.match(/^Bearer\s+(.+)$/i);
+  if (!match) throw new Error('Unauthorized: Missing token');
+
+  const token = match[1];
+  const decoded = await getAdminAuth().verifyIdToken(token);
+  return {
+    uid: decoded.uid,
+    email: decoded.email,
+  };
+}
