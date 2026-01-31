@@ -194,7 +194,7 @@ const Users: React.FC = () => {
                     <td className="py-3">{u.email}</td>
                     <td className="py-3">
                       <select
-                        className="bg-stone-50 border border-stone-200 rounded px-3 py-2 text-sm"
+                        className="bg-stone-50 border border-stone-200 rounded px-3 py-2 text-sm appearance-none pr-8 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2020%2020%22%3E%3Cpath%20stroke%3D%22%236b7280%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%221.5%22%20d%3D%22m6%208%204%204%204-4%22%2F%3E%3C%2Fsvg%3E')] bg-[position:right_0.5rem_center] bg-[size:1.5em_1.5em] bg-no-repeat"
                         value={(u.role || 'customer') as Role}
                         onChange={(e) => updateRole(u.id, e.target.value as Role)}
                         disabled={currentUser?.role !== 'super-admin'}

@@ -1,5 +1,5 @@
-
 import React from 'react';
+import { useUser } from '../../context/UserContext';
 
 interface AdminHeaderProps {
     onMenuClick: () => void;
@@ -7,6 +7,8 @@ interface AdminHeaderProps {
 }
 
 const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, title = "Management Suite" }) => {
+    const { currentUser } = useUser();
+
     return (
         <header className="lg:hidden bg-[#221C1D] text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
             <div className="flex items-center gap-3">
@@ -24,10 +26,17 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, title = "Managem
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="p-2 hover:bg-stone-800 rounded-lg transition-colors">
+                <button className="p-2 hover:bg-stone-800 rounded-lg transition-colors mobile-hidden">
                     <span className="material-symbols-outlined text-xl text-stone-400">notifications</span>
                 </button>
-                <div className="w-8 h-8 rounded-full bg-cover bg-center border border-stone-800 shadow-inner" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&h=200&auto=format&fit=crop')" }}></div>
+                <div className="flex flex-col items-end">
+                    <p className="text-[10px] font-bold tracking-wider">{currentUser?.fullName}</p>
+                    <p className="text-[8px] text-stone-500 lowercase">{currentUser?.email}</p>
+                </div>
+                <div className="w-8 h-8 rounded-full bg-cover bg-center border border-stone-800 shadow-inner overflow-hidden"
+                    style={{ backgroundImage: currentUser?.avatar ? `url('${currentUser.avatar}')` : 'none' }}>
+                    {!currentUser?.avatar && <span className="material-symbols-outlined text-stone-600 flex items-center justify-center h-full">account_circle</span>}
+                </div>
             </div>
         </header>
     );

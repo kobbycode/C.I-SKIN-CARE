@@ -1,6 +1,5 @@
-
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useUser } from '../../context/UserContext';
 
 interface AdminSidebarProps {
   onMobileClose?: () => void;
@@ -8,6 +7,7 @@ interface AdminSidebarProps {
 
 const AdminSidebar: React.FC<AdminSidebarProps> = ({ onMobileClose }) => {
   const location = useLocation();
+  const { currentUser } = useUser();
 
   const menuItems = [
     { label: 'Dashboard', icon: 'grid_view', path: '/admin' },
@@ -75,12 +75,16 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onMobileClose }) => {
           </Link>
 
           <div className="pt-6 border-t border-stone-800 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center text-stone-500">
-              <span className="material-symbols-outlined text-lg">account_circle</span>
+            <div className="w-10 h-10 rounded-full bg-stone-800 flex items-center justify-center text-stone-500 overflow-hidden ring-1 ring-stone-700">
+              {currentUser?.avatar ? (
+                <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <span className="material-symbols-outlined text-lg">account_circle</span>
+              )}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-bold truncate">System Admin</p>
-              <p className="text-[9px] text-stone-600 uppercase truncate">Access Level 1</p>
+              <p className="text-xs font-bold truncate">{currentUser?.fullName || 'System Admin'}</p>
+              <p className="text-[9px] text-stone-500 truncate lowercase">{currentUser?.email || 'Access Level 1'}</p>
             </div>
           </div>
         </div>
