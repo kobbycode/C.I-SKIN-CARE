@@ -21,6 +21,8 @@ const Account: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [changingPw, setChangingPw] = useState(false);
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
 
   if (!currentUser) {
     return (
@@ -128,21 +130,43 @@ const Account: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2">Current password</label>
-              <input
-                type="password"
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm"
-              />
+              <div className="relative">
+                <input
+                  type={showCurrentPw ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPw(!showCurrentPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {showCurrentPw ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
             </div>
             <div>
               <label className="block text-[10px] font-bold uppercase tracking-widest text-stone-500 mb-2">New password</label>
-              <input
-                type="password"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm"
-              />
+              <div className="relative">
+                <input
+                  type={showNewPw ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPw(!showNewPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    {showNewPw ? 'visibility_off' : 'visibility'}
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
           <div className="mt-6">

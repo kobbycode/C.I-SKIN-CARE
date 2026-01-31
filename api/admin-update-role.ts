@@ -8,7 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await requireAdmin(req);
     const { uid, role } = (req.body || {}) as any;
     if (!uid || !role) return res.status(400).json({ error: 'Missing fields' });
-    if (!['customer', 'admin', 'manager', 'editor'].includes(role)) {
+    if (!['customer', 'super-admin', 'admin', 'manager', 'editor'].includes(role)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
 
@@ -16,7 +16,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     await db.collection('users').doc(uid).set(
       {
         role,
-        statusLabel: role === 'admin' ? 'Admin' : role === 'customer' ? 'Member' : 'Staff',
+        statusLabel: role === 'super-admin' ? 'Super Admin' : role === 'admin' ? 'Admin' : role === 'customer' ? 'Member' : 'Staff',
       },
       { merge: true }
     );

@@ -53,8 +53,8 @@ export async function requireAdmin(req: any) {
   }
 
   const role = snap.data()?.role || 'customer';
-  if (role !== 'admin') {
-    console.warn(`[requireAdmin] User ${uid} has role ${role}, not admin`);
+  if (role !== 'admin' && role !== 'super-admin') {
+    console.warn(`[requireAdmin] User ${uid} has role ${role}, not admin/super-admin`);
     throw new Error('Forbidden: Admin access required');
   }
 

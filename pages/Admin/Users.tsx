@@ -3,7 +3,7 @@ import AdminLayout from '../../components/Admin/AdminLayout';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
 
-type Role = 'customer' | 'admin' | 'manager' | 'editor';
+type Role = 'customer' | 'super-admin' | 'admin' | 'manager' | 'editor';
 
 const Users: React.FC = () => {
   const { allUsers, getIdToken } = useUser();
@@ -15,6 +15,7 @@ const Users: React.FC = () => {
   const [username, setUsername] = useState('');
   const [role, setRole] = useState<Role>('manager');
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const staff = useMemo(
     () => allUsers.filter(u => (u.role || 'customer') !== 'customer'),
@@ -106,9 +107,27 @@ const Users: React.FC = () => {
             <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Full name" value={fullName} onChange={(e) => setFullName(e.target.value)} />
             <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Username (optional)" value={username} onChange={(e) => setUsername(e.target.value)} />
             <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
-            <input className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" type="password" placeholder="Temporary password" value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="relative">
+              <input
+                className="w-full bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm pr-10"
+                type={showPassword ? "text" : "password"}
+                placeholder="Temporary password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600"
+              >
+                <span className="material-symbols-outlined text-lg">
+                  {showPassword ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
+            </div>
             <select className="bg-stone-50 border border-stone-200 rounded px-4 py-3 text-sm" value={role} onChange={(e) => setRole(e.target.value as Role)}>
-              <option value="admin">Admin (full access)</option>
+              <option value="super-admin">Super Admin (full access + roles)</option>
+              <option value="admin">Admin</option>
               <option value="manager">Manager</option>
               <option value="editor">Editor</option>
             </select>
@@ -146,6 +165,7 @@ const Users: React.FC = () => {
                         value={(u.role || 'customer') as Role}
                         onChange={(e) => updateRole(u.id, e.target.value as Role)}
                       >
+                        <option value="super-admin">super-admin</option>
                         <option value="admin">admin</option>
                         <option value="manager">manager</option>
                         <option value="editor">editor</option>

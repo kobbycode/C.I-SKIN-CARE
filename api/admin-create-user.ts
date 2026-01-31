@@ -12,8 +12,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Missing fields' });
     }
 
-    const normalizedRole = (role || 'manager') as 'admin' | 'manager' | 'editor';
-    if (!['admin', 'manager', 'editor'].includes(normalizedRole)) {
+    const normalizedRole = (role || 'manager') as 'super-admin' | 'admin' | 'manager' | 'editor';
+    if (!['super-admin', 'admin', 'manager', 'editor'].includes(normalizedRole)) {
       return res.status(400).json({ error: 'Invalid role' });
     }
 
@@ -32,7 +32,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         fullName,
         username: (username || email.split('@')[0]).toLowerCase(),
         role: normalizedRole,
-        statusLabel: normalizedRole === 'admin' ? 'Admin' : 'Staff',
+        statusLabel: normalizedRole === 'super-admin' ? 'Super Admin' : normalizedRole === 'admin' ? 'Admin' : 'Staff',
         joinedDate: new Date().toISOString(),
         points: 0,
         pointsTier: 'Bronze',
