@@ -3,7 +3,7 @@ import AdminLayout from '../../components/Admin/AdminLayout';
 import { useOrders } from '../../context/OrderContext';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
-import { doc, updateDoc, runTransaction } from 'firebase/firestore';
+import { doc, updateDoc, runTransaction, arrayUnion } from 'firebase/firestore';
 import { db } from '../../firebaseConfig';
 
 const Orders: React.FC = () => {
@@ -61,7 +61,14 @@ const Orders: React.FC = () => {
     const handleStatusUpdate = async (id: string, status: any) => {
         try {
             const orderRef = doc(db, 'orders', id);
-            const updates: any = { status };
+            const updates: any = {
+                status,
+                journey: arrayUnion({
+                    status: status,
+                    date: new Date().toISOString(),
+                    message: `Ritual status updated to ${status}.`
+                })
+            };
             if (status === 'Shipped' && trackingNumber) {
                 updates.trackingNumber = trackingNumber;
             }
@@ -110,11 +117,29 @@ const Orders: React.FC = () => {
                 // 1. Update order
                 transaction.update(orderRef, {
                     returnStatus: action,
-                    ...(action === 'Approved' ? { status: 'Refunded', paymentStatus: 'refunded' } : {})
+                    ...(action === 'Approved' ? {
+                        status: 'Refunded',
+                        paymentStatus: 'refunded',
+                        refundProcessedAt: new Date().toISOString(),
+                        journey: arrayUnion({
+                            status: 'Refunded',
+                            date: new Date().toISOString(),
+                            message: 'Ritual return approved. Financial refund initiated.'
+                        })
+                    } : {
+                        journey: arrayUnion({
+                            status: 'Return Rejected',
+                            date: new Date().toISOString(),
+                            message: 'Ritual return request was not approved.'
+                        })
+                    })
                 });
 
                 // 2. If approved, restore stock
                 if (action === 'Approved') {
+                    // Start Automated Financial Refund Simulation
+                    console.log('Initiating Paystack Refund for Order:', targetOrder.id, 'Amount:', targetOrder.total);
+
                     const productRefs = targetOrder.items.map(item => doc(db, 'products', item.id));
                     const productSnaps = await Promise.all(productRefs.map(ref => transaction.get(ref)));
 
@@ -142,7 +167,7 @@ const Orders: React.FC = () => {
                 }
             });
 
-            showNotification(`Return request ${action}`, 'success');
+            showNotification(action === 'Approved' ? 'Return Approved & Refund Initiated' : 'Return Rejected', 'success');
         } catch (error) {
             console.error(error);
             showNotification('Failed to update return status', 'error');

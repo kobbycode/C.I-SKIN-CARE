@@ -2,6 +2,8 @@ import React, { useMemo, useState } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
+import { auth } from '../../firebaseConfig';
+import { sendPasswordResetEmail } from 'firebase/auth';
 
 type Role = 'customer' | 'super-admin' | 'admin' | 'manager' | 'editor';
 
@@ -167,6 +169,16 @@ const Users: React.FC = () => {
     } catch (e: any) {
       console.error(e);
       showNotification(e.message || 'Delete failed', 'error');
+    }
+  };
+
+  const sendResetEmail = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showNotification('Password reset rituals initiated via email', 'success');
+    } catch (e: any) {
+      console.error(e);
+      showNotification(e.message || 'Failed to initiate reset rituals', 'error');
     }
   };
 
@@ -364,13 +376,21 @@ const Users: React.FC = () => {
                 </div>
 
                 <div className="pt-4 border-t border-dashed border-stone-200">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-red-500 mb-2">Reset Password</label>
-                  <p className="text-xs text-stone-400 mb-3">Leave blank to keep existing password. Entering a value here will immediately change the user's password.</p>
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#221C1D]">Password Management</label>
+                    <button
+                      onClick={() => sendResetEmail(editForm.email)}
+                      className="text-[9px] font-black uppercase text-orange-600 hover:text-orange-700 bg-orange-50 px-3 py-1 rounded-full transition-colors"
+                    >
+                      Send Reset Email Link
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-stone-400 mb-3">Manually update or send a self-service reset link to the user.</p>
                   <div className="relative">
                     <input
                       type={showEditPassword ? "text" : "password"}
-                      className="w-full bg-red-50 border border-red-100 rounded px-4 py-3 text-sm focus:border-red-500 focus:ring-0 outline-none transition-colors pr-10"
-                      placeholder="New Password (optional)"
+                      className="w-full bg-stone-50 border border-stone-100 rounded px-4 py-3 text-sm focus:border-black focus:ring-0 outline-none transition-colors pr-10"
+                      placeholder="New Manual Password (optional)"
                       value={editForm.password}
                       onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
                     />

@@ -179,12 +179,67 @@ const OrderDetail: React.FC = () => {
                         <div className="p-6 bg-orange-50 dark:bg-orange-950/20 border-t border-orange-100 dark:border-orange-900/50">
                             <div className="flex items-start gap-4">
                                 <span className="material-symbols-outlined text-orange-500">assignment_return</span>
-                                <div>
+                                <div className="flex-1">
                                     <h4 className="font-bold text-sm text-orange-700 dark:text-orange-400">Return Requested</h4>
                                     <p className="text-xs text-orange-600/80 dark:text-orange-400/80 mt-1">
                                         Status: <span className="font-bold uppercase">{order.returnStatus || 'Pending Review'}</span>
                                     </p>
                                     <p className="text-[10px] italic mt-2 opacity-70">Reason: {order.returnReason}</p>
+
+                                    {/* Tracking Number Upload for Approved Returns */}
+                                    {order.returnStatus === 'Approved' && (
+                                        <div className="mt-6 p-4 bg-white dark:bg-stone-800 rounded-xl border border-orange-200 dark:border-orange-700">
+                                            <p className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D] dark:text-stone-300 mb-3 block">Submit Return Tracking</p>
+                                            {order.returnTrackingNumber ? (
+                                                <div className="flex items-center gap-2 text-green-600 font-bold text-[10px] uppercase">
+                                                    <span className="material-symbols-outlined text-sm">check_circle</span>
+                                                    Tracking: {order.returnTrackingNumber}
+                                                </div>
+                                            ) : (
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="e.g. DHL-987654321"
+                                                        className="flex-1 bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-700 rounded px-3 py-2 text-xs focus:ring-accent"
+                                                        onKeyDown={async (e) => {
+                                                            if (e.key === 'Enter') {
+                                                                const val = e.currentTarget.value;
+                                                                if (!val) return;
+                                                                try {
+                                                                    await updateDoc(doc(db, 'orders', order.id), {
+                                                                        returnTrackingNumber: val
+                                                                    });
+                                                                    setOrder(prev => prev ? { ...prev, returnTrackingNumber: val } : null);
+                                                                    showNotification('Tracking number uploaded', 'success');
+                                                                } catch (err) {
+                                                                    showNotification('Failed to upload tracking', 'error');
+                                                                }
+                                                            }
+                                                        }}
+                                                    />
+                                                    <button
+                                                        onClick={async (e) => {
+                                                            const input = e.currentTarget.previousSibling as HTMLInputElement;
+                                                            const val = input.value;
+                                                            if (!val) return;
+                                                            try {
+                                                                await updateDoc(doc(db, 'orders', order.id), {
+                                                                    returnTrackingNumber: val
+                                                                });
+                                                                setOrder(prev => prev ? { ...prev, returnTrackingNumber: val } : null);
+                                                                showNotification('Tracking number uploaded', 'success');
+                                                            } catch (err) {
+                                                                showNotification('Failed to upload tracking', 'error');
+                                                            }
+                                                        }}
+                                                        className="bg-[#221C1D] text-white px-4 py-2 rounded text-[9px] font-bold uppercase tracking-widest hover:bg-black transition-all"
+                                                    >
+                                                        Upload
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

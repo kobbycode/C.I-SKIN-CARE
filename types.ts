@@ -26,6 +26,7 @@ export interface Product {
   cost?: number;
   variants?: ProductVariant[];
   couponCodes?: string[];
+  gallery?: string[];
 }
 
 export interface CartItem extends Product {
@@ -68,6 +69,7 @@ export interface Order {
   deliveryMapLink?: string;
   deliveryContactPhone?: string;
   trackingNumber?: string;
+  returnTrackingNumber?: string;
 }
 
 export interface Category {
@@ -122,4 +124,5 @@ export interface Coupon {
   usageLimit?: number;
   usedCount: number;
   status: 'active' | 'disabled';
+  isGlobal?: boolean;
 }

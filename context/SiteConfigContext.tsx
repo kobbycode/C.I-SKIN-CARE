@@ -79,6 +79,14 @@ export interface StoryContent {
     coreValues: CoreValue[];
 }
 
+export interface AnnouncementBar {
+    text: string;
+    link: string;
+    active: boolean;
+    backgroundColor: string;
+    textColor: string;
+}
+
 export interface SiteConfig {
     navLinks: NavLink[];
     footerSections: FooterSection[];
@@ -90,6 +98,7 @@ export interface SiteConfig {
     testimonials: Testimonial[];
     ritualGuide: Ritual[];
     story: StoryContent;
+    announcementBar: AnnouncementBar;
 }
 
 interface SiteConfigContextType {
@@ -217,6 +226,14 @@ const defaultStory: StoryContent = {
     ]
 };
 
+const defaultAnnouncementBar: AnnouncementBar = {
+    text: "Experience the Ritual - Free shipping on orders over GH₵500",
+    link: "/shop",
+    active: true,
+    backgroundColor: "#221C1D",
+    textColor: "#FFFFFF"
+};
+
 const defaultSiteConfig: SiteConfig = {
     navLinks: defaultNavLinks,
     footerSections: defaultFooterSections,
@@ -227,7 +244,8 @@ const defaultSiteConfig: SiteConfig = {
     philosophy: defaultPhilosophy,
     testimonials: defaultTestimonials,
     ritualGuide: defaultRitualGuide,
-    story: defaultStory
+    story: defaultStory,
+    announcementBar: defaultAnnouncementBar
 };
 
 
@@ -252,6 +270,7 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
                     contactInfo: { ...defaultSiteConfig.contactInfo, ...data.contactInfo },
                     philosophy: { ...defaultSiteConfig.philosophy, ...data.philosophy },
                     story: { ...defaultSiteConfig.story, ...data.story },
+                    announcementBar: { ...defaultSiteConfig.announcementBar, ...data.announcementBar },
                 } as SiteConfig);
                 setLoading(false);
             } else {

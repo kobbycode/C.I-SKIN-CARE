@@ -37,13 +37,28 @@ const Shop: React.FC = () => {
   const [isPageLoading, setIsPageLoading] = useState(false);
   const observerTarget = useRef<HTMLDivElement>(null);
 
-  // Filter Options
+  // Filter Options (Dynamic)
   const categories = useMemo(() => ['All', ...dynamicCategories
     .filter(c => c.status !== 'Draft')
     .map(c => c.name)], [dynamicCategories]);
-  const skinTypes = ['All', 'All Skin Types', 'Dry & Dehydrated', 'Oily & Acne-Prone', 'Mature Skin', 'Sensitive', 'Sensitive Skins'];
-  const concerns = ['All', 'Aging', 'Dullness', 'Dehydration', 'Dryness', 'Dark Circles', 'Fine Lines', 'Dark Spots', 'Uneven Tone', 'Redness', 'Facial Burns'];
-  const brands = ['All', 'BEL ECLAT', 'Gluta Master', '5D Gluta', 'C.I Skin Care', 'SPA Rituals', 'Pomegranate Line', 'Bismid Cosmetics'];
+
+  const skinTypes = useMemo(() => {
+    const types = new Set<string>();
+    products.forEach(p => p.skinTypes?.forEach(t => types.add(t)));
+    return ['All', ...Array.from(types).sort()];
+  }, [products]);
+
+  const concerns = useMemo(() => {
+    const items = new Set<string>();
+    products.forEach(p => p.concerns?.forEach(c => items.add(c)));
+    return ['All', ...Array.from(items).sort()];
+  }, [products]);
+
+  const brands = useMemo(() => {
+    const items = new Set<string>();
+    products.forEach(p => p.brand && items.add(p.brand));
+    return ['All', ...Array.from(items).sort()];
+  }, [products]);
 
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
@@ -51,13 +66,14 @@ const Shop: React.FC = () => {
       const matchesSkinType = activeSkinType === 'All' || p.skinTypes?.includes(activeSkinType);
       const matchesConcern = activeConcern === 'All' || p.concerns?.includes(activeConcern);
       const matchesBrand = activeBrand === 'All' || p.brand === activeBrand;
+      const isVisible = p.status === 'Active';
 
       const matchesSearch = !query ||
         p.name.toLowerCase().includes(query) ||
         p.description.toLowerCase().includes(query) ||
         p.tags.some(t => t.toLowerCase().includes(query));
 
-      return matchesCategory && matchesSkinType && matchesConcern && matchesBrand && matchesSearch;
+      return isVisible && matchesCategory && matchesSkinType && matchesConcern && matchesBrand && matchesSearch;
     });
   }, [activeCategory, activeSkinType, activeConcern, activeBrand, query, products]);
 
@@ -239,8 +255,8 @@ const Shop: React.FC = () => {
                               onClick={() => !isOutOfStock && addToCart(product)}
                               disabled={isOutOfStock}
                               className={`w-full py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-2xl rounded-lg ${isOutOfStock
-                                  ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
-                                  : 'bg-white/90 backdrop-blur-md text-secondary hover:bg-gold hover:text-white'
+                                ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
+                                : 'bg-white/90 backdrop-blur-md text-secondary hover:bg-gold hover:text-white'
                                 }`}
                             >
                               {isOutOfStock ? 'Sold Out' : 'Quick Add to Ritual'}

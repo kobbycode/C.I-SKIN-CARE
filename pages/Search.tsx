@@ -1,22 +1,24 @@
-
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useApp } from '../App';
-import { MOCK_PRODUCTS } from '../constants';
+import { useProducts } from '../context/ProductContext';
 
 const Search: React.FC = () => {
   const { addToCart } = useApp();
+  const { products } = useProducts();
   const [query, setQuery] = useState('');
 
   const filteredProducts = useMemo(() => {
     if (!query.trim()) return [];
     const lowerQuery = query.toLowerCase();
-    return MOCK_PRODUCTS.filter(p => 
-      p.name.toLowerCase().includes(lowerQuery) || 
-      p.category.toLowerCase().includes(lowerQuery) ||
-      p.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+    return products.filter(p =>
+      p.status === 'Active' && (
+        p.name.toLowerCase().includes(lowerQuery) ||
+        p.category.toLowerCase().includes(lowerQuery) ||
+        p.tags.some(tag => tag.toLowerCase().includes(lowerQuery))
+      )
     );
-  }, [query]);
+  }, [query, products]);
 
   const trendingSearches = ['Vitamin C', 'Serum', 'Night Repair', 'Cleansing Balm'];
 
@@ -25,7 +27,7 @@ const Search: React.FC = () => {
       <div className="max-w-3xl mx-auto text-center mb-20">
         <span className="text-[10px] uppercase tracking-[0.5em] text-primary mb-6 block font-bold">Discover Your Next Ritual</span>
         <div className="relative group">
-          <input 
+          <input
             autoFocus
             type="text"
             placeholder="Search products, ingredients, concerns..."
@@ -42,7 +44,7 @@ const Search: React.FC = () => {
           <div className="mt-12 flex flex-wrap justify-center gap-4">
             <span className="text-[10px] font-bold uppercase tracking-widest text-secondary/40 mr-2 self-center">Trending:</span>
             {trendingSearches.map(term => (
-              <button 
+              <button
                 key={term}
                 onClick={() => setQuery(term)}
                 className="px-4 py-2 border border-primary/10 rounded-full text-[10px] font-bold uppercase tracking-widest hover:border-accent hover:text-accent transition-all"
@@ -66,7 +68,7 @@ const Search: React.FC = () => {
             <div className="text-center py-24">
               <span className="material-symbols-outlined text-6xl mb-6 font-light opacity-20">inventory_2</span>
               <p className="text-xl font-display italic opacity-60">We couldn't find anything matching your search.</p>
-              <button 
+              <button
                 onClick={() => setQuery('')}
                 className="mt-6 text-primary font-bold uppercase tracking-widest text-xs border-b border-primary pb-1"
               >
@@ -79,14 +81,14 @@ const Search: React.FC = () => {
                 <div key={product.id} className="group flex flex-col">
                   <div className="relative aspect-[4/5] bg-primary/5 overflow-hidden mb-6">
                     <Link to={`/product/${product.id}`}>
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" 
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
                       />
                     </Link>
                     <div className="absolute bottom-0 left-0 right-0 p-4 opacity-0 transform translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">
-                      <button 
+                      <button
                         onClick={() => addToCart(product)}
                         className="w-full bg-secondary text-white dark:bg-primary dark:text-background-dark py-3 text-[10px] font-bold uppercase tracking-widest hover:brightness-110 shadow-xl"
                       >

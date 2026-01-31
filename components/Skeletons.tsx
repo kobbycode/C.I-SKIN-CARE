@@ -1,7 +1,13 @@
 import React from 'react';
 
-export const SkeletonLine = (props: { className?: string }) => (
-  <div className={`h-3 rounded bg-primary/10 dark:bg-white/10 animate-pulse ${props.className ?? ''}`} />
+export const SkeletonLine = (props: { className?: string; width?: string | number; height?: string | number }) => (
+  <div
+    className={`rounded bg-primary/10 dark:bg-white/10 animate-pulse ${props.className ?? ''}`}
+    style={{
+      width: props.width,
+      height: props.height ?? '0.75rem' // Defaulting to h-3 (0.75rem)
+    }}
+  />
 );
 
 export const ProductCardSkeleton = () => (

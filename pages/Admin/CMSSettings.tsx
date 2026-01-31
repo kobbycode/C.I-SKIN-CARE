@@ -368,6 +368,75 @@ const CMSSettings: React.FC = () => {
             <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 lg:gap-12">
                 {/* Left Column: Hero, Sections, Navigation */}
                 <div className="xl:col-span-2 space-y-12">
+                    {/* Announcement Bar Management */}
+                    <section>
+                        <div className="flex justify-between items-end mb-6">
+                            <h3 className="text-xl font-bold text-[#221C1D]">Announcement Bar</h3>
+                            <button
+                                onClick={() => handleChange('announcementBar', { ...formData.announcementBar, active: !formData.announcementBar.active })}
+                                className={`w-10 h-6 rounded-full relative transition-colors ${formData.announcementBar.active ? 'bg-green-500' : 'bg-stone-200'}`}
+                            >
+                                <div className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow-sm transition-all ${formData.announcementBar.active ? 'right-1' : 'left-1'}`} />
+                            </button>
+                        </div>
+                        <div className="bg-white border border-stone-100 rounded-2xl p-6 md:p-8 space-y-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Announcement Text</label>
+                                    <input
+                                        value={formData.announcementBar.text}
+                                        onChange={(e) => handleChange('announcementBar', { ...formData.announcementBar, text: e.target.value })}
+                                        className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F2A600]"
+                                        placeholder="e.g. Free shipping on all orders!"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Target Link</label>
+                                    <input
+                                        value={formData.announcementBar.link}
+                                        onChange={(e) => handleChange('announcementBar', { ...formData.announcementBar, link: e.target.value })}
+                                        className="w-full bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-[#F2A600]"
+                                        placeholder="/shop"
+                                    />
+                                </div>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Background</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="color"
+                                            value={formData.announcementBar.backgroundColor}
+                                            onChange={(e) => handleChange('announcementBar', { ...formData.announcementBar, backgroundColor: e.target.value })}
+                                            className="w-10 h-10 rounded-lg overflow-hidden cursor-pointer"
+                                        />
+                                        <input
+                                            value={formData.announcementBar.backgroundColor}
+                                            onChange={(e) => handleChange('announcementBar', { ...formData.announcementBar, backgroundColor: e.target.value })}
+                                            className="flex-1 bg-stone-50 border border-stone-100 rounded-lg px-3 py-2 text-[10px] focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black uppercase tracking-widest text-stone-400">Text Color</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="color"
+                                            value={formData.announcementBar.textColor}
+                                            onChange={(e) => handleChange('announcementBar', { ...formData.announcementBar, textColor: e.target.value })}
+                                            className="w-10 h-10 rounded-lg overflow-hidden cursor-pointer"
+                                        />
+                                        <input
+                                            value={formData.announcementBar.textColor}
+                                            onChange={(e) => handleChange('announcementBar', { ...formData.announcementBar, textColor: e.target.value })}
+                                            className="flex-1 bg-stone-50 border border-stone-100 rounded-lg px-3 py-2 text-[10px] focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
                     {/* Navigation Management */}
                     <section>
                         <div className="flex justify-between items-end mb-6">

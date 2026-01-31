@@ -112,16 +112,34 @@ const Checkout: React.FC = () => {
       if (coupon.usageLimit && (coupon.usedCount || 0) >= coupon.usageLimit) throw new Error('This coupon has reached its usage limit');
       if (coupon.minOrderAmount && subtotal < coupon.minOrderAmount) throw new Error(`Minimum order of GH₵${coupon.minOrderAmount} required`);
 
+      // Identify eligible items and calculate eligible subtotal
+      const eligibleItems = cart.filter(item =>
+        coupon.isGlobal || item.couponCodes?.includes(coupon.code)
+      );
+
+      if (eligibleItems.length === 0) {
+        throw new Error('This coupon is not valid for any items in your bag.');
+      }
+
+      const eligibleSubtotal = eligibleItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+
       let calculatedDiscount = 0;
       if (coupon.type === 'percentage') {
-        calculatedDiscount = (subtotal * (coupon.value / 100));
+        calculatedDiscount = (eligibleSubtotal * (coupon.value / 100));
       } else {
-        calculatedDiscount = coupon.value;
+        // Cap fixed discount at eligible subtotal
+        calculatedDiscount = Math.min(coupon.value, eligibleSubtotal);
       }
 
       setAppliedCoupon(coupon);
       setDiscountAmount(calculatedDiscount);
-      showNotification(`Coupon applied! You saved GH₵${calculatedDiscount.toFixed(2)}`, 'success');
+
+      const savedCount = cart.length - eligibleItems.length;
+      if (savedCount > 0) {
+        showNotification(`Coupon applied to eligible rituals! You saved GH₵${calculatedDiscount.toFixed(2)}. (${savedCount} items were ineligible)`, 'success');
+      } else {
+        showNotification(`Coupon applied! You saved GH₵${calculatedDiscount.toFixed(2)}`, 'success');
+      }
       setCouponCode('');
     } catch (error: any) {
       console.error(error);

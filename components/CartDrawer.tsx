@@ -17,15 +17,18 @@ const CartDrawer: React.FC = () => {
   // Live stock validation for cart items
   const cartWithStock = cart.map(item => {
     const liveProduct = products.find(p => p.id === item.id);
-    const liveStock = item.selectedVariant
-      ? liveProduct?.variants?.find(v => v.id === item.selectedVariant?.id)?.stock ?? 0
-      : liveProduct?.stock ?? 0;
+    const isAvailable = liveProduct?.status === 'Active';
+    const liveStock = isAvailable
+      ? (item.selectedVariant
+        ? liveProduct?.variants?.find(v => v.id === item.selectedVariant?.id)?.stock ?? 0
+        : liveProduct?.stock ?? 0)
+      : 0;
 
     return {
       ...item,
       liveStock,
-      isOutOfStock: liveStock <= 0,
-      isLowStock: liveStock > 0 && liveStock <= 5
+      isOutOfStock: !isAvailable || liveStock <= 0,
+      isLowStock: isAvailable && liveStock > 0 && liveStock <= 5
     };
   });
 

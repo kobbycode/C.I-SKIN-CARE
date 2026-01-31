@@ -19,7 +19,8 @@ const Coupons: React.FC = () => {
         value: 0,
         minOrderAmount: 0,
         usageLimit: 100,
-        status: 'active'
+        status: 'active',
+        isGlobal: true
     });
 
     useEffect(() => {
@@ -42,7 +43,8 @@ const Coupons: React.FC = () => {
             minOrderAmount: 0,
             usageLimit: 100,
             status: 'active',
-            expirationDate: ''
+            expirationDate: '',
+            isGlobal: true
         });
         setIsModalOpen(true);
     };
@@ -64,7 +66,8 @@ const Coupons: React.FC = () => {
                 usageLimit: Number(formData.usageLimit) || 0,
                 usedCount: 0,
                 status: formData.status || 'active',
-                expirationDate: formData.expirationDate || undefined
+                expirationDate: formData.expirationDate || undefined,
+                isGlobal: formData.isGlobal ?? true
             };
 
             await setDoc(doc(db, 'coupons', code), newCoupon); // Use code as ID for easy lookup
@@ -145,6 +148,12 @@ const Coupons: React.FC = () => {
                                     </button>
                                 </div>
                             </div>
+
+                            {coupon.isGlobal && (
+                                <div className="mb-3">
+                                    <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-[8px] font-black uppercase tracking-tighter rounded border border-purple-100 italic">Global Ritual</span>
+                                </div>
+                            )}
 
                             <div className="space-y-2 pt-4 border-t border-stone-50">
                                 <div className="flex justify-between text-[10px] uppercase font-bold text-stone-400">
@@ -249,6 +258,19 @@ const Coupons: React.FC = () => {
                                     onChange={(e) => setFormData({ ...formData, expirationDate: e.target.value })}
                                 />
                             </div>
+
+                            <label className="flex items-center gap-3 p-4 bg-stone-50 rounded-xl border border-stone-100 cursor-pointer group hover:bg-white transition-all">
+                                <input
+                                    type="checkbox"
+                                    checked={formData.isGlobal}
+                                    onChange={(e) => setFormData({ ...formData, isGlobal: e.target.checked })}
+                                    className="w-4 h-4 rounded text-[#221C1D] shadow-inner"
+                                />
+                                <div>
+                                    <p className="text-[10px] font-black uppercase tracking-widest text-[#221C1D]">Global Coupon</p>
+                                    <p className="text-[9px] text-stone-400 font-bold uppercase tracking-tighter italic">Valid for all products in the catalog</p>
+                                </div>
+                            </label>
 
                             <div className="pt-4 flex justify-end gap-3">
                                 <button

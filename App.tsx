@@ -35,6 +35,7 @@ const Journal = lazy(() => import('./pages/Journal'));
 const JournalDetail = lazy(() => import('./pages/JournalDetail'));
 const Loyalty = lazy(() => import('./pages/Loyalty'));
 const SkinQuiz = lazy(() => import('./pages/SkinQuiz'));
+const SkinQuizResults = lazy(() => import('./pages/SkinQuizResults'));
 const RitualGuide = lazy(() => import('./pages/RitualGuide'));
 const Dashboard = lazy(() => import('./pages/Admin/Dashboard'));
 const Inventory = lazy(() => import('./pages/Admin/Inventory'));
@@ -231,6 +232,7 @@ const MainLayout: React.FC = () => {
           <Route path="/reviews" element={<Reviews />} />
           <Route path="/faq" element={<FAQ />} />
           <Route path="/quiz" element={<SkinQuiz />} />
+          <Route path="/quiz/results" element={<SkinQuizResults />} />
           <Route path="/rituals" element={<RitualGuide />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/login" element={<Login />} />

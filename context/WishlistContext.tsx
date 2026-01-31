@@ -34,7 +34,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         // Map IDs to Products, filtering out any that might not exist in products list
         return ids
             .map(id => products.find(p => p.id === id))
-            .filter((p): p is Product => p !== undefined);
+            .filter((p): p is Product => p !== undefined && p.status === 'Active');
     };
 
     const wishlist = getWishlistProducts();

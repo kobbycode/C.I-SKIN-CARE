@@ -48,9 +48,10 @@ const SkinQuiz: React.FC = () => {
         if (currentStep < QUESTIONS.length - 1) {
             setCurrentStep(currentStep + 1);
         } else {
-            // Results logic - simple for now: redirect to shop with the most prominent concern
-            const mostProminent = newAnswers[1];
-            navigate(`/shop?q=${mostProminent.toLowerCase()}`);
+            // New Personalized Results Logic
+            const skinType = newAnswers[2]; // Description of type
+            const concern = newAnswers[3]; // Description of goal
+            navigate(`/quiz/results?type=${encodeURIComponent(skinType)}&concern=${encodeURIComponent(concern)}`);
         }
     };
 

@@ -434,16 +434,24 @@ const AddProduct: React.FC = () => {
                                     <button
                                         key={coupon.id}
                                         type="button"
-                                        onClick={() => toggleCoupon(coupon.code)}
-                                        className={`p-3 rounded-xl border text-left transition-all ${formData.couponCodes?.includes(coupon.code)
+                                        onClick={() => !coupon.isGlobal && toggleCoupon(coupon.code)}
+                                        className={`p-3 rounded-xl border text-left transition-all ${formData.couponCodes?.includes(coupon.code) || coupon.isGlobal
                                             ? 'bg-[#221C1D] text-white border-[#221C1D] shadow-md'
                                             : 'bg-[#FDFCFB] text-[#221C1D] border-stone-100 hover:border-[#F2A600]'
-                                            }`}
+                                            } ${coupon.isGlobal ? 'cursor-default ring-1 ring-gold/20' : ''}`}
                                     >
-                                        <p className="text-[10px] font-black uppercase tracking-widest">{coupon.code}</p>
-                                        <p className={`text-[8px] uppercase tracking-tighter mt-1 ${formData.couponCodes?.includes(coupon.code) ? 'text-stone-300' : 'text-stone-400'}`}>
+                                        <div className="flex justify-between items-start">
+                                            <p className="text-[10px] font-black uppercase tracking-widest">{coupon.code}</p>
+                                            {coupon.isGlobal && (
+                                                <span className="material-symbols-outlined text-[10px] text-gold">public</span>
+                                            )}
+                                        </div>
+                                        <p className={`text-[8px] uppercase tracking-tighter mt-1 ${formData.couponCodes?.includes(coupon.code) || coupon.isGlobal ? 'text-stone-300' : 'text-stone-400'}`}>
                                             {coupon.type === 'percentage' ? `${coupon.value}% Off` : `GH₵${coupon.value} Off`}
                                         </p>
+                                        {coupon.isGlobal && (
+                                            <p className="text-[7px] font-bold uppercase tracking-tighter text-gold/60 mt-0.5 italic">Global Ritual</p>
+                                        )}
                                     </button>
                                 ))}
                                 {availableCoupons.length === 0 && (

@@ -84,6 +84,31 @@ const Dashboard: React.FC = () => {
     };
   }, [orders, products]);
 
+  const variantStats = useMemo(() => {
+    const statsMap: Record<string, { name: string; productName: string; qty: number; revenue: number; image: string }> = {};
+
+    orders.forEach(order => {
+      order.items.forEach(item => {
+        if (item.selectedVariant) {
+          const key = `${item.id}-${item.selectedVariant.id}`;
+          if (!statsMap[key]) {
+            statsMap[key] = {
+              name: item.selectedVariant.name,
+              productName: item.name,
+              qty: 0,
+              revenue: 0,
+              image: item.image
+            };
+          }
+          statsMap[key].qty += item.quantity;
+          statsMap[key].revenue += (item.price * item.quantity);
+        }
+      });
+    });
+
+    return Object.values(statsMap).sort((a, b) => b.revenue - a.revenue).slice(0, 5);
+  }, [orders]);
+
   if (loading) return <AdminLayout><div className="p-20 text-center opacity-30">Aggregating Global Metrics...</div></AdminLayout>;
   return (
     <AdminLayout>
@@ -228,7 +253,65 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Recent Orders - Responsive Table */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+        {/* Top Sellers Table (Base Products) */}
+        <div className="p-6 md:p-8 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+          <div className="flex justify-between items-center mb-8">
+            <h4 className="text-lg md:text-xl font-bold text-[#221C1D]">Top Rituals</h4>
+            <Link to="/admin/inventory" className="text-[10px] font-bold text-[#F2A600] uppercase underline tracking-wider">Inventory</Link>
+          </div>
+          <div className="space-y-6">
+            {products.slice(0, 4).map((product, i) => {
+              const totalSold = orders.reduce((sum, o) => sum + o.items.filter(item => item.id === product.id).reduce((s, it) => s + it.quantity, 0), 0);
+              return (
+                <div key={i} className="flex items-center gap-4 p-4 hover:bg-stone-50 rounded-xl transition-colors">
+                  <img src={product.image} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" alt={product.name} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate text-[#221C1D]">{product.name}</p>
+                    <p className="text-[9px] text-stone-400 font-medium uppercase tracking-widest">{totalSold} Units Sold</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold text-[#221C1D]">{(product.price).toFixed(2)}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Variant Performance Analytics */}
+        <div className="p-6 md:p-8 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)]">
+          <div className="flex justify-between items-center mb-8">
+            <h4 className="text-lg md:text-xl font-bold text-[#221C1D]">Variant Performance</h4>
+            <span className="text-[9px] font-bold uppercase tracking-widest bg-purple-50 text-purple-600 px-2 py-1 rounded">Top Options</span>
+          </div>
+          {variantStats.length > 0 ? (
+            <div className="space-y-6">
+              {variantStats.map((v, i) => (
+                <div key={i} className="flex items-center gap-4 p-4 bg-stone-50/50 rounded-xl border border-transparent hover:border-stone-100 transition-all">
+                  <div className="relative">
+                    <img src={v.image} className="w-12 h-12 rounded-lg object-cover flex-shrink-0" alt={v.name} />
+                    <span className="absolute -top-1 -right-1 bg-purple-600 text-white text-[7px] px-1 rounded-full font-black">V</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold truncate text-[#221C1D]">{v.name}</p>
+                    <p className="text-[9px] text-stone-400 font-bold uppercase tracking-tighter truncate">{v.productName}</p>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-sm font-bold text-[#221C1D]">GH₵{v.revenue.toFixed(2)}</p>
+                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-tighter">{v.qty} Sold</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="h-[280px] flex flex-col items-center justify-center text-center opacity-30">
+              <span className="material-symbols-outlined text-4xl mb-2">analytics</span>
+              <p className="text-[10px] uppercase font-bold tracking-widest">No variant sales data yet</p>
+            </div>
+          )}
+        </div>
+      </div>
       <div className="bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.03)] overflow-hidden">
         <div className="p-6 md:p-8 border-b border-stone-50 flex justify-between items-center">
           <h4 className="text-lg md:text-xl font-bold text-[#221C1D]">Recent Orders</h4>
