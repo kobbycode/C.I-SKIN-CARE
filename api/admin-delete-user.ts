@@ -9,11 +9,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const { uid } = (req.body || {}) as any;
         if (!uid) return res.status(400).json({ error: 'Missing uid' });
 
-        // Delete from Firebase Auth
+        // Delete from Firebase Auth (ignore if already gone)
         const auth = getAdminAuth();
-        await auth.deleteUser(uid);
+        try {
+            await auth.deleteUser(uid);
+        } catch (authError: any) {
+            console.warn(`[admin-delete-user] Auth user ${uid} not found or already deleted:`, authError.message);
+        }
 
-        // Delete from Firestore
+        // Always delete from Firestore to prevent "ghost" records
         const db = getAdminFirestore();
         await db.collection('users').doc(uid).delete();
 
