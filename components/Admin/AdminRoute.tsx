@@ -6,7 +6,7 @@ import type { UserProfile } from '../../types';
 type Role = NonNullable<UserProfile['role']>;
 
 export default function AdminRoute(props: { allow?: Role[]; children: React.ReactNode }) {
-  const { allow = ['admin', 'manager', 'editor'], children } = props;
+  const { allow = ['super-admin', 'admin', 'manager', 'editor'], children } = props;
   const { currentUser, loading, hasRole } = useUser();
   const location = useLocation();
 

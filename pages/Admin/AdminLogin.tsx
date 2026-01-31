@@ -16,7 +16,7 @@ const AdminLogin: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
-    if (!loading && currentUser && hasRole(['admin', 'manager', 'editor'])) {
+    if (!loading && currentUser && hasRole(['super-admin', 'admin', 'manager', 'editor'])) {
       navigate(from, { replace: true });
     }
   }, [loading, currentUser, hasRole, navigate, from]);

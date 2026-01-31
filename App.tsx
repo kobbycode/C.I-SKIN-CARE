@@ -232,7 +232,7 @@ const MainLayout: React.FC = () => {
           <Route path="/admin/journal" element={<AdminRoute><JournalManager /></AdminRoute>} />
           <Route path="/admin/settings" element={<AdminRoute><CMSSettings /></AdminRoute>} />
           <Route path="/admin/account" element={<AdminRoute><AdminAccount /></AdminRoute>} />
-          <Route path="/admin/users" element={<AdminRoute allow={['admin']}><AdminUsers /></AdminRoute>} />
+          <Route path="/admin/users" element={<AdminRoute allow={['super-admin', 'admin']}><AdminUsers /></AdminRoute>} />
           <Route path="/admin/inventory/add" element={<AdminRoute><AddProduct /></AdminRoute>} />
           <Route path="/admin/inventory/edit/:id" element={<AdminRoute><AddProduct /></AdminRoute>} />
           <Route path="/admin/categories" element={<AdminRoute><Categories /></AdminRoute>} />
