@@ -20,6 +20,17 @@ export const AccountSecurityEditor: React.FC = () => {
     const [uploadingAvatar, setUploadingAvatar] = useState(false);
     const [showCurrentPw, setShowCurrentPw] = useState(false);
     const [showNewPw, setShowNewPw] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [isGoogleUser, setIsGoogleUser] = useState(false);
+
+    // Check if user is Google authenticated (no password)
+    React.useEffect(() => {
+        const fbUser = auth.currentUser;
+        if (fbUser) {
+            const hasPasswordProvider = fbUser.providerData.some(p => p.providerId === 'password');
+            setIsGoogleUser(!hasPasswordProvider);
+        }
+    }, []);
 
     const changePassword = async () => {
         if (!currentPassword || !newPassword) {
@@ -102,6 +113,7 @@ export const AccountSecurityEditor: React.FC = () => {
             await updateProfile({ avatar: downloadURL });
             showNotification('Avatar updated successfully', 'success');
             setAvatarFile(null);
+            setAvatarPreview(null);
         } catch (e) {
             console.error(e);
             showNotification('Failed to upload avatar', 'error');
@@ -118,7 +130,9 @@ export const AccountSecurityEditor: React.FC = () => {
                 <div className="space-y-4">
                     <div className="flex items-center gap-6">
                         <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-accent overflow-hidden flex items-center justify-center">
-                            {currentUser?.avatar ? (
+                            {avatarPreview ? (
+                                <img src={avatarPreview} alt="Preview" className="w-full h-full object-cover" />
+                            ) : currentUser?.avatar ? (
                                 <img src={currentUser.avatar} alt="" className="w-full h-full object-cover" />
                             ) : (
                                 <span className="material-symbols-outlined text-4xl text-accent">account_circle</span>
@@ -128,7 +142,19 @@ export const AccountSecurityEditor: React.FC = () => {
                             <input
                                 type="file"
                                 accept="image/*"
-                                onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                                onChange={(e) => {
+                                    const file = e.target.files?.[0] || null;
+                                    setAvatarFile(file);
+                                    if (file) {
+                                        const reader = new FileReader();
+                                        reader.onloadend = () => {
+                                            setAvatarPreview(reader.result as string);
+                                        };
+                                        reader.readAsDataURL(file);
+                                    } else {
+                                        setAvatarPreview(null);
+                                    }
+                                }}
                                 className="text-xs"
                             />
                             {avatarFile && (
@@ -142,6 +168,7 @@ export const AccountSecurityEditor: React.FC = () => {
                             )}
                         </div>
                     </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">Full Name</label>
@@ -171,7 +198,7 @@ export const AccountSecurityEditor: React.FC = () => {
             </div>
 
             {/* Security Verification */}
-            <div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+            < div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl" >
                 <h2 className="font-display text-2xl text-secondary dark:text-white mb-2">Security Verification</h2>
                 <p className="text-xs opacity-60 mb-6">Required for changing sensitive account details like Email or Password.</p>
                 <div className="max-w-sm">
@@ -195,10 +222,10 @@ export const AccountSecurityEditor: React.FC = () => {
                         </button>
                     </div>
                 </div>
-            </div>
+            </div >
 
             {/* Change Email */}
-            <div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+            < div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl" >
                 <h2 className="font-display text-2xl text-secondary dark:text-white mb-6">Change Email</h2>
                 <div className="max-w-sm space-y-4">
                     <div>
@@ -220,42 +247,51 @@ export const AccountSecurityEditor: React.FC = () => {
                     </button>
                     {!currentPassword && <p className="text-[9px] text-red-500 font-bold uppercase tracking-widest">Enter current password above to enable</p>}
                 </div>
-            </div>
+            </div >
 
             {/* Change Password */}
-            <div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl">
+            < div className="bg-white dark:bg-stone-900 border border-primary/10 p-8 rounded-2xl" >
                 <h2 className="font-display text-2xl text-secondary dark:text-white mb-6">Change Password</h2>
-                <div className="max-w-sm space-y-4">
-                    <div>
-                        <label className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">New Password</label>
-                        <div className="relative">
-                            <input
-                                type={showNewPw ? "text" : "password"}
-                                value={newPassword}
-                                onChange={(e) => setNewPassword(e.target.value)}
-                                className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-sm pr-10"
-                            />
+                {
+                    isGoogleUser ? (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                            <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">🔐 You signed in with Google</p>
+                            <p className="text-xs text-blue-600 dark:text-blue-300">Your account uses Google authentication and doesn't have a password. You can continue using Google Sign-In, or contact support if you'd like to set up password authentication.</p>
+                        </div>
+                    ) : (
+                        <div className="max-w-sm space-y-4">
+                            <div>
+                                <label className="text-[10px] font-bold uppercase tracking-widest text-primary block mb-2">New Password</label>
+                                <div className="relative">
+                                    <input
+                                        type={showNewPw ? "text" : "password"}
+                                        value={newPassword}
+                                        onChange={(e) => setNewPassword(e.target.value)}
+                                        className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-sm pr-10"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewPw(!showNewPw)}
+                                        className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary/60"
+                                    >
+                                        <span className="material-symbols-outlined text-lg">
+                                            {showNewPw ? 'visibility_off' : 'visibility'}
+                                        </span>
+                                    </button>
+                                </div>
+                            </div>
                             <button
-                                type="button"
-                                onClick={() => setShowNewPw(!showNewPw)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary/60"
+                                disabled={changingPw || !currentPassword}
+                                onClick={changePassword}
+                                className={`px-6 py-3 rounded font-bold uppercase tracking-[0.2em] text-[10px] ${changingPw || !currentPassword ? 'bg-stone-300 text-white' : 'bg-accent text-white hover:bg-[#e19c00]'}`}
                             >
-                                <span className="material-symbols-outlined text-lg">
-                                    {showNewPw ? 'visibility_off' : 'visibility'}
-                                </span>
+                                {changingPw ? 'Updating...' : 'Update Password'}
                             </button>
                         </div>
-                    </div>
-                    <button
-                        disabled={changingPw || !currentPassword}
-                        onClick={changePassword}
-                        className={`px-6 py-3 rounded font-bold uppercase tracking-[0.2em] text-[10px] ${changingPw || !currentPassword ? 'bg-stone-300 text-white' : 'bg-accent text-white hover:bg-[#e19c00]'}`}
-                    >
-                        {changingPw ? 'Updating...' : 'Update Password'}
-                    </button>
-                </div>
-            </div>
-        </div>
+                    )
+                }
+            </div >
+        </div >
     );
 };
 
