@@ -1,25 +1,18 @@
-import admin from 'firebase-admin';
+import { requireAdmin } from './_firebaseAdmin';
 
 export default async function handler(req: any, res: any) {
-    const saRaw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
-    if (!saRaw) return res.status(200).json({ ok: false, error: 'missing env' });
-
     try {
-        const sa = JSON.parse(saRaw.trim().replace(/^['"]|['"]$/g, ''));
-        const credential = admin.credential.cert(sa);
-
-        // Check if already init
-        let app = admin.apps.length > 0 ? admin.apps[0] : admin.initializeApp({ credential });
-
-        const db = app.firestore();
-        const snap = await db.collection('users').limit(1).get();
-
+        const adminUser = await requireAdmin(req);
         res.status(200).json({
             ok: true,
-            msg: 'Firestore read worked',
-            count: snap.size
+            msg: 'Shared requireAdmin worked',
+            uid: adminUser.uid
         });
     } catch (e: any) {
-        res.status(200).json({ ok: false, error: e.message });
+        res.status(200).json({
+            ok: false,
+            error: e.message,
+            hint: 'Error inside shared requireAdmin'
+        });
     }
 }
