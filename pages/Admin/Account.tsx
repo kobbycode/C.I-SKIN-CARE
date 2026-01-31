@@ -5,6 +5,7 @@ import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
 import { auth } from '../../firebaseConfig';
 import { EmailAuthProvider, reauthenticateWithCredential, updatePassword } from 'firebase/auth';
+import ConfirmModal from '../../components/Admin/ConfirmModal';
 
 const Account: React.FC = () => {
   const { currentUser, updateProfile, logout } = useUser();
@@ -23,6 +24,7 @@ const Account: React.FC = () => {
   const [changingPw, setChangingPw] = useState(false);
   const [showCurrentPw, setShowCurrentPw] = useState(false);
   const [showNewPw, setShowNewPw] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
   if (!currentUser) {
     return (
@@ -79,16 +81,27 @@ const Account: React.FC = () => {
             <p className="text-stone-500 text-sm">Update your admin username and password.</p>
           </div>
           <button
-            onClick={() => {
-              logout();
-              navigate('/admin/login');
-            }}
+            onClick={() => setIsLogoutModalOpen(true)}
             className="flex items-center gap-2 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-red-100"
           >
             <span className="material-symbols-outlined text-lg">logout</span>
             Logout
           </button>
         </div>
+
+        <ConfirmModal
+          isOpen={isLogoutModalOpen}
+          title="Confirm Logout"
+          message="Are you sure you want to sign out of the Management Suite?"
+          confirmLabel="Logout"
+          cancelLabel="Stay logged in"
+          variant="danger"
+          onConfirm={() => {
+            logout();
+            navigate('/admin/login');
+          }}
+          onCancel={() => setIsLogoutModalOpen(false)}
+        />
 
         <div className="bg-white border border-stone-100 rounded-xl p-6 mb-8">
           <h3 className="text-xs font-black uppercase tracking-[0.2em] mb-4">Profile</h3>
