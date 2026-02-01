@@ -1,70 +1,8 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    
-    // Helper functions
-    function isAuthenticated() {
-      return request.auth != null;
-    }
-    
-    function isAdmin() {
-      return isAuthenticated() && 
-        request.auth.token.role in ['super-admin', 'admin', 'manager'];
-    }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-    
-    function isValidImageSize() {
-      return request.resource.size < 5 * 1024 * 1024; // 5MB limit
-    }
-    
-    function isValidImageType() {
-      return request.resource.contentType.matches('image/.*');
-    }
-    
-    // Product images - public read, admin write
-    match /products/{productId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if isAdmin() && isValidImageSize() && isValidImageType();
-    }
-    
-    // User avatars - public read, owner/admin write
-    match /avatars/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if (isOwner(userId) || isAdmin()) && 
-        isValidImageSize() && isValidImageType();
-    }
-    
-    // Review images - public read, authenticated users can upload
-    match /reviews/{reviewId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if isAuthenticated() && isValidImageSize() && isValidImageType();
-    }
-    
-    // Journal/Blog images - public read, admin write
-    match /journal/{journalId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if isAdmin() && isValidImageSize() && isValidImageType();
-    }
-    
-    // Site assets (logos, banners, etc.) - public read, admin write
-    match /site/{allPaths=**} {
-      allow read: if true;
-      allow write: if isAdmin() && isValidImageSize();
-    }
-    
-    // Temporary uploads - authenticated users only, 10MB limit
-    match /temp/{userId}/{allPaths=**} {
-      allow read, write: if isOwner(userId) && 
-        request.resource.size < 10 * 1024 * 1024;
-    }
-    
-    // Order documents/receipts - owner and admin only
-    match /orders/{orderId}/{allPaths=**} {
-      allow read: if isAuthenticated();
-      allow write: if isAdmin();
+    match /{allPaths=**} {
+      allow read, write: if true;
     }
   }
 }
