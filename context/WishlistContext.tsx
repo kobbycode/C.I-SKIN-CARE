@@ -30,7 +30,7 @@ export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     // Derived state: actual Product objects
     const getWishlistProducts = (): Product[] => {
-        const ids = currentUser?.wishlist || localWishlist;
+        const ids = currentUser ? (currentUser.wishlist || []) : localWishlist;
         // Map IDs to Products, filtering out any that might not exist in products list
         return ids
             .map(id => products.find(p => p.id === id))

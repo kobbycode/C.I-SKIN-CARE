@@ -31,16 +31,6 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const usersRef = collection(db, 'users');
-        const unsubscribeUsers = onSnapshot(usersRef, (snapshot) => {
-            const users: UserProfile[] = [];
-            snapshot.forEach(docSnap => {
-                const data = docSnap.data() as Omit<UserProfile, 'id'>;
-                users.push({ id: docSnap.id, ...data });
-            });
-            setAllUsers(users);
-        });
-
         let unsubscribeCurrentUser: (() => void) | null = null;
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
@@ -111,13 +101,36 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
         });
         return () => {
-            unsubscribeUsers();
             unsubscribeAuth();
             if (unsubscribeCurrentUser) {
                 unsubscribeCurrentUser();
             }
         };
     }, []);
+
+    // Separated: Fetch all users ONLY for staff/admin roles to avoid permission errors
+    useEffect(() => {
+        const isAdmin = currentUser?.role && ['super-admin', 'admin', 'manager', 'editor'].includes(currentUser.role);
+
+        if (!isAdmin) {
+            setAllUsers([]);
+            return;
+        }
+
+        const usersRef = collection(db, 'users');
+        const unsubscribe = onSnapshot(usersRef, (snapshot) => {
+            const users: UserProfile[] = [];
+            snapshot.forEach(docSnap => {
+                const data = docSnap.data() as Omit<UserProfile, 'id'>;
+                users.push({ id: docSnap.id, ...data });
+            });
+            setAllUsers(users);
+        }, (error) => {
+            console.error("All users listener error:", error);
+        });
+
+        return () => unsubscribe();
+    }, [currentUser?.role]);
 
     const updateProfile = async (updates: Partial<UserProfile>) => {
         if (!currentUser) return;

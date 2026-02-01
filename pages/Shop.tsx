@@ -322,6 +322,7 @@ const WishlistButton: React.FC<{ product: any }> = ({ product }) => {
     <button
       onClick={(e) => {
         e.preventDefault();
+        e.stopPropagation();
         toggleWishlist(product);
       }}
       className="p-2 bg-white/90 backdrop-blur rounded-full hover:bg-white text-stone-400 hover:text-red-500 transition-colors shadow-sm"
