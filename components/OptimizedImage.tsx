@@ -17,21 +17,36 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 
     // Update internal state if prop changes
     useEffect(() => {
-        if (src) {
-            // Encode URI to handle spaces in filenames, but only for relative paths
-            const cleanSrc = (src.startsWith('http') || src.startsWith('data:')) ? src : encodeURI(src);
-            setImgSrc(cleanSrc);
-            setIsLoaded(false);
-            setHasError(false);
-        } else {
+        if (!src) {
             setImgSrc('');
             setHasError(true);
+            return;
         }
+
+        let resolvedSrc = src;
+
+        // If it looks like a Firebase Storage path but isn't a full URL
+        // Example: "products/image.png"
+        if (!src.startsWith('http') && !src.startsWith('data:') && !src.startsWith('/')) {
+            const bucket = 'ci-skincare-digital-platform.firebasestorage.app';
+            const encodedPath = encodeURIComponent(src);
+            resolvedSrc = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodedPath}?alt=media`;
+        } else if (src.startsWith('/')) {
+            // Local path (like /products/xxx.jpg) - no encoding needed for absolute local paths
+            resolvedSrc = src;
+        } else {
+            // Already a full URL or data URI - no change needed
+            resolvedSrc = src;
+        }
+
+        setImgSrc(resolvedSrc);
+        setIsLoaded(false);
+        setHasError(false);
     }, [src]);
 
     const handleError = () => {
         if (!hasError) {
-            console.warn(`OptimizedImage: Failed to load ${imgSrc}. Switching to fallback.`);
+            console.warn(`OptimizedImage: Failed to load ${imgSrc}. Path was: ${src}`);
             setHasError(true);
             if (fallbackSrc && fallbackSrc !== imgSrc) {
                 setImgSrc(fallbackSrc);
