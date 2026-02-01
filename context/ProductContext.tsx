@@ -57,20 +57,6 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
             });
             setProducts(items);
             setLoading(false);
-
-            // AUTO-FIX: Ensure images are correct based on MOCK_PRODUCTS constants
-            // This runs completely client-side after data loads, but only triggers writes if needed.
-            items.forEach(async (dbProduct) => {
-                const mockMatch = MOCK_PRODUCTS.find(p => p.id === dbProduct.id);
-                if (mockMatch && mockMatch.image !== dbProduct.image) {
-                    console.log(`Fixing image for ${dbProduct.name}: ${dbProduct.image} -> ${mockMatch.image}`);
-                    try {
-                        await setDoc(doc(db, 'products', dbProduct.id), { image: mockMatch.image }, { merge: true });
-                    } catch (e) {
-                        console.error("Failed to auto-fix image for", dbProduct.id, e);
-                    }
-                }
-            });
         });
 
         return () => unsubscribe();
