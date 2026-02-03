@@ -302,6 +302,9 @@ const Checkout: React.FC = () => {
           discount: discountAmount
         };
 
+        // Sanitize order object to remove undefined values (Firestore rejects undefined)
+        const sanitizedOrder = JSON.parse(JSON.stringify(orderSummary));
+
         // Increment coupon usage if applied
         if (appliedCoupon) {
           try {
@@ -311,7 +314,7 @@ const Checkout: React.FC = () => {
             console.error('Failed to increment coupon usage', e);
           }
         }
-        const orderId = await addOrder(orderSummary);
+        const orderId = await addOrder(sanitizedOrder);
 
         // Trigger order confirmation email
         try {
