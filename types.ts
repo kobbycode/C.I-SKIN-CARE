@@ -61,6 +61,9 @@ export interface Order {
   returnReason?: string;
   returnStatus?: 'Pending' | 'Approved' | 'Rejected';
   returnDate?: string;
+  subtotal: number;
+  shipping: number;
+  tax: number;
   total: number;
   items: CartItem[];
   shippingAddress: string;
