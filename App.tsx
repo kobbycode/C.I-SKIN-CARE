@@ -185,23 +185,23 @@ const App: React.FC = () => {
     <SiteConfigProvider>
       <NotificationProvider>
         <UserProvider>
-          <WishlistProvider>
-            <CategoryProvider>
-              <FAQProvider>
-                <JournalProvider>
-                  <OrderProvider>
-                    <ReviewProvider>
-                      <ProductProvider>
+          <ProductProvider>
+            <WishlistProvider>
+              <CategoryProvider>
+                <FAQProvider>
+                  <JournalProvider>
+                    <OrderProvider>
+                      <ReviewProvider>
                         <InAppNotificationProvider>
                           <AppContent />
                         </InAppNotificationProvider>
-                      </ProductProvider>
-                    </ReviewProvider>
-                  </OrderProvider>
-                </JournalProvider>
-              </FAQProvider>
-            </CategoryProvider>
-          </WishlistProvider>
+                      </ReviewProvider>
+                    </OrderProvider>
+                  </JournalProvider>
+                </FAQProvider>
+              </CategoryProvider>
+            </WishlistProvider>
+          </ProductProvider>
         </UserProvider>
       </NotificationProvider>
     </SiteConfigProvider>
