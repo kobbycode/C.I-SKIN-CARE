@@ -632,7 +632,15 @@ const Orders: React.FC = () => {
                                     </div>
                                     <div>
                                         <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Contact</p>
-                                        <p className="text-[10px] text-stone-600 truncate">{selectedOrder.customerEmail}</p>
+                                        <div className="space-y-1">
+                                            <p className="text-[10px] text-stone-600 truncate">{selectedOrder.customerEmail}</p>
+                                            {selectedOrder.customerPhone && (
+                                                <p className="text-[10px] text-stone-600 font-medium truncate flex items-center gap-1.5">
+                                                    <span className="material-symbols-outlined text-[10px]">phone</span>
+                                                    {selectedOrder.customerPhone}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
