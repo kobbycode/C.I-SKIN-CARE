@@ -15,10 +15,12 @@ service cloud.firestore {
     
     function isOwner(userId) { return isAuthenticated() && request.auth.uid == userId; }
 
-    // Products: Public Read, Admin Write
+    // Products: Public Read, Admin Write, Authenticated update stock
     match /products/{productId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow update: if (request.auth != null && (isAdmin() || 
+                                              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['stock', 'variants'])));
+      allow create, delete: if isAdmin();
     }
 
     // Categories: Public Read, Admin Write
@@ -51,6 +53,20 @@ service cloud.firestore {
       allow create: if isAuthenticated() && request.auth.uid == userId;
       allow update: if isOwner(userId) || isAdmin();
       allow delete: if isAdmin();
+    }
+
+    // Coupons: Public Read, Admin Write, Authenticated update usedCount
+    match /coupons/{couponId} {
+      allow read: if true;
+      allow update: if (request.auth != null && (isAdmin() || 
+                                              request.resource.data.diff(resource.data).affectedKeys().hasOnly(['usedCount'])));
+      allow create, delete: if isAdmin();
+    }
+
+    // Notifications: Anyone authenticated can create, Recipient/Admin can read/write
+    match /notifications/{notificationId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if isOwner(resource.data.recipientId) || isAdmin();
     }
 
     // Settings: Admin only
