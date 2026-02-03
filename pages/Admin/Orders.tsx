@@ -89,7 +89,7 @@ const Orders: React.FC = () => {
 
             if (status === 'Delivered') {
                 const targetOrder = orders.find(o => o.id === id);
-                if (targetOrder && targetOrder.paymentMethod === 'pay_on_delivery') {
+                if (targetOrder && targetOrder.paymentMethod === 'Pay on Delivery') {
                     updates.paymentStatus = 'paid';
                 }
             }

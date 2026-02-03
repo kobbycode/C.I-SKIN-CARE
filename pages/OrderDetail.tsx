@@ -147,8 +147,8 @@ const OrderDetail: React.FC = () => {
                             <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-secondary/40 mb-4">Payment Information</h3>
                             <div className="text-sm opacity-70 space-y-2">
                                 <p>Method: <span className="font-bold text-secondary dark:text-white capitalize">{order.paymentMethod}</span></p>
-                                <p>Status: <span className={`font-bold capitalize ${(order.paymentStatus === 'paid' || (order.status === 'Delivered' && order.paymentMethod === 'pay_on_delivery')) ? 'text-green-600' : 'text-orange-600'}`}>
-                                    {(order.paymentStatus === 'paid' || (order.status === 'Delivered' && order.paymentMethod === 'pay_on_delivery')) ? 'Paid' : (order.paymentStatus || 'Pending')}
+                                <p>Status: <span className={`font-bold capitalize ${(order.paymentStatus === 'paid' || (order.status === 'Delivered' && order.paymentMethod === 'Pay on Delivery')) ? 'text-green-600' : 'text-orange-600'}`}>
+                                    {(order.paymentStatus === 'paid' || (order.status === 'Delivered' && order.paymentMethod === 'Pay on Delivery')) ? 'Paid' : (order.paymentStatus || 'Pending')}
                                 </span></p>
                                 {order.paymentReference && <p className="text-xs">Ref: {order.paymentReference}</p>}
 
