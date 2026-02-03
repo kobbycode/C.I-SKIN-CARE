@@ -55,6 +55,36 @@ const Checkout: React.FC = () => {
   });
   const [geoCoords, setGeoCoords] = useState<{ lat: number; lng: number } | null>(null);
 
+  // Auto-fill address from profile if logged in
+  React.useEffect(() => {
+    if (currentUser) {
+      const parts = (currentUser.fullName || '').split(' ');
+      const firstName = parts[0] || '';
+      const lastName = parts.slice(1).join(' ') || '';
+
+      setFormData(prev => ({
+        ...prev,
+        email: currentUser.email || prev.email,
+        firstName: firstName || prev.firstName,
+        lastName: lastName || prev.lastName,
+        address: currentUser.deliveryAddress || prev.address,
+        city: currentUser.deliveryCity || prev.city,
+        state: currentUser.deliveryState || prev.state,
+        zipCode: currentUser.deliveryZipCode || prev.zipCode,
+        phone: currentUser.deliveryPhone || prev.phone,
+        landmark: currentUser.deliveryLandmark || prev.landmark,
+        deliveryInstructions: currentUser.deliveryInstructions || prev.deliveryInstructions,
+      }));
+
+      if (currentUser.deliveryLocationLat && currentUser.deliveryLocationLng) {
+        setGeoCoords({
+          lat: currentUser.deliveryLocationLat,
+          lng: currentUser.deliveryLocationLng
+        });
+      }
+    }
+  }, [currentUser]);
+
   // Coupon State
   const [couponCode, setCouponCode] = useState('');
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
@@ -390,7 +420,17 @@ const Checkout: React.FC = () => {
                 <section className="mb-10">
                   <div className="flex justify-between items-baseline mb-6 border-b border-primary/10 pb-2">
                     <h3 className="text-xs font-black uppercase tracking-[0.2em]">Contact Information</h3>
-                    <Link to="/profile" className="text-[10px] font-bold text-primary">Already have an account?</Link>
+                    {currentUser ? (
+                      <Link
+                        to="/profile"
+                        state={{ from: '/checkout', tab: 'addresses' }}
+                        className="text-[10px] font-bold text-primary hover:underline"
+                      >
+                        Update Saved Address
+                      </Link>
+                    ) : (
+                      <Link to="/profile" className="text-[10px] font-bold text-primary">Already have an account?</Link>
+                    )}
                   </div>
                   <div className="space-y-4">
                     <input

@@ -6,7 +6,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useOrders } from '../context/OrderContext';
 import { useNotification } from '../context/NotificationContext';
 import { useProducts } from '../context/ProductContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import ConfirmModal from '../components/Admin/ConfirmModal';
 
 const Profile: React.FC = () => {
@@ -16,7 +16,15 @@ const Profile: React.FC = () => {
   const { products } = useProducts();
   const { showNotification } = useNotification();
   const navigate = useNavigate();
+  const location = useLocation();
   const [activeTab, setActiveTab] = useState<'orders' | 'skin' | 'favorites' | 'addresses' | 'preferences' | 'account'>('orders');
+
+  // Set active tab from location state if available
+  useEffect(() => {
+    if (location.state?.tab) {
+      setActiveTab(location.state.tab as any);
+    }
+  }, [location.state]);
   const [signOutLoading, setSignOutLoading] = useState(false);
   const [jumpLoading, setJumpLoading] = useState(false);
   const ordersSectionRef = useRef<HTMLDivElement | null>(null);
@@ -492,6 +500,8 @@ const SkinProfileEditor: React.FC = () => {
 const DeliveryDetailsEditor: React.FC = () => {
   const { currentUser, updateProfile } = useUser();
   const { showNotification } = useNotification();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     deliveryAddress: '',
     deliveryCity: '',
@@ -649,7 +659,7 @@ const DeliveryDetailsEditor: React.FC = () => {
           className="w-full bg-primary/5 border-primary/10 rounded px-4 py-3 text-[10px] uppercase font-bold tracking-widest focus:ring-accent md:col-span-2"
         />
       </div>
-      <div className="pt-2">
+      <div className="pt-2 flex gap-4">
         <button
           disabled={saving}
           onClick={save}
@@ -657,6 +667,15 @@ const DeliveryDetailsEditor: React.FC = () => {
         >
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
+
+        {location.state?.from === '/checkout' && (
+          <button
+            onClick={() => navigate('/checkout')}
+            className="py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] border border-primary text-primary hover:bg-primary/5"
+          >
+            Return to Checkout
+          </button>
+        )}
       </div>
     </div>
   );
