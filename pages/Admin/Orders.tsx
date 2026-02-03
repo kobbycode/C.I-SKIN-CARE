@@ -39,8 +39,8 @@ const Orders: React.FC = () => {
             if (activeTab.startsWith('Returns')) {
                 result = result.filter(o => o.returnRequested);
             } else {
-                // Extract status from "Pending (5)" format -> "Pending"
-                const status = activeTab.split(' (')[0];
+                // Extract status safely from "Pending (5)" or "Pending(5)" format
+                const status = activeTab.split('(')[0].trim();
                 result = result.filter(o => o.status === status);
             }
         }
@@ -309,6 +309,8 @@ const Orders: React.FC = () => {
                                     `Pending (${orders.filter(o => o.status === 'Pending').length})`,
                                     `Processing (${orders.filter(o => o.status === 'Processing').length})`,
                                     `Shipped (${orders.filter(o => o.status === 'Shipped').length})`,
+                                    `Delivered (${orders.filter(o => o.status === 'Delivered').length})`,
+                                    `Cancelled (${orders.filter(o => o.status === 'Cancelled').length})`,
                                     `Returns (${orders.filter(o => o.returnRequested).length})`
                                 ].map((tab) => (
                                     <button
