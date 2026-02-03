@@ -452,7 +452,15 @@ const Orders: React.FC = () => {
                                             </div>
                                             <div className="flex flex-col min-w-0">
                                                 <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
-                                                <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{o.id.slice(-6).toUpperCase()}</span>
+                                                <div className="flex flex-col">
+                                                    <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{o.id.slice(-6).toUpperCase()}</span>
+                                                    {(o.customerPhone || o.deliveryContactPhone) && (
+                                                        <span className="text-[9px] text-stone-400 flex items-center gap-1">
+                                                            <span className="material-symbols-outlined text-[10px]">phone</span>
+                                                            {o.customerPhone || o.deliveryContactPhone}
+                                                        </span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                         <span className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
@@ -535,7 +543,15 @@ const Orders: React.FC = () => {
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
                                                         <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
-                                                        <span className="text-[10px] text-stone-400 truncate">{o.customerEmail}</span>
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] text-stone-400 truncate">{o.customerEmail}</span>
+                                                            {(o.customerPhone || o.deliveryContactPhone) && (
+                                                                <span className="text-[10px] text-stone-500 font-medium flex items-center gap-1">
+                                                                    <span className="material-symbols-outlined text-[10px]">phone</span>
+                                                                    {o.customerPhone || o.deliveryContactPhone}
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </td>
@@ -634,10 +650,10 @@ const Orders: React.FC = () => {
                                         <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Contact</p>
                                         <div className="space-y-1">
                                             <p className="text-[10px] text-stone-600 truncate">{selectedOrder.customerEmail}</p>
-                                            {selectedOrder.customerPhone && (
+                                            {(selectedOrder.customerPhone || selectedOrder.deliveryContactPhone) && (
                                                 <p className="text-[10px] text-stone-600 font-medium truncate flex items-center gap-1.5">
                                                     <span className="material-symbols-outlined text-[10px]">phone</span>
-                                                    {selectedOrder.customerPhone}
+                                                    {selectedOrder.customerPhone || selectedOrder.deliveryContactPhone}
                                                 </p>
                                             )}
                                         </div>
