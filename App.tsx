@@ -64,6 +64,7 @@ const FAQManager = lazyWithRetry(() => import('./pages/Admin/FAQManager'));
 const AdminLogin = lazyWithRetry(() => import('./pages/Admin/AdminLogin'));
 const AdminAccount = lazyWithRetry(() => import('./pages/Admin/Account'));
 const AdminUsers = lazyWithRetry(() => import('./pages/Admin/Users'));
+const Analytics = lazyWithRetry(() => import('./pages/Admin/Analytics'));
 
 // Component for Suspense fallback
 const PageLoader = () => (
@@ -260,6 +261,7 @@ const MainLayout: React.FC = () => {
           <Route path="/journal/:id" element={<JournalDetail />} />
           <Route path="/loyalty" element={<Loyalty />} />
           <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/analytics" element={<AdminRoute><Analytics /></AdminRoute>} />
           <Route path="/admin" element={<AdminRoute><Dashboard /></AdminRoute>} />
           <Route path="/admin/inventory" element={<AdminRoute><Inventory /></AdminRoute>} />
           <Route path="/admin/customers" element={<AdminRoute><Customers /></AdminRoute>} />

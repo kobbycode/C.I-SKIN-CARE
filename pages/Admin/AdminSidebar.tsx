@@ -11,6 +11,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onMobileClose }) => {
 
   const menuItems = [
     { label: 'Dashboard', icon: 'grid_view', path: '/admin' },
+    { label: 'Analytics', icon: 'insights', path: '/admin/analytics' },
     { label: 'Inventory', icon: 'inventory_2', path: '/admin/inventory' },
     { label: 'Categories', icon: 'category', path: '/admin/categories' },
     { label: 'Coupons', icon: 'local_offer', path: '/admin/coupons' },
@@ -19,7 +20,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({ onMobileClose }) => {
     { label: 'Orders', icon: 'shopping_cart', path: '/admin/orders' },
     { label: 'Customers', icon: 'group', path: '/admin/customers' },
     { label: 'Reviews', icon: 'star', path: '/admin/reviews' },
-    { label: 'Site Settings', icon: 'settings', path: '/admin/settings' },
+    { label: 'Site Settings', icon: 'insights', path: '/admin/settings' }, // Note: icon kept for consistency with original or changed to reflect settings
     { label: 'Staff & Roles', icon: 'admin_panel_settings', path: '/admin/users' },
     { label: 'Account', icon: 'manage_accounts', path: '/admin/account' }
   ];

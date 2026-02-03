@@ -222,7 +222,8 @@ const Checkout: React.FC = () => {
               ? 'AirtelTigo Money via Paystack'
               : 'Paystack',
       couponCode: appliedCoupon?.code,
-      discount: discountAmount
+      discount: discountAmount,
+      customerPhone: formData.phone
     };
 
     // Increment coupon usage if applied
@@ -361,7 +362,8 @@ const Checkout: React.FC = () => {
           paymentMethod: 'Pay on Delivery',
           couponCode: appliedCoupon?.code || null,
           discount: discountAmount || 0,
-          userId: currentUser?.id
+          userId: currentUser?.id,
+          customerPhone: formData.phone
         };
 
         // Sanitize order object to remove undefined values (Firestore rejects undefined)

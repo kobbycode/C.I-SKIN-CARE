@@ -8,6 +8,7 @@ import { useInAppNotifications } from '../../context/InAppNotificationContext';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
 import { doc, updateDoc, runTransaction, arrayUnion, deleteDoc } from 'firebase/firestore';
+import { Order } from '../../types';
 
 const Orders: React.FC = () => {
     const { orders, updateOrderStatus, loading } = useOrders();
@@ -25,10 +26,13 @@ const Orders: React.FC = () => {
     }, [searchParams]);
     const [activeTab, setActiveTab] = useState('All Orders');
     const [searchTerm, setSearchTerm] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [trackingNumber, setTrackingNumber] = useState('');
     const [isProcessingAction, setIsProcessingAction] = useState<string | null>(null);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const { getIdToken } = useUser();
 
     const filteredOrders = useMemo(() => {
@@ -51,8 +55,28 @@ const Orders: React.FC = () => {
             result = result.filter(o =>
                 o.customerName.toLowerCase().includes(lowSearch) ||
                 o.id.toLowerCase().includes(lowSearch) ||
-                o.customerEmail.toLowerCase().includes(lowSearch)
+                o.customerEmail.toLowerCase().includes(lowSearch) ||
+                (o.customerPhone && o.customerPhone.toLowerCase().includes(lowSearch))
             );
+        }
+
+        // Filter by date range
+        if (startDate || endDate) {
+            result = result.filter(o => {
+                // Convert order date string "January 31, 2026" to comparable date
+                const orderDate = new Date(o.date);
+                if (startDate) {
+                    const start = new Date(startDate);
+                    start.setHours(0, 0, 0, 0);
+                    if (orderDate < start) return false;
+                }
+                if (endDate) {
+                    const end = new Date(endDate);
+                    end.setHours(23, 59, 59, 999);
+                    if (orderDate > end) return false;
+                }
+                return true;
+            });
         }
 
         return result;
@@ -191,11 +215,48 @@ const Orders: React.FC = () => {
     const handleMarkAsPaid = async (id: string) => {
         setIsProcessingAction('paid');
         try {
-            const orderRef = doc(db, 'orders', id);
-            await updateDoc(orderRef, { paymentStatus: 'paid' });
+            await updateDoc(doc(db, 'orders', id), {
+                paymentStatus: 'paid'
+            });
             showNotification('Order marked as paid', 'success');
         } catch (error) {
-            showNotification('Failed to mark as paid', 'error');
+            showNotification('Status update failed', 'error');
+        } finally {
+            setIsProcessingAction(null);
+        }
+    };
+
+    const handleBulkStatusUpdate = async (newStatus: Order['status']) => {
+        if (selectedIds.size === 0) return;
+        setIsProcessingAction(`bulk-status-${newStatus}`);
+        try {
+            const batch = Array.from(selectedIds).map(id =>
+                updateDoc(doc(db, 'orders', id), { status: newStatus })
+            );
+            await Promise.all(batch);
+            showNotification(`Updated ${selectedIds.size} orders to ${newStatus}`, 'success');
+            setSelectedIds(new Set());
+        } catch (error) {
+            showNotification('Bulk update failed', 'error');
+        } finally {
+            setIsProcessingAction(null);
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0) return;
+        if (!window.confirm(`Are you sure you want to permanently delete ${selectedIds.size} orders?`)) return;
+        setIsProcessingAction('bulk-delete');
+        try {
+            const batch = Array.from(selectedIds).map(id =>
+                deleteDoc(doc(db, 'orders', id))
+            );
+            await Promise.all(batch);
+            showNotification(`Deleted ${selectedIds.size} orders`, 'success');
+            setSelectedIds(new Set());
+            setSelectedOrderId(null);
+        } catch (error) {
+            showNotification('Bulk deletion failed', 'error');
         } finally {
             setIsProcessingAction(null);
         }
@@ -317,7 +378,6 @@ const Orders: React.FC = () => {
                                         key={tab}
                                         onClick={() => {
                                             setActiveTab(tab);
-                                            // Reset selected order if it's not in the new filtered list
                                             setSelectedOrderId(null);
                                         }}
                                         className={`text-[10px] md:text-xs font-bold uppercase tracking-widest pb-1 transition-all whitespace-nowrap ${activeTab === tab ? 'text-[#221C1D] border-b-2 border-[#F2A600]' : 'text-stone-400 hover:text-stone-600'}`}
@@ -326,15 +386,41 @@ const Orders: React.FC = () => {
                                     </button>
                                 ))}
                             </div>
-                            <div className="relative w-full md:w-64">
-                                <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-stone-300 text-lg">search</span>
-                                <input
-                                    type="text"
-                                    placeholder="Search orders..."
-                                    value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-transparent rounded-lg text-xs focus:outline-none focus:border-[#F2A600] transition-colors"
-                                />
+                            <div className="flex flex-col sm:flex-row items-center gap-3">
+                                <div className="flex items-center gap-2 bg-stone-50 px-3 py-1.5 rounded-lg border border-stone-100">
+                                    <span className="text-[9px] font-bold text-stone-400 uppercase">From</span>
+                                    <input
+                                        type="date"
+                                        value={startDate}
+                                        onChange={(e) => setStartDate(e.target.value)}
+                                        className="bg-transparent text-[10px] focus:outline-none"
+                                    />
+                                    <span className="text-[9px] font-bold text-stone-400 uppercase ml-1">To</span>
+                                    <input
+                                        type="date"
+                                        value={endDate}
+                                        onChange={(e) => setEndDate(e.target.value)}
+                                        className="bg-transparent text-[10px] focus:outline-none"
+                                    />
+                                    {(startDate || endDate) && (
+                                        <button
+                                            onClick={() => { setStartDate(''); setEndDate(''); }}
+                                            className="ml-1 material-symbols-outlined text-xs text-stone-400 hover:text-red-500"
+                                        >
+                                            close
+                                        </button>
+                                    )}
+                                </div>
+                                <div className="relative w-full sm:w-48 lg:w-64">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-stone-300 text-lg">search</span>
+                                    <input
+                                        type="text"
+                                        placeholder="Name, ID, Email, Phone..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2 bg-stone-50 border border-transparent rounded-lg text-xs focus:outline-none focus:border-[#F2A600] transition-colors"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -380,7 +466,23 @@ const Orders: React.FC = () => {
                             <table className="w-full text-left">
                                 <thead>
                                     <tr className="bg-stone-50/30">
-                                        <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Order ID</th>
+                                        <th className="px-4 md:px-6 py-4">
+                                            <div className="flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 rounded border-stone-300 text-[#F2A600] focus:ring-[#F2A600]"
+                                                    checked={filteredOrders.length > 0 && selectedIds.size === filteredOrders.length}
+                                                    onChange={(e) => {
+                                                        if (e.target.checked) {
+                                                            setSelectedIds(new Set(filteredOrders.map(o => o.id)));
+                                                        } else {
+                                                            setSelectedIds(new Set());
+                                                        }
+                                                    }}
+                                                />
+                                            </div>
+                                        </th>
+                                        <th className="px-4 md:px-6 py-4 text-left text-[10px] font-bold text-stone-400 uppercase tracking-widest">Order ID</th>
                                         <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Customer</th>
                                         <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Date</th>
                                         <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Amount</th>
@@ -389,7 +491,27 @@ const Orders: React.FC = () => {
                                 </thead>
                                 <tbody className="divide-y divide-stone-50">
                                     {filteredOrders.map((o) => (
-                                        <tr key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`hover:bg-stone-50/50 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-amber-50/50' : ''}`}>
+                                        <tr
+                                            key={o.id}
+                                            onClick={() => setSelectedOrderId(o.id)}
+                                            className={`border-b border-stone-50 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-amber-50/50' : 'hover:bg-stone-50/50'}`}
+                                        >
+                                            <td className="px-4 md:px-6 py-5" onClick={(e) => e.stopPropagation()}>
+                                                <input
+                                                    type="checkbox"
+                                                    className="w-4 h-4 rounded border-stone-300 text-[#F2A600] focus:ring-[#F2A600]"
+                                                    checked={selectedIds.has(o.id)}
+                                                    onChange={(e) => {
+                                                        const newSelected = new Set(selectedIds);
+                                                        if (e.target.checked) {
+                                                            newSelected.add(o.id);
+                                                        } else {
+                                                            newSelected.delete(o.id);
+                                                        }
+                                                        setSelectedIds(newSelected);
+                                                    }}
+                                                />
+                                            </td>
                                             <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D] whitespace-nowrap">{o.id.slice(-6).toUpperCase()}</td>
                                             <td className="px-4 md:px-6 py-5">
                                                 <div className="flex items-center gap-3">
@@ -625,6 +747,55 @@ const Orders: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            {/* Bulk Action Bar */}
+            {selectedIds.size > 0 && (
+                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <div className="bg-[#221C1D] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 border border-white/10">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Bulk Actions</span>
+                            <span className="text-xs font-bold">{selectedIds.size} Rituals Selected</span>
+                        </div>
+                        <div className="h-8 w-[1px] bg-white/10 hidden sm:block" />
+                        <div className="flex items-center gap-2">
+                            <button
+                                disabled={!!isProcessingAction}
+                                onClick={() => handleBulkStatusUpdate('Processing')}
+                                className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                            >
+                                Process
+                            </button>
+                            <button
+                                disabled={!!isProcessingAction}
+                                onClick={() => handleBulkStatusUpdate('Shipped')}
+                                className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                            >
+                                Dispatch
+                            </button>
+                            <button
+                                disabled={!!isProcessingAction}
+                                onClick={() => handleBulkStatusUpdate('Delivered')}
+                                className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                            >
+                                Deliver
+                            </button>
+                            <button
+                                disabled={!!isProcessingAction}
+                                onClick={handleBulkDelete}
+                                className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                            >
+                                Delete
+                            </button>
+                            <button
+                                onClick={() => setSelectedIds(new Set())}
+                                className="ml-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-stone-400"
+                            >
+                                <span className="material-symbols-outlined text-lg">close</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <ConfirmModal
                 isOpen={isDeleteModalOpen}

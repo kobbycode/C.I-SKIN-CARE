@@ -74,6 +74,7 @@ export interface Order {
   trackingNumber?: string;
   returnTrackingNumber?: string;
   userId?: string;
+  customerPhone?: string;
 }
 
 export interface Category {
