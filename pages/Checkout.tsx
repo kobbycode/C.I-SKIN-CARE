@@ -298,8 +298,8 @@ const Checkout: React.FC = () => {
           items: [...cart],
           shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
           paymentMethod: 'Pay on Delivery',
-          couponCode: appliedCoupon?.code,
-          discount: discountAmount
+          couponCode: appliedCoupon?.code || null,
+          discount: discountAmount || 0
         };
 
         // Sanitize order object to remove undefined values (Firestore rejects undefined)

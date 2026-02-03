@@ -35,7 +35,24 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         try {
             const ordersRef = collection(db, 'orders');
             const docRef = doc(ordersRef);
-            const newOrder = { ...order, id: docRef.id };
+
+
+            // Helper to recursively remove undefined values
+            const removeUndefined = (obj: any): any => {
+                if (Array.isArray(obj)) {
+                    return obj.map(removeUndefined);
+                } else if (obj !== null && typeof obj === 'object') {
+                    return Object.entries(obj).reduce((acc, [key, value]) => {
+                        if (value !== undefined) {
+                            acc[key] = removeUndefined(value);
+                        }
+                        return acc;
+                    }, {} as any);
+                }
+                return obj;
+            };
+
+            const newOrder = removeUndefined({ ...order, id: docRef.id });
 
             await runTransaction(db, async (transaction) => {
                 // 1. Read all product docs first
