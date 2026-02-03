@@ -249,6 +249,18 @@ const Checkout: React.FC = () => {
       if (!resp.ok) throw new Error(data?.error || 'Payment verification failed');
 
       showNotification('Payment verified. Order placed!', 'success');
+
+      // Notify customer
+      if (currentUser) {
+        await createNotification({
+          recipientId: currentUser.id,
+          title: 'Order Confirmed',
+          message: `Your order #${data.orderId.slice(0, 8)}... has been placed successfully.`,
+          link: `/order/${data.orderId}`,
+          type: 'success'
+        });
+      }
+
       clearCart();
       navigate('/order-confirmation', { state: { orderSummary: { ...orderDraft, id: data.orderId } } });
     } catch (error) {
@@ -362,6 +374,17 @@ const Checkout: React.FC = () => {
           link: `/admin/orders`,
           type: 'success'
         });
+
+        // Notify customer
+        if (currentUser) {
+          await createNotification({
+            recipientId: currentUser.id,
+            title: 'Order Placed (Pay On Delivery)',
+            message: `Your order #${orderId.slice(0, 8)}... has been placed. You will pay upon delivery.`,
+            link: `/order/${orderId}`,
+            type: 'success'
+          });
+        }
 
         // Trigger order confirmation email
         try {

@@ -11,11 +11,11 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, title = "Managem
     const { currentUser } = useUser();
 
     return (
-        <header className="lg:hidden bg-[#221C1D] text-white px-6 py-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
+        <header className="bg-[#221C1D] text-white px-6 py-4 flex items-center justify-between sticky top-0 z-[50] shadow-md border-b border-stone-800">
             <div className="flex items-center gap-3">
                 <button
                     onClick={onMenuClick}
-                    className="p-2 -ml-2 hover:bg-stone-800 rounded-lg transition-colors"
+                    className="lg:hidden p-2 -ml-2 hover:bg-stone-800 rounded-lg transition-colors"
                     aria-label="Open Menu"
                 >
                     <span className="material-symbols-outlined text-2xl">menu</span>
@@ -27,9 +27,7 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, title = "Managem
             </div>
 
             <div className="flex items-center gap-4">
-                <div className="mobile-hidden">
-                    <NotificationBell />
-                </div>
+                <NotificationBell />
                 <div className="flex flex-col items-end">
                     <p className="text-[10px] font-bold tracking-wider">{currentUser?.fullName}</p>
                     <p className="text-[8px] text-stone-500 lowercase">{currentUser?.email}</p>
