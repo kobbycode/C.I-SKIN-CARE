@@ -261,6 +261,15 @@ const Checkout: React.FC = () => {
         });
       }
 
+      // Notify admin
+      await createNotification({
+        recipientId: 'admin',
+        title: 'New Online Order',
+        message: `Order #${data.orderId.slice(0, 8)}... placed by ${formData.firstName} ${formData.lastName}.`,
+        link: `/admin/orders?id=${data.orderId}`,
+        type: 'success'
+      });
+
       clearCart();
       navigate('/order-confirmation', { state: { orderSummary: { ...orderDraft, id: data.orderId } } });
     } catch (error) {
@@ -371,7 +380,7 @@ const Checkout: React.FC = () => {
           recipientId: 'admin',
           title: 'New Order Received',
           message: `Order #${orderId.slice(0, 8)}... placed by ${formData.firstName} ${formData.lastName} (POD).`,
-          link: `/admin/orders`,
+          link: `/admin/orders?id=${orderId}`,
           type: 'success'
         });
 
