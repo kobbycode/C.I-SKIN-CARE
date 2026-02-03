@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AdminLayout from '../../components/Admin/AdminLayout';
+import ConfirmModal from '../../components/Admin/ConfirmModal';
 import { useOrders } from '../../context/OrderContext';
 import { db } from '../../firebaseConfig';
 import { useInAppNotifications } from '../../context/InAppNotificationContext';
@@ -26,6 +27,8 @@ const Orders: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [trackingNumber, setTrackingNumber] = useState('');
     const [isProcessingAction, setIsProcessingAction] = useState<string | null>(null);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [orderToDelete, setOrderToDelete] = useState<string | null>(null);
     const { getIdToken } = useUser();
 
     const filteredOrders = useMemo(() => {
@@ -164,16 +167,24 @@ const Orders: React.FC = () => {
     };
 
     const handleDeleteOrder = async (id: string) => {
-        if (!window.confirm('CRITICAL: This will permanently delete this order from the archive. Proceed?')) return;
+        setOrderToDelete(id);
+        setIsDeleteModalOpen(true);
+    };
+
+    const confirmDeleteOrder = async () => {
+        if (!orderToDelete) return;
+        const id = orderToDelete;
         setIsProcessingAction('delete');
         try {
             await deleteDoc(doc(db, 'orders', id));
             showNotification('Order deleted permanently', 'success');
-            setSelectedOrderId(null); // Optional: clear selection
+            setSelectedOrderId(null);
         } catch (error) {
             showNotification('Deletion failed', 'error');
         } finally {
             setIsProcessingAction(null);
+            setIsDeleteModalOpen(false);
+            setOrderToDelete(null);
         }
     };
 
@@ -293,10 +304,20 @@ const Orders: React.FC = () => {
                     <div className="bg-white border border-stone-100 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.02)] overflow-hidden mb-8">
                         <div className="p-6 border-b border-stone-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
                             <div className="flex gap-6 overflow-x-auto pb-2 md:pb-0 scrollbar-hide border-b md:border-none border-stone-50">
-                                {['All Orders', `Pending(${orders.filter(o => o.status === 'Pending').length})`, `Processing(${orders.filter(o => o.status === 'Processing').length})`, 'Shipped', `Returns(${orders.filter(o => o.returnRequested).length})`].map((tab) => (
+                                {[
+                                    'All Orders',
+                                    `Pending (${orders.filter(o => o.status === 'Pending').length})`,
+                                    `Processing (${orders.filter(o => o.status === 'Processing').length})`,
+                                    `Shipped (${orders.filter(o => o.status === 'Shipped').length})`,
+                                    `Returns (${orders.filter(o => o.returnRequested).length})`
+                                ].map((tab) => (
                                     <button
                                         key={tab}
-                                        onClick={() => setActiveTab(tab)}
+                                        onClick={() => {
+                                            setActiveTab(tab);
+                                            // Reset selected order if it's not in the new filtered list
+                                            setSelectedOrderId(null);
+                                        }}
                                         className={`text-[10px] md:text-xs font-bold uppercase tracking-widest pb-1 transition-all whitespace-nowrap ${activeTab === tab ? 'text-[#221C1D] border-b-2 border-[#F2A600]' : 'text-stone-400 hover:text-stone-600'}`}
                                     >
                                         {tab}
@@ -602,6 +623,20 @@ const Orders: React.FC = () => {
                     )}
                 </div>
             </div>
+
+            <ConfirmModal
+                isOpen={isDeleteModalOpen}
+                title="Delete Order Permanently"
+                message="CRITICAL: This will permanently delete this order from the archive. This action cannot be undone. Proceed?"
+                confirmLabel="Delete Forever"
+                cancelLabel="Cancel"
+                variant="danger"
+                onConfirm={confirmDeleteOrder}
+                onCancel={() => {
+                    setIsDeleteModalOpen(false);
+                    setOrderToDelete(null);
+                }}
+            />
         </AdminLayout>
     );
 };
