@@ -8,6 +8,7 @@ import { useUser } from '../context/UserContext';
 import { useNotification } from '../context/NotificationContext';
 import { doc, getDoc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
+import { useInAppNotifications } from '../context/InAppNotificationContext';
 import { Coupon } from '../types';
 import OptimizedImage from '../components/OptimizedImage';
 
@@ -30,6 +31,7 @@ const Checkout: React.FC = () => {
   const { addOrder } = useOrders();
   const { showNotification } = useNotification();
   const { currentUser, getIdToken, updateProfile } = useUser();
+  const { createNotification } = useInAppNotifications();
   const navigate = useNavigate();
   const [isProcessing, setIsProcessing] = useState(false);
   const [step, setStep] = useState(1);
@@ -335,7 +337,8 @@ const Checkout: React.FC = () => {
           shippingAddress: `${formData.address}${formData.apartment ? ', ' + formData.apartment : ''}, ${formData.city}, ${formData.state} ${formData.zipCode}`,
           paymentMethod: 'Pay on Delivery',
           couponCode: appliedCoupon?.code || null,
-          discount: discountAmount || 0
+          discount: discountAmount || 0,
+          userId: currentUser?.id
         };
 
         // Sanitize order object to remove undefined values (Firestore rejects undefined)
@@ -351,6 +354,14 @@ const Checkout: React.FC = () => {
           }
         }
         const orderId = await addOrder(sanitizedOrder);
+
+        await createNotification({
+          recipientId: 'admin',
+          title: 'New Order Received',
+          message: `Order #${orderId.slice(0, 8)}... placed by ${formData.firstName} ${formData.lastName} (POD).`,
+          link: `/admin/orders`,
+          type: 'success'
+        });
 
         // Trigger order confirmation email
         try {

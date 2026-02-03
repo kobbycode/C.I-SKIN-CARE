@@ -73,6 +73,7 @@ export interface Order {
   deliveryContactPhone?: string;
   trackingNumber?: string;
   returnTrackingNumber?: string;
+  userId?: string;
 }
 
 export interface Category {
@@ -115,6 +116,17 @@ export interface UserProfile {
   notifyOrders?: boolean;
   notifyNewsletter?: boolean;
   wishlist?: string[]; // Array of Product IDs
+}
+
+export interface InAppNotification {
+  id: string;
+  recipientId: string; // 'admin' or userId
+  title: string;
+  message: string;
+  date: string;
+  read: boolean;
+  link?: string;
+  type: 'info' | 'success' | 'warning' | 'error';
 }
 
 export interface Coupon {

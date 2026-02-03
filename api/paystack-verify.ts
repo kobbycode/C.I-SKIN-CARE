@@ -110,6 +110,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // We don't throw here because the order is already created and payment verified
     }
 
+    // 5. Create in-app notification for admins
+    try {
+      await db.collection('notifications').add({
+        recipientId: 'admin',
+        title: 'New Order Received',
+        message: `Order #${orderRef.id.slice(0, 8)}... placed by ${orderDoc.customerName}.`,
+        date: new Date().toISOString(),
+        read: false,
+        link: `/admin/orders`,
+        type: 'success'
+      });
+    } catch (notifError) {
+      console.error('Failed to create admin notification:', notifError);
+    }
+
     return res.status(200).json({ ok: true, orderId: orderRef.id });
   } catch (e: any) {
     return res.status(400).json({ error: e?.message || 'Failed' });

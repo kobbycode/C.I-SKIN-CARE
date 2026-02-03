@@ -15,6 +15,7 @@ import { FAQProvider } from './context/FAQContext';
 import { CategoryProvider } from './context/CategoryContext';
 import { UserProvider } from './context/UserContext';
 import AdminRoute from './components/Admin/AdminRoute';
+import { InAppNotificationProvider } from './context/InAppNotificationContext';
 
 // Lazy load pages
 const Home = lazy(() => import('./pages/Home'));
@@ -183,23 +184,25 @@ const App: React.FC = () => {
   return (
     <SiteConfigProvider>
       <NotificationProvider>
-        <ProductProvider>
-          <ReviewProvider>
-            <OrderProvider>
-              <JournalProvider>
-                <FAQProvider>
-                  <CategoryProvider>
-                    <UserProvider>
-                      <WishlistProvider>
-                        <AppContent />
-                      </WishlistProvider>
-                    </UserProvider>
-                  </CategoryProvider>
-                </FAQProvider>
-              </JournalProvider>
-            </OrderProvider>
-          </ReviewProvider>
-        </ProductProvider>
+        <UserProvider>
+          <WishlistProvider>
+            <CategoryProvider>
+              <FAQProvider>
+                <JournalProvider>
+                  <OrderProvider>
+                    <ReviewProvider>
+                      <ProductProvider>
+                        <InAppNotificationProvider>
+                          <AppContent />
+                        </InAppNotificationProvider>
+                      </ProductProvider>
+                    </ReviewProvider>
+                  </OrderProvider>
+                </JournalProvider>
+              </FAQProvider>
+            </CategoryProvider>
+          </WishlistProvider>
+        </UserProvider>
       </NotificationProvider>
     </SiteConfigProvider>
   );

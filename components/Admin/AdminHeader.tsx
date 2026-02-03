@@ -1,5 +1,6 @@
 import React from 'react';
 import { useUser } from '../../context/UserContext';
+import NotificationBell from '../NotificationBell';
 
 interface AdminHeaderProps {
     onMenuClick: () => void;
@@ -26,9 +27,9 @@ const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuClick, title = "Managem
             </div>
 
             <div className="flex items-center gap-4">
-                <button className="p-2 hover:bg-stone-800 rounded-lg transition-colors mobile-hidden">
-                    <span className="material-symbols-outlined text-xl text-stone-400">notifications</span>
-                </button>
+                <div className="mobile-hidden">
+                    <NotificationBell />
+                </div>
                 <div className="flex flex-col items-end">
                     <p className="text-[10px] font-bold tracking-wider">{currentUser?.fullName}</p>
                     <p className="text-[8px] text-stone-500 lowercase">{currentUser?.email}</p>

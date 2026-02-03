@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useApp } from '../App';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import NotificationBell from './NotificationBell';
 
 const Header: React.FC = () => {
   const { siteConfig } = useSiteConfig();
@@ -67,6 +68,7 @@ const Header: React.FC = () => {
             >
               search
             </Link>
+            <NotificationBell />
             <Link to="/profile" className="hidden sm:block material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors">
               person
             </Link>

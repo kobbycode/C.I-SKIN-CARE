@@ -1,15 +1,17 @@
 import React, { useState, useMemo } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
 import { useOrders } from '../../context/OrderContext';
+import { db } from '../../firebaseConfig';
+import { useInAppNotifications } from '../../context/InAppNotificationContext';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
 import { doc, updateDoc, runTransaction, arrayUnion } from 'firebase/firestore';
-import { db } from '../../firebaseConfig';
 
 const Orders: React.FC = () => {
     const { orders, updateOrderStatus, loading } = useOrders();
     const { showNotification } = useNotification();
     const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
+    const { createNotification } = useInAppNotifications();
     const [activeTab, setActiveTab] = useState('All Orders');
     const [searchTerm, setSearchTerm] = useState('');
     const [trackingNumber, setTrackingNumber] = useState('');
@@ -73,7 +75,21 @@ const Orders: React.FC = () => {
                 updates.trackingNumber = trackingNumber;
             }
 
-            await updateDoc(orderRef, updates);
+            await updateDoc(orderRef, updates); // Update the document first
+            await updateOrderStatus(id, status); // Then update the context state
+            showNotification(`Order status updated to ${status} `, 'success');
+
+            // Find the order to get customer userId
+            const order = orders.find(o => o.id === id);
+            if (order && order.userId) {
+                await createNotification({
+                    recipientId: order.userId,
+                    title: `Order Update: #${id.slice(0, 8)} `,
+                    message: `Your order status has been updated to: ${status} `,
+                    link: `/ orders / ${id} `,
+                    type: 'info'
+                });
+            }
 
             // Trigger email notification for Shipped and Delivered
             if (status === 'Shipped' || status === 'Delivered') {
@@ -86,7 +102,7 @@ const Orders: React.FC = () => {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                Authorization: `Bearer ${token}`,
+                                Authorization: `Bearer ${token} `,
                             },
                             body: JSON.stringify({
                                 order: { ...targetOrder, ...updates },
@@ -192,7 +208,7 @@ const Orders: React.FC = () => {
                             <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-hover hover:shadow-md">
                                 <div className="flex justify-between items-start mb-2">
                                     <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest">{stat.label}</p>
-                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${stat.trend.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                    <span className={`text - [10px] font - bold px - 2 py - 1 rounded - full ${stat.trend.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'} `}>
                                         {stat.trend}
                                     </span>
                                 </div>
@@ -206,11 +222,11 @@ const Orders: React.FC = () => {
                     <div className="bg-white border border-stone-100 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.02)] overflow-hidden mb-8">
                         <div className="p-6 border-b border-stone-50 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-6">
                             <div className="flex gap-6 overflow-x-auto pb-2 md:pb-0 scrollbar-hide border-b md:border-none border-stone-50">
-                                {['All Orders', `Pending (${orders.filter(o => o.status === 'Pending').length})`, `Processing (${orders.filter(o => o.status === 'Processing').length})`, 'Shipped', `Returns (${orders.filter(o => o.returnRequested).length})`].map((tab) => (
+                                {['All Orders', `Pending(${orders.filter(o => o.status === 'Pending').length})`, `Processing(${orders.filter(o => o.status === 'Processing').length})`, 'Shipped', `Returns(${orders.filter(o => o.returnRequested).length})`].map((tab) => (
                                     <button
                                         key={tab}
                                         onClick={() => setActiveTab(tab)}
-                                        className={`text-[10px] md:text-xs font-bold uppercase tracking-widest pb-1 transition-all whitespace-nowrap ${activeTab === tab ? 'text-[#221C1D] border-b-2 border-[#F2A600]' : 'text-stone-400 hover:text-stone-600'}`}
+                                        className={`text - [10px] md: text - xs font - bold uppercase tracking - widest pb - 1 transition - all whitespace - nowrap ${activeTab === tab ? 'text-[#221C1D] border-b-2 border-[#F2A600]' : 'text-stone-400 hover:text-stone-600'} `}
                                     >
                                         {tab}
                                     </button>
@@ -233,7 +249,7 @@ const Orders: React.FC = () => {
                     <div className="bg-white border border-stone-100 rounded-xl overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
                         <div className="md:hidden divide-y divide-stone-50">
                             {filteredOrders.length > 0 ? filteredOrders.map((o) => (
-                                <div key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`p-6 space-y-4 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-stone-50' : 'active:bg-stone-50'}`}>
+                                <div key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`p - 6 space - y - 4 transition - colors cursor - pointer ${selectedOrderId === o.id ? 'bg-stone-50' : 'active:bg-stone-50'} `}>
                                     <div className="flex justify-between items-start">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold text-stone-500 uppercase">
@@ -244,9 +260,9 @@ const Orders: React.FC = () => {
                                                 <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{o.id.slice(-6).toUpperCase()}</span>
                                             </div>
                                         </div>
-                                        <span className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
-                                            o.status === 'Shipped' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
-                                            }`}>
+                                        <span className={`px - 2.5 py - 1 rounded - full text - [8px] font - bold uppercase tracking - widest ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
+                                                o.status === 'Shipped' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
+                                            } `}>
                                             {o.status}
                                         </span>
                                     </div>
@@ -279,7 +295,7 @@ const Orders: React.FC = () => {
                                 </thead>
                                 <tbody className="divide-y divide-stone-50">
                                     {filteredOrders.map((o) => (
-                                        <tr key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`hover:bg-stone-50/50 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-stone-50/30' : ''}`}>
+                                        <tr key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`hover: bg - stone - 50 / 50 transition - colors cursor - pointer ${selectedOrderId === o.id ? 'bg-stone-50/30' : ''} `}>
                                             <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D] whitespace-nowrap">{o.id.slice(-6).toUpperCase()}</td>
                                             <td className="px-4 md:px-6 py-5">
                                                 <div className="flex items-center gap-3">
@@ -300,9 +316,9 @@ const Orders: React.FC = () => {
                                             </td>
                                             <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">GH₵{o.total.toFixed(2)}</td>
                                             <td className="px-4 md:px-6 py-5">
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
-                                                    o.status === 'Shipped' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
-                                                    }`}>
+                                                <span className={`px - 3 py - 1 rounded - full text - [10px] font - bold uppercase tracking - wider ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
+                                                        o.status === 'Shipped' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
+                                                    } `}>
                                                     {o.status}
                                                 </span>
                                             </td>
@@ -332,18 +348,18 @@ const Orders: React.FC = () => {
                                 <h6 className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-6">Journey Timeline</h6>
                                 <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-[2px] before:bg-stone-50">
                                     <div className="relative pl-8">
-                                        <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white shadow-sm z-10 ${selectedOrder.status !== 'Pending' ? 'bg-[#F2A600]' : 'bg-stone-200'}`} />
+                                        <div className={`absolute left - 0 top - 1 w - [14px] h - [14px] rounded - full border - 4 border - white shadow - sm z - 10 ${selectedOrder.status !== 'Pending' ? 'bg-[#F2A600]' : 'bg-stone-200'} `} />
                                         <p className="text-xs font-bold text-[#221C1D]">Order Received</p>
                                         <p className="text-[10px] text-stone-400">{selectedOrder.date}, {selectedOrder.time}</p>
                                     </div>
                                     <div className="relative pl-8">
-                                        <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white z-10 ${['Processing', 'Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200'}`} />
+                                        <div className={`absolute left - 0 top - 1 w - [14px] h - [14px] rounded - full border - 4 border - white z - 10 ${['Processing', 'Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200'} `} />
                                         <p className="text-xs font-bold text-[#221C1D]">Processing Fulfillment</p>
                                         <p className="text-[10px] text-stone-400 italic">{selectedOrder.status === 'Processing' ? 'In Progress' : ['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'Completed' : 'Awaiting Action'}</p>
                                     </div>
                                     <div className="relative pl-8">
-                                        <div className={`absolute left-0 top-1 w-[14px] h-[14px] rounded-full border-4 border-white z-10 ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200 opacity-40'}`} />
-                                        <p className={`text-xs font-bold ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'text-[#221C1D]' : 'text-stone-400'}`}>Shipped</p>
+                                        <div className={`absolute left - 0 top - 1 w - [14px] h - [14px] rounded - full border - 4 border - white z - 10 ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'bg-[#F2A600]' : 'bg-stone-200 opacity-40'} `} />
+                                        <p className={`text - xs font - bold ${['Shipped', 'Delivered'].includes(selectedOrder.status) ? 'text-[#221C1D]' : 'text-stone-400'} `}>Shipped</p>
                                         <p className="text-[10px] text-stone-400">{selectedOrder.status === 'Shipped' || selectedOrder.status === 'Delivered' ? 'Sent via Global Logistics' : 'In Queue'}</p>
                                     </div>
                                 </div>
