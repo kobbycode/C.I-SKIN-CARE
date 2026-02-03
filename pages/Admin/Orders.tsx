@@ -87,6 +87,13 @@ const Orders: React.FC = () => {
                 updates.trackingNumber = trackingNumber;
             }
 
+            if (status === 'Delivered') {
+                const targetOrder = orders.find(o => o.id === id);
+                if (targetOrder && targetOrder.paymentMethod === 'pay_on_delivery') {
+                    updates.paymentStatus = 'paid';
+                }
+            }
+
             await updateDoc(orderRef, updates);
             await updateOrderStatus(id, status);
             showNotification(`Order status updated to ${status}`, 'success');
@@ -165,6 +172,19 @@ const Orders: React.FC = () => {
             setSelectedOrderId(null); // Optional: clear selection
         } catch (error) {
             showNotification('Deletion failed', 'error');
+        } finally {
+            setIsProcessingAction(null);
+        }
+    };
+
+    const handleMarkAsPaid = async (id: string) => {
+        setIsProcessingAction('paid');
+        try {
+            const orderRef = doc(db, 'orders', id);
+            await updateDoc(orderRef, { paymentStatus: 'paid' });
+            showNotification('Order marked as paid', 'success');
+        } catch (error) {
+            showNotification('Failed to mark as paid', 'error');
         } finally {
             setIsProcessingAction(null);
         }
@@ -541,6 +561,17 @@ const Orders: React.FC = () => {
                                         >
                                             {isProcessingAction === 'cancel' ? <div className="w-3 h-3 border-2 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div> : null}
                                             Cancel Ritual
+                                        </button>
+                                    )}
+
+                                    {selectedOrder.paymentStatus !== 'paid' && (
+                                        <button
+                                            disabled={!!isProcessingAction}
+                                            onClick={() => handleMarkAsPaid(selectedOrder.id)}
+                                            className="w-full flex items-center justify-center gap-2 py-3 border border-green-100 text-green-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-green-50 transition-colors disabled:opacity-50"
+                                        >
+                                            {isProcessingAction === 'paid' ? <div className="w-3 h-3 border-2 border-green-500/20 border-t-green-500 rounded-full animate-spin"></div> : null}
+                                            Mark as Paid
                                         </button>
                                     )}
 
