@@ -22,28 +22,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     useEffect(() => {
         const productsRef = collection(db, 'products');
 
-        // Check if we need to seed
-        const seedProducts = async () => {
-            try {
-                const q = query(productsRef);
-                const snapshot = await getDocs(q);
 
-                if (snapshot.empty) {
-                    console.log("Seeding products to Firestore...");
-                    const batch = writeBatch(db);
-
-                    MOCK_PRODUCTS.forEach(product => {
-                        const ref = doc(productsRef, product.id);
-                        batch.set(ref, product);
-                    });
-
-                    await batch.commit();
-                    console.log("Seeding complete.");
-                }
-            } catch (error) {
-                console.error("Error seeding products:", error);
-            }
-        };
 
 
 
