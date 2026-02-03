@@ -34,71 +34,80 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         let unsubscribeCurrentUser: (() => void) | null = null;
 
         const unsubscribeAuth = onAuthStateChanged(auth, async (firebaseUser) => {
-            // Clean up previous current user listener
-            if (unsubscribeCurrentUser) {
-                unsubscribeCurrentUser();
-                unsubscribeCurrentUser = null;
-            }
-
-            if (firebaseUser) {
-                setFirebaseUser(firebaseUser);
-                const userRef = doc(db, 'users', firebaseUser.uid);
-                const snap = await getDoc(userRef);
-                if (snap.exists()) {
-                    const userData = snap.data() as UserProfile;
-                    // Sync email from Auth to Firestore if they differ (e.g., after email verification)
-                    if (firebaseUser.email && userData.email !== firebaseUser.email) {
-                        await setDoc(userRef, { email: firebaseUser.email }, { merge: true });
-                        userData.email = firebaseUser.email;
-                    }
-                    setCurrentUser(userData);
-
-                    // Set up realtime listener for current user's document
-                    unsubscribeCurrentUser = onSnapshot(userRef, (docSnap) => {
-                        if (docSnap.exists()) {
-                            const updatedUserData = docSnap.data() as UserProfile;
-                            setCurrentUser(updatedUserData);
-                        }
-                    });
-                } else {
-                    const username =
-                        (firebaseUser.email?.split('@')[0] || firebaseUser.displayName || 'member')
-                            .toLowerCase()
-                            .replace(/[^a-z0-9._-]/g, '');
-                    const newUser: UserProfile = {
-                        id: firebaseUser.uid,
-                        username,
-                        fullName: firebaseUser.displayName || 'Member',
-                        email: firebaseUser.email || '',
-                        statusLabel: 'Member',
-                        role: 'customer',
-                        skinType: 'Unknown',
-                        skinTypeDetail: '',
-                        focusRitual: 'None',
-                        focusRitualDetail: '',
-                        points: 0,
-                        pointsTier: 'Bronze',
-                        pointsToNextTier: 100,
-                        joinedDate: new Date().toISOString(),
-                        avatar: '',
-                        registrationMethod: 'web'
-                    };
-                    await setDoc(userRef, newUser, { merge: true });
-                    setCurrentUser(newUser);
-
-                    // Set up realtime listener for newly created user
-                    unsubscribeCurrentUser = onSnapshot(userRef, (docSnap) => {
-                        if (docSnap.exists()) {
-                            const updatedUserData = docSnap.data() as UserProfile;
-                            setCurrentUser(updatedUserData);
-                        }
-                    });
+            try {
+                // Clean up previous current user listener
+                if (unsubscribeCurrentUser) {
+                    unsubscribeCurrentUser();
+                    unsubscribeCurrentUser = null;
                 }
-            } else {
-                setFirebaseUser(null);
-                setCurrentUser(null);
+
+                if (firebaseUser) {
+                    setFirebaseUser(firebaseUser);
+                    const userRef = doc(db, 'users', firebaseUser.uid);
+
+                    try {
+                        const snap = await getDoc(userRef);
+                        if (snap.exists()) {
+                            const userData = snap.data() as UserProfile;
+                            // Sync email from Auth to Firestore if they differ
+                            if (firebaseUser.email && userData.email !== firebaseUser.email) {
+                                await setDoc(userRef, { email: firebaseUser.email }, { merge: true });
+                                userData.email = firebaseUser.email;
+                            }
+                            setCurrentUser(userData);
+
+                            unsubscribeCurrentUser = onSnapshot(userRef, (docSnap) => {
+                                if (docSnap.exists()) {
+                                    setCurrentUser(docSnap.data() as UserProfile);
+                                }
+                            });
+                        } else {
+                            const username =
+                                (firebaseUser.email?.split('@')[0] || firebaseUser.displayName || 'member')
+                                    .toLowerCase()
+                                    .replace(/[^a-z0-9._-]/g, '');
+                            const newUser: UserProfile = {
+                                id: firebaseUser.uid,
+                                username,
+                                fullName: firebaseUser.displayName || 'Member',
+                                email: firebaseUser.email || '',
+                                statusLabel: 'Member',
+                                role: 'customer',
+                                skinType: 'Unknown',
+                                skinTypeDetail: '',
+                                focusRitual: 'None',
+                                focusRitualDetail: '',
+                                points: 0,
+                                pointsTier: 'Bronze',
+                                pointsToNextTier: 100,
+                                joinedDate: new Date().toISOString(),
+                                avatar: '',
+                                registrationMethod: 'web'
+                            };
+                            await setDoc(userRef, newUser, { merge: true });
+                            setCurrentUser(newUser);
+
+                            unsubscribeCurrentUser = onSnapshot(userRef, (docSnap) => {
+                                if (docSnap.exists()) {
+                                    setCurrentUser(docSnap.data() as UserProfile);
+                                }
+                            });
+                        }
+                    } catch (err) {
+                        console.error("Error fetching user profile:", err);
+                        // Fallback: create a basic user profile in state so app doesn't break
+                        // or just log it. If we can't fetch profile, we probably can't do much.
+                        // But we MUST unset loading.
+                    }
+                } else {
+                    setFirebaseUser(null);
+                    setCurrentUser(null);
+                }
+            } catch (error) {
+                console.error("Auth state change error:", error);
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         });
         return () => {
             unsubscribeAuth();

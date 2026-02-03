@@ -45,8 +45,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
             }
         };
 
-        // Run seed check once
-        // seedProducts();
+
 
         // Subscribe to changes
         const unsubscribe = onSnapshot(productsRef, (snapshot) => {
