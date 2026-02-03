@@ -14,6 +14,7 @@ const OrderDetail: React.FC = () => {
     const navigate = useNavigate();
     const [order, setOrder] = useState<Order | null>(null);
     const [showReturnModal, setShowReturnModal] = useState(false);
+    const [isUploadingTracking, setIsUploadingTracking] = useState(false);
     const [returnReason, setReturnReason] = useState('');
     const [isSubmittingReturn, setIsSubmittingReturn] = useState(false);
     const { showNotification } = useNotification();
@@ -205,6 +206,8 @@ const OrderDetail: React.FC = () => {
                                                             if (e.key === 'Enter') {
                                                                 const val = e.currentTarget.value;
                                                                 if (!val) return;
+                                                                if (isUploadingTracking) return;
+                                                                setIsUploadingTracking(true);
                                                                 try {
                                                                     await updateDoc(doc(db, 'orders', order.id), {
                                                                         returnTrackingNumber: val
@@ -213,15 +216,18 @@ const OrderDetail: React.FC = () => {
                                                                     showNotification('Tracking number uploaded', 'success');
                                                                 } catch (err) {
                                                                     showNotification('Failed to upload tracking', 'error');
+                                                                } finally {
+                                                                    setIsUploadingTracking(false);
                                                                 }
                                                             }
                                                         }}
                                                     />
                                                     <button
                                                         onClick={async (e) => {
-                                                            const input = e.currentTarget.previousSibling as HTMLInputElement;
-                                                            const val = input.value;
-                                                            if (!val) return;
+                                                            const input = (e.currentTarget.previousSibling as HTMLElement).querySelector('input') || e.currentTarget.previousSibling as HTMLInputElement;
+                                                            const val = (input as HTMLInputElement).value;
+                                                            if (!val || isUploadingTracking) return;
+                                                            setIsUploadingTracking(true);
                                                             try {
                                                                 await updateDoc(doc(db, 'orders', order.id), {
                                                                     returnTrackingNumber: val
@@ -230,10 +236,16 @@ const OrderDetail: React.FC = () => {
                                                                 showNotification('Tracking number uploaded', 'success');
                                                             } catch (err) {
                                                                 showNotification('Failed to upload tracking', 'error');
+                                                            } finally {
+                                                                setIsUploadingTracking(false);
                                                             }
                                                         }}
-                                                        className="bg-[#221C1D] text-white px-4 py-2 rounded text-[9px] font-bold uppercase tracking-widest hover:bg-black transition-all"
+                                                        disabled={isUploadingTracking}
+                                                        className="bg-[#221C1D] text-white px-4 py-2 rounded text-[9px] font-bold uppercase tracking-widest hover:bg-black transition-all disabled:opacity-50 flex items-center gap-2"
                                                     >
+                                                        {isUploadingTracking ? (
+                                                            <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                                                        ) : null}
                                                         Upload
                                                     </button>
                                                 </div>

@@ -92,6 +92,8 @@ const Checkout: React.FC = () => {
   const [appliedCoupon, setAppliedCoupon] = useState<Coupon | null>(null);
   const [discountAmount, setDiscountAmount] = useState(0);
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [isLocating, setIsLocating] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   const shipping = subtotal >= 200 ? 0 : 15.0;
@@ -835,11 +837,13 @@ const Checkout: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={async () => {
-                        if (!('geolocation' in navigator)) {
+                      disabled={isLocating}
+                      onClick={() => {
+                        if (!navigator.geolocation) {
                           showNotification('Geolocation not supported on this device.', 'error');
                           return;
                         }
+                        setIsLocating(true);
                         navigator.geolocation.getCurrentPosition(async (pos) => {
                           const { latitude, longitude } = pos.coords;
                           setGeoCoords({ lat: latitude, lng: longitude });
@@ -852,15 +856,27 @@ const Checkout: React.FC = () => {
                           } catch {
                             setFormData(prev => ({ ...prev, landmark: `${latitude.toFixed(5)}, ${longitude.toFixed(5)}` }));
                             showNotification('Location captured (fallback coordinates)', 'success');
+                          } finally {
+                            setIsLocating(false);
                           }
                         }, () => {
                           showNotification('Unable to fetch your location.', 'error');
+                          setIsLocating(false);
                         }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
                       }}
-                      className="bg-stone-900 text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
+                      className="bg-stone-900 text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 disabled:opacity-50"
                     >
-                      <span className="material-symbols-outlined text-[12px]">my_location</span>
-                      Use Current Location
+                      {isLocating ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                          Locating...
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[12px]">my_location</span>
+                          Use Current Location
+                        </>
+                      )}
                     </button>
                     <button
                       type="button"
@@ -870,6 +886,7 @@ const Checkout: React.FC = () => {
                           navigate('/login', { state: { from: '/profile' } });
                           return;
                         }
+                        setIsSavingProfile(true);
                         try {
                           await updateProfile({
                             deliveryAddress: formData.address,
@@ -883,14 +900,26 @@ const Checkout: React.FC = () => {
                             deliveryLocationLng: geoCoords?.lng
                           });
                           showNotification('Delivery details saved to your profile.', 'success');
-                        } catch (e) {
+                        } catch (error) {
                           showNotification('Failed to save delivery details.', 'error');
+                        } finally {
+                          setIsSavingProfile(false);
                         }
                       }}
-                      className="bg-accent text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
+                      disabled={isSavingProfile}
+                      className="border border-primary/20 text-primary py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 hover:bg-primary/5 transition-all disabled:opacity-50"
                     >
-                      <span className="material-symbols-outlined text-[12px]">save</span>
-                      Save To Profile
+                      {isSavingProfile ? (
+                        <>
+                          <div className="w-3 h-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <span className="material-symbols-outlined text-[14px]">save</span>
+                          Save to Profile
+                        </>
+                      )}
                     </button>
                   </div>
                 </section>
@@ -1006,9 +1035,14 @@ const Checkout: React.FC = () => {
                 <button
                   onClick={applyCoupon}
                   disabled={isValidatingCoupon || !couponCode}
-                  className="px-6 border border-primary/20 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-primary/5 transition-colors disabled:opacity-50"
+                  className="px-6 border border-primary/20 rounded text-[10px] font-bold uppercase tracking-widest hover:bg-primary/5 transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
-                  {isValidatingCoupon ? '...' : 'Apply'}
+                  {isValidatingCoupon ? (
+                    <>
+                      <div className="w-3 h-3 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+                      Verifying
+                    </>
+                  ) : 'Apply'}
                 </button>
               </div>
             )}

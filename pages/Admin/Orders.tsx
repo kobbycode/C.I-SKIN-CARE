@@ -6,7 +6,7 @@ import { db } from '../../firebaseConfig';
 import { useInAppNotifications } from '../../context/InAppNotificationContext';
 import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
-import { doc, updateDoc, runTransaction, arrayUnion } from 'firebase/firestore';
+import { doc, updateDoc, runTransaction, arrayUnion, deleteDoc } from 'firebase/firestore';
 
 const Orders: React.FC = () => {
     const { orders, updateOrderStatus, loading } = useOrders();
@@ -25,6 +25,7 @@ const Orders: React.FC = () => {
     const [activeTab, setActiveTab] = useState('All Orders');
     const [searchTerm, setSearchTerm] = useState('');
     const [trackingNumber, setTrackingNumber] = useState('');
+    const [isProcessingAction, setIsProcessingAction] = useState<string | null>(null);
     const { getIdToken } = useUser();
 
     const filteredOrders = useMemo(() => {
@@ -71,6 +72,7 @@ const Orders: React.FC = () => {
     }, [orders]);
 
     const handleStatusUpdate = async (id: string, status: any) => {
+        setIsProcessingAction('status-' + status);
         try {
             const orderRef = doc(db, 'orders', id);
             const updates: any = {
@@ -85,23 +87,21 @@ const Orders: React.FC = () => {
                 updates.trackingNumber = trackingNumber;
             }
 
-            await updateDoc(orderRef, updates); // Update the document first
-            await updateOrderStatus(id, status); // Then update the context state
-            showNotification(`Order status updated to ${status} `, 'success');
+            await updateDoc(orderRef, updates);
+            await updateOrderStatus(id, status);
+            showNotification(`Order status updated to ${status}`, 'success');
 
-            // Find the order to get customer userId
             const order = orders.find(o => o.id === id);
             if (order && order.userId) {
                 await createNotification({
                     recipientId: order.userId,
-                    title: `Order Update: #${id.slice(0, 8)} `,
-                    message: `Your order status has been updated to: ${status} `,
+                    title: `Order Update: #${id.slice(0, 8)}`,
+                    message: `Your order status has been updated to: ${status}`,
                     link: `/order/${id}`,
                     type: 'info'
                 });
             }
 
-            // Trigger email notification for Shipped and Delivered
             if (status === 'Shipped' || status === 'Delivered') {
                 try {
                     const token = await getIdToken();
@@ -112,7 +112,7 @@ const Orders: React.FC = () => {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
-                                Authorization: `Bearer ${token} `,
+                                Authorization: `Bearer ${token}`,
                             },
                             body: JSON.stringify({
                                 order: { ...targetOrder, ...updates },
@@ -124,15 +124,54 @@ const Orders: React.FC = () => {
                     console.error('Failed to trigger status email:', emailErr);
                 }
             }
-
-            showNotification('Order status updated', 'success');
-            setTrackingNumber(''); // Reset tracking input
+            setTrackingNumber('');
         } catch (error) {
             showNotification('Update failed', 'error');
+        } finally {
+            setIsProcessingAction(null);
+        }
+    };
+
+    const handleCancelOrder = async (id: string) => {
+        if (!window.confirm('Are you sure you want to cancel this ritual?')) return;
+        setIsProcessingAction('cancel');
+        try {
+            const orderRef = doc(db, 'orders', id);
+            const status = 'Cancelled';
+            const updates = {
+                status,
+                journey: arrayUnion({
+                    status,
+                    date: new Date().toISOString(),
+                    message: 'Ritual has been cancelled by the administrator.'
+                })
+            };
+            await updateDoc(orderRef, updates);
+            await updateOrderStatus(id, status);
+            showNotification('Order cancelled', 'success');
+        } catch (error) {
+            showNotification('Cancellation failed', 'error');
+        } finally {
+            setIsProcessingAction(null);
+        }
+    };
+
+    const handleDeleteOrder = async (id: string) => {
+        if (!window.confirm('CRITICAL: This will permanently delete this order from the archive. Proceed?')) return;
+        setIsProcessingAction('delete');
+        try {
+            await deleteDoc(doc(db, 'orders', id));
+            showNotification('Order deleted permanently', 'success');
+            setSelectedOrderId(null); // Optional: clear selection
+        } catch (error) {
+            showNotification('Deletion failed', 'error');
+        } finally {
+            setIsProcessingAction(null);
         }
     };
 
     const handleReturnAction = async (id: string, action: 'Approved' | 'Rejected') => {
+        setIsProcessingAction('return-' + action);
         try {
             const targetOrder = orders.find(o => o.id === id);
             if (!targetOrder) throw new Error('Order not found');
@@ -197,6 +236,8 @@ const Orders: React.FC = () => {
         } catch (error) {
             console.error(error);
             showNotification('Failed to update return status', 'error');
+        } finally {
+            setIsProcessingAction(null);
         }
     };
 
@@ -423,7 +464,12 @@ const Orders: React.FC = () => {
                                 </div>
                                 <div className="flex flex-col gap-3">
                                     {selectedOrder.status === 'Pending' && (
-                                        <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Processing')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#221C1D] text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors shadow-sm">
+                                        <button
+                                            disabled={!!isProcessingAction}
+                                            onClick={() => handleStatusUpdate(selectedOrder.id, 'Processing')}
+                                            className="w-full flex items-center justify-center gap-2 py-3 bg-[#221C1D] text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors shadow-sm disabled:opacity-50"
+                                        >
+                                            {isProcessingAction === 'status-Processing' ? <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : null}
                                             Mark as Processing
                                         </button>
                                     )}
@@ -433,19 +479,30 @@ const Orders: React.FC = () => {
                                                 <label className="text-[10px] font-bold text-stone-400 uppercase tracking-widest pl-1">Tracking Identifier (Optional)</label>
                                                 <input
                                                     type="text"
+                                                    disabled={!!isProcessingAction}
                                                     placeholder="e.g. DHL-123456"
                                                     value={trackingNumber}
                                                     onChange={(e) => setTrackingNumber(e.target.value)}
                                                     className="w-full px-4 py-2 bg-stone-50 border border-stone-100 rounded-lg text-xs focus:outline-none focus:border-[#F2A600] transition-colors"
                                                 />
                                             </div>
-                                            <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Shipped')} className="w-full flex items-center justify-center gap-2 py-3 bg-[#F2A600] text-black rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#D49100] transition-colors shadow-sm">
+                                            <button
+                                                disabled={!!isProcessingAction}
+                                                onClick={() => handleStatusUpdate(selectedOrder.id, 'Shipped')}
+                                                className="w-full flex items-center justify-center gap-2 py-3 bg-[#F2A600] text-black rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-[#D49100] transition-colors shadow-sm disabled:opacity-50"
+                                            >
+                                                {isProcessingAction === 'status-Shipped' ? <div className="w-3 h-3 border-2 border-black/20 border-t-black rounded-full animate-spin"></div> : null}
                                                 Dispatch Order
                                             </button>
                                         </div>
                                     )}
                                     {selectedOrder.status === 'Shipped' && (
-                                        <button onClick={() => handleStatusUpdate(selectedOrder.id, 'Delivered')} className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition-colors shadow-sm">
+                                        <button
+                                            disabled={!!isProcessingAction}
+                                            onClick={() => handleStatusUpdate(selectedOrder.id, 'Delivered')}
+                                            className="w-full flex items-center justify-center gap-2 py-3 bg-green-600 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
+                                        >
+                                            {isProcessingAction === 'status-Delivered' ? <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : null}
                                             Confirm Delivery
                                         </button>
                                     )}
@@ -455,15 +512,46 @@ const Orders: React.FC = () => {
                                         <div className="space-y-3 pt-4 border-t border-stone-100">
                                             <p className="text-[10px] font-bold text-orange-600 uppercase tracking-widest">Return Request: {selectedOrder.returnReason}</p>
                                             <div className="flex gap-3">
-                                                <button onClick={() => handleReturnAction(selectedOrder.id, 'Approved')} className="flex-1 py-3 bg-stone-800 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors">
-                                                    Approve Return
+                                                <button
+                                                    disabled={!!isProcessingAction}
+                                                    onClick={() => handleReturnAction(selectedOrder.id, 'Approved')}
+                                                    className="flex-1 flex items-center justify-center gap-2 py-3 bg-stone-800 text-white rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-black transition-colors disabled:opacity-50"
+                                                >
+                                                    {isProcessingAction === 'return-Approved' ? <div className="w-3 h-3 border-2 border-white/20 border-t-white rounded-full animate-spin"></div> : null}
+                                                    Approve
                                                 </button>
-                                                <button onClick={() => handleReturnAction(selectedOrder.id, 'Rejected')} className="flex-1 py-3 border border-red-200 text-red-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-colors">
+                                                <button
+                                                    disabled={!!isProcessingAction}
+                                                    onClick={() => handleReturnAction(selectedOrder.id, 'Rejected')}
+                                                    className="flex-1 flex items-center justify-center gap-2 py-3 border border-red-200 text-red-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-colors disabled:opacity-50"
+                                                >
+                                                    {isProcessingAction === 'return-Rejected' ? <div className="w-3 h-3 border-2 border-red-500/20 border-t-red-500 rounded-full animate-spin"></div> : null}
                                                     Reject
                                                 </button>
                                             </div>
                                         </div>
                                     )}
+
+                                    {/* Cancel & Delete Actions */}
+                                    {selectedOrder.status !== 'Cancelled' && selectedOrder.status !== 'Delivered' && (
+                                        <button
+                                            disabled={!!isProcessingAction}
+                                            onClick={() => handleCancelOrder(selectedOrder.id)}
+                                            className="w-full flex items-center justify-center gap-2 py-3 border border-orange-100 text-orange-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-orange-50 transition-colors disabled:opacity-50"
+                                        >
+                                            {isProcessingAction === 'cancel' ? <div className="w-3 h-3 border-2 border-orange-500/20 border-t-orange-500 rounded-full animate-spin"></div> : null}
+                                            Cancel Ritual
+                                        </button>
+                                    )}
+
+                                    <button
+                                        disabled={!!isProcessingAction}
+                                        onClick={() => handleDeleteOrder(selectedOrder.id)}
+                                        className="w-full flex items-center justify-center gap-2 py-3 border border-red-100 text-red-600 rounded-lg text-[10px] font-bold uppercase tracking-widest hover:bg-red-50 transition-colors disabled:opacity-50"
+                                    >
+                                        {isProcessingAction === 'delete' ? <div className="w-3 h-3 border-2 border-red-500/20 border-t-red-500 rounded-full animate-spin"></div> : null}
+                                        Delete Forever
+                                    </button>
 
                                     <button className="w-full flex items-center justify-center gap-2 py-3 border border-stone-100 rounded-lg text-[10px] font-bold text-stone-400 uppercase tracking-widest hover:bg-stone-50 transition-colors">
                                         <span className="material-symbols-outlined text-lg">print</span>
