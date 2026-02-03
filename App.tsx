@@ -17,41 +17,53 @@ import { UserProvider } from './context/UserContext';
 import AdminRoute from './components/Admin/AdminRoute';
 import { InAppNotificationProvider } from './context/InAppNotificationContext';
 
+// Helper for retrying lazy loads (fixes chunk loading errors after new deployments)
+const lazyWithRetry = (componentImport: () => Promise<any>) =>
+  lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      console.error("Chunk load failed, retrying page...", error);
+      window.location.reload();
+      return { default: () => null };
+    }
+  });
+
 // Lazy load pages
-const Home = lazy(() => import('./pages/Home'));
-const Shop = lazy(() => import('./pages/Shop'));
-const Search = lazy(() => import('./pages/Search'));
-const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-const Contact = lazy(() => import('./pages/Contact'));
-const Reviews = lazy(() => import('./pages/Reviews'));
-const FAQ = lazy(() => import('./pages/FAQ'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const Checkout = lazy(() => import('./pages/Checkout'));
-const OrderConfirmation = lazy(() => import('./pages/OrderConfirmation'));
-const OrderDetail = lazy(() => import('./pages/OrderDetail'));
-const Story = lazy(() => import('./pages/Story'));
-const Journal = lazy(() => import('./pages/Journal'));
-const JournalDetail = lazy(() => import('./pages/JournalDetail'));
-const Loyalty = lazy(() => import('./pages/Loyalty'));
-const SkinQuiz = lazy(() => import('./pages/SkinQuiz'));
-const SkinQuizResults = lazy(() => import('./pages/SkinQuizResults'));
-const RitualGuide = lazy(() => import('./pages/RitualGuide'));
-const Dashboard = lazy(() => import('./pages/Admin/Dashboard'));
-const Inventory = lazy(() => import('./pages/Admin/Inventory'));
-const Customers = lazy(() => import('./pages/Admin/Customers'));
-const Orders = lazy(() => import('./pages/Admin/Orders'));
-const CMSSettings = lazy(() => import('./pages/Admin/CMSSettings'));
-const AdminReviews = lazy(() => import('./pages/Admin/Reviews'));
-const JournalManager = lazy(() => import('@/pages/Admin/JournalManager'));
-const AddProduct = lazy(() => import('./pages/Admin/AddProduct'));
-const Categories = lazy(() => import('./pages/Admin/Categories'));
-const Coupons = lazy(() => import('./pages/Admin/Coupons.tsx'));
-const FAQManager = lazy(() => import('./pages/Admin/FAQManager'));
-const AdminLogin = lazy(() => import('./pages/Admin/AdminLogin'));
-const AdminAccount = lazy(() => import('./pages/Admin/Account'));
-const AdminUsers = lazy(() => import('./pages/Admin/Users'));
+const Home = lazyWithRetry(() => import('./pages/Home'));
+const Shop = lazyWithRetry(() => import('./pages/Shop'));
+const Search = lazyWithRetry(() => import('./pages/Search'));
+const ProductDetail = lazyWithRetry(() => import('./pages/ProductDetail'));
+const Contact = lazyWithRetry(() => import('./pages/Contact'));
+const Reviews = lazyWithRetry(() => import('./pages/Reviews'));
+const FAQ = lazyWithRetry(() => import('./pages/FAQ'));
+const Profile = lazyWithRetry(() => import('./pages/Profile'));
+const Login = lazyWithRetry(() => import('./pages/Login'));
+const Register = lazyWithRetry(() => import('./pages/Register'));
+const Checkout = lazyWithRetry(() => import('./pages/Checkout'));
+const OrderConfirmation = lazyWithRetry(() => import('./pages/OrderConfirmation'));
+const OrderDetail = lazyWithRetry(() => import('./pages/OrderDetail'));
+const Story = lazyWithRetry(() => import('./pages/Story'));
+const Journal = lazyWithRetry(() => import('./pages/Journal'));
+const JournalDetail = lazyWithRetry(() => import('./pages/JournalDetail'));
+const Loyalty = lazyWithRetry(() => import('./pages/Loyalty'));
+const SkinQuiz = lazyWithRetry(() => import('./pages/SkinQuiz'));
+const SkinQuizResults = lazyWithRetry(() => import('./pages/SkinQuizResults'));
+const RitualGuide = lazyWithRetry(() => import('./pages/RitualGuide'));
+const Dashboard = lazyWithRetry(() => import('./pages/Admin/Dashboard'));
+const Inventory = lazyWithRetry(() => import('./pages/Admin/Inventory'));
+const Customers = lazyWithRetry(() => import('./pages/Admin/Customers'));
+const Orders = lazyWithRetry(() => import('./pages/Admin/Orders'));
+const CMSSettings = lazyWithRetry(() => import('./pages/Admin/CMSSettings'));
+const AdminReviews = lazyWithRetry(() => import('./pages/Admin/Reviews'));
+const JournalManager = lazyWithRetry(() => import('@/pages/Admin/JournalManager'));
+const AddProduct = lazyWithRetry(() => import('./pages/Admin/AddProduct'));
+const Categories = lazyWithRetry(() => import('./pages/Admin/Categories'));
+const Coupons = lazyWithRetry(() => import('./pages/Admin/Coupons.tsx'));
+const FAQManager = lazyWithRetry(() => import('./pages/Admin/FAQManager'));
+const AdminLogin = lazyWithRetry(() => import('./pages/Admin/AdminLogin'));
+const AdminAccount = lazyWithRetry(() => import('./pages/Admin/Account'));
+const AdminUsers = lazyWithRetry(() => import('./pages/Admin/Users'));
 
 // Component for Suspense fallback
 const PageLoader = () => (
