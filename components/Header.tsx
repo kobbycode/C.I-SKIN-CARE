@@ -69,7 +69,7 @@ const Header: React.FC = () => {
               search
             </Link>
             <NotificationBell />
-            <Link to="/profile" className="hidden sm:block material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors">
+            <Link to="/profile" className="hidden lg:block material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors">
               person
             </Link>
             <button
