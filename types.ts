@@ -71,6 +71,7 @@ export interface Order {
   deliveryNotes?: string;
   deliveryMapLink?: string;
   deliveryContactPhone?: string;
+  deliveryPhone?: string;
   trackingNumber?: string;
   returnTrackingNumber?: string;
   userId?: string;

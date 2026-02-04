@@ -454,10 +454,10 @@ const Orders: React.FC = () => {
                                                 <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
                                                 <div className="flex flex-col">
                                                     <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{o.id.slice(-6).toUpperCase()}</span>
-                                                    {(o.customerPhone || o.deliveryContactPhone) && (
-                                                        <span className="text-[9px] text-stone-400 flex items-center gap-1">
+                                                    {(o.customerPhone || o.deliveryContactPhone || o.deliveryPhone) && (
+                                                        <span className="text-[9px] text-stone-500 font-bold flex items-center gap-1">
                                                             <span className="material-symbols-outlined text-[10px]">phone</span>
-                                                            {o.customerPhone || o.deliveryContactPhone}
+                                                            {o.customerPhone || o.deliveryContactPhone || o.deliveryPhone}
                                                         </span>
                                                     )}
                                                 </div>
@@ -545,10 +545,10 @@ const Orders: React.FC = () => {
                                                         <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
                                                         <div className="flex flex-col">
                                                             <span className="text-[10px] text-stone-400 truncate">{o.customerEmail}</span>
-                                                            {(o.customerPhone || o.deliveryContactPhone) && (
-                                                                <span className="text-[10px] text-stone-500 font-medium flex items-center gap-1">
+                                                            {(o.customerPhone || o.deliveryContactPhone || o.deliveryPhone) && (
+                                                                <span className="text-[10px] text-stone-600 font-bold flex items-center gap-1 mt-0.5">
                                                                     <span className="material-symbols-outlined text-[10px]">phone</span>
-                                                                    {o.customerPhone || o.deliveryContactPhone}
+                                                                    {o.customerPhone || o.deliveryContactPhone || o.deliveryPhone}
                                                                 </span>
                                                             )}
                                                         </div>
@@ -636,7 +636,15 @@ const Orders: React.FC = () => {
                                     </div>
                                     <div className="min-w-0">
                                         <p className="text-sm font-bold text-[#221C1D] truncate">{selectedOrder.customerName}</p>
-                                        <p className="text-[10px] text-stone-400">{selectedOrder.paymentMethod} • GH₵{selectedOrder.total.toFixed(2)}</p>
+                                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                            <p className="text-[10px] text-stone-400 font-medium">{selectedOrder.paymentMethod} • GH₵{selectedOrder.total.toFixed(2)}</p>
+                                            {(selectedOrder.customerPhone || selectedOrder.deliveryContactPhone || selectedOrder.deliveryPhone) && (
+                                                <p className="text-[10px] text-stone-900 font-bold flex items-center gap-1">
+                                                    <span className="material-symbols-outlined text-[10px]">phone</span>
+                                                    {selectedOrder.customerPhone || selectedOrder.deliveryContactPhone || selectedOrder.deliveryPhone}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 gap-6">
@@ -650,10 +658,10 @@ const Orders: React.FC = () => {
                                         <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Contact</p>
                                         <div className="space-y-1">
                                             <p className="text-[10px] text-stone-600 truncate">{selectedOrder.customerEmail}</p>
-                                            {(selectedOrder.customerPhone || selectedOrder.deliveryContactPhone) && (
+                                            {(selectedOrder.customerPhone || selectedOrder.deliveryContactPhone || selectedOrder.deliveryPhone) && (
                                                 <p className="text-[10px] text-stone-600 font-medium truncate flex items-center gap-1.5">
                                                     <span className="material-symbols-outlined text-[10px]">phone</span>
-                                                    {selectedOrder.customerPhone || selectedOrder.deliveryContactPhone}
+                                                    {selectedOrder.customerPhone || selectedOrder.deliveryContactPhone || selectedOrder.deliveryPhone}
                                                 </p>
                                             )}
                                         </div>
