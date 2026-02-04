@@ -132,10 +132,10 @@ const ProductDetail: React.FC = () => {
   };
 
   return (
-    <main className="pt-40 pb-24 px-10 bg-white dark:bg-stone-950">
-      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20">
+    <main className="pt-24 lg:pt-40 pb-24 px-6 lg:px-10 bg-white dark:bg-stone-950">
+      <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
         {/* Left: Product Images */}
-        <div className="sticky top-40 h-fit space-y-6">
+        <div className="lg:sticky lg:top-40 h-fit space-y-6">
           <div className="aspect-[4/5] bg-stone-50 rounded-3xl overflow-hidden relative group">
             {activeImageIdx === images.length ? (
               <video
@@ -192,7 +192,7 @@ const ProductDetail: React.FC = () => {
 
         {/* Right: Product Info */}
         <div className="flex flex-col">
-          <h1 className="font-display text-4xl lg:text-5xl text-stone-900 dark:text-white mb-2 leading-tight">
+          <h1 className="font-display text-3xl lg:text-5xl text-stone-900 dark:text-white mb-2 leading-tight">
             {product.name}
           </h1>
 
@@ -383,11 +383,11 @@ const ProductDetail: React.FC = () => {
       </div>
 
       {/* Reviews Section */}
-      <section id="reviews" className="mt-32 max-w-[1000px] mx-auto pt-24 border-t border-stone-100 dark:border-stone-900">
+      <section id="reviews" className="mt-20 lg:mt-32 max-w-[1000px] mx-auto pt-16 lg:pt-24 border-t border-stone-100 dark:border-stone-900">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4 block underline">Community Evidence</span>
-            <h2 className="font-display text-4xl text-stone-900 dark:text-white">Customer Chronicles</h2>
+            <h2 className="font-display text-3xl lg:text-4xl text-stone-900 dark:text-white">Customer Chronicles</h2>
           </div>
           <button
             onClick={() => setShowReviewForm(!showReviewForm)}
@@ -495,8 +495,8 @@ const ProductDetail: React.FC = () => {
       </section>
 
       {/* Suggested Rituals */}
-      <section className="mt-32 pt-24 border-t border-stone-100 dark:border-stone-900">
-        <h3 className="font-display text-3xl text-[#221C1D] dark:text-white mb-16 text-center">Complete Your Ritual</h3>
+      <section className="mt-20 lg:mt-32 pt-16 lg:pt-24 border-t border-stone-100 dark:border-stone-900">
+        <h3 className="font-display text-2xl lg:text-3xl text-[#221C1D] dark:text-white mb-10 lg:mb-16 text-center">Complete Your Ritual</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {products.filter(p => p.id !== id).slice(0, 4).map(p => (
             <Link to={`/product/${p.id}`} key={p.id} className="group flex flex-col items-center text-center">
