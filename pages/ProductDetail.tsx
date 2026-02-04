@@ -135,7 +135,7 @@ const ProductDetail: React.FC = () => {
     <main className="pt-24 lg:pt-40 pb-24 px-6 lg:px-10 bg-white dark:bg-stone-950">
       <div className="max-w-[1400px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-20">
         {/* Left: Product Images */}
-        <div className="lg:sticky lg:top-40 h-fit space-y-6 lg:max-w-xl">
+        <div className="lg:sticky lg:top-40 h-fit space-y-6 max-w-[420px] mx-auto lg:max-w-lg">
           <div className="aspect-square bg-stone-50 rounded-3xl overflow-hidden relative group border border-stone-100 dark:border-stone-900">
             {activeImageIdx === images.length ? (
               <video
