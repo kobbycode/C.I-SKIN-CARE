@@ -223,7 +223,8 @@ const Checkout: React.FC = () => {
               : 'Paystack',
       couponCode: appliedCoupon?.code,
       discount: discountAmount,
-      customerPhone: formData.phone
+      customerPhone: formData.phone,
+      deliveryPhone: formData.phone
     };
 
     // Increment coupon usage if applied
@@ -363,7 +364,8 @@ const Checkout: React.FC = () => {
           couponCode: appliedCoupon?.code || null,
           discount: discountAmount || 0,
           userId: currentUser?.id,
-          customerPhone: formData.phone
+          customerPhone: formData.phone,
+          deliveryPhone: formData.phone
         };
 
         // Sanitize order object to remove undefined values (Firestore rejects undefined)

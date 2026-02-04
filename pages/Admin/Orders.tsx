@@ -56,7 +56,8 @@ const Orders: React.FC = () => {
                 o.customerName.toLowerCase().includes(lowSearch) ||
                 o.id.toLowerCase().includes(lowSearch) ||
                 o.customerEmail.toLowerCase().includes(lowSearch) ||
-                (o.customerPhone && o.customerPhone.toLowerCase().includes(lowSearch))
+                (o.customerPhone && o.customerPhone.toLowerCase().includes(lowSearch)) ||
+                (o.deliveryPhone && o.deliveryPhone.toLowerCase().includes(lowSearch))
             );
         }
 
