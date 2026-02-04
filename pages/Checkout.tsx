@@ -449,9 +449,9 @@ const Checkout: React.FC = () => {
   }
 
   return (
-    <main className="pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="mb-12 flex flex-col items-center">
-        <h1 className="font-display text-4xl md:text-5xl text-secondary dark:text-white mb-4 uppercase tracking-[0.2em]">Checkout</h1>
+    <main className="pt-24 lg:pt-32 pb-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+      <div className="mb-8 lg:mb-12 flex flex-col items-center text-center">
+        <h1 className="font-display text-3xl lg:text-5xl text-secondary dark:text-white mb-4 uppercase tracking-[0.2em]">Checkout</h1>
         <nav className="flex items-center gap-4 text-[9px] font-bold uppercase tracking-[0.3em]">
           <span className={step >= 1 ? "text-primary cursor-pointer" : "opacity-40"}>Information</span>
           <span className="material-icons text-[12px] opacity-40">chevron_right</span>
@@ -461,7 +461,7 @@ const Checkout: React.FC = () => {
         </nav>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-start">
         {/* Left: Form */}
         <div className="lg:col-span-7">
           <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-12">
@@ -830,7 +830,7 @@ const Checkout: React.FC = () => {
                       className="w-full bg-primary/5 border-primary/10 focus:ring-1 focus:ring-accent rounded px-4 py-4 placeholder:text-stone-400 placeholder:text-xs text-stone-800 dark:text-stone-200"
                     />
                   </div>
-                  <div className="pt-4 flex flex-wrap gap-3">
+                  <div className="pt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -838,7 +838,7 @@ const Checkout: React.FC = () => {
                         const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
                         window.open(url, '_blank');
                       }}
-                      className="bg-primary text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2"
+                      className="w-full bg-primary text-white py-4 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2"
                     >
                       <span className="material-symbols-outlined text-[12px]">map</span>
                       Track Location
@@ -872,7 +872,7 @@ const Checkout: React.FC = () => {
                           setIsLocating(false);
                         }, { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
                       }}
-                      className="bg-stone-900 text-white py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 disabled:opacity-50"
+                      className="w-full bg-stone-900 text-white py-4 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 disabled:opacity-50"
                     >
                       {isLocating ? (
                         <>
@@ -915,7 +915,7 @@ const Checkout: React.FC = () => {
                         }
                       }}
                       disabled={isSavingProfile}
-                      className="border border-primary/20 text-primary py-3 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 hover:bg-primary/5 transition-all disabled:opacity-50"
+                      className="w-full border border-primary/20 text-primary py-4 px-6 rounded font-bold uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 hover:bg-primary/5 transition-all disabled:opacity-50"
                     >
                       {isSavingProfile ? (
                         <>
@@ -932,11 +932,11 @@ const Checkout: React.FC = () => {
                   </div>
                 </section>
 
-                <div className="pt-8 flex justify-between items-center">
+                <div className="pt-10 flex flex-col sm:flex-row justify-between items-center gap-6">
                   <button
                     type="button"
                     onClick={() => setStep(2)}
-                    className="text-primary font-bold uppercase tracking-[0.2em] text-[10px] flex items-center gap-2 hover:opacity-70"
+                    className="text-primary font-bold uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-2 hover:opacity-70 w-full sm:w-auto order-2 sm:order-1"
                   >
                     <span className="material-icons text-[12px]">arrow_back</span>
                     Return to Shipping
@@ -944,7 +944,7 @@ const Checkout: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="bg-gold-gradient text-white py-5 px-10 rounded font-bold uppercase tracking-[0.3em] text-xs shadow-2xl hover:brightness-110 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50"
+                    className="bg-gold-gradient text-white py-5 px-10 rounded font-bold uppercase tracking-[0.3em] text-xs shadow-2xl hover:brightness-110 hover:shadow-gold-500/50 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 w-full sm:w-auto order-1 sm:order-2"
                   >
                     {isProcessing ? (
                       <>
