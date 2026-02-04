@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useOrders } from '../context/OrderContext';
 import { useUser } from '../context/UserContext';
 import { useNotification } from '../context/NotificationContext';
+import { OrderDetailSkeleton } from '../components/Skeletons';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '../firebaseConfig';
 import { Order } from '../types';
@@ -61,11 +62,7 @@ const OrderDetail: React.FC = () => {
     }, [orders, id, currentUser, navigate]);
 
     if (!order) {
-        return (
-            <div className="pt-40 pb-24 px-10 min-h-screen flex items-center justify-center">
-                <div className="animate-spin w-8 h-8 border-2 border-primary border-t-transparent rounded-full"></div>
-            </div>
-        );
+        return <OrderDetailSkeleton />;
     }
 
     const formatDate = (dateString: string) => {

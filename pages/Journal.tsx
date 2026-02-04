@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useJournal } from '../context/JournalContext';
+import { JournalSkeleton } from '../components/Skeletons';
 
 const Journal: React.FC = () => {
     const { posts, loading } = useJournal();
@@ -10,7 +11,7 @@ const Journal: React.FC = () => {
         activeCategory === 'All' || post.category === activeCategory
     );
 
-    if (loading) return <div className="min-h-screen bg-[#FDFCFB] pt-40 text-center font-display text-xl uppercase tracking-widest opacity-30">Accessing Archives...</div>;
+    if (loading) return <JournalSkeleton />;
     if (posts.length === 0) return <div className="min-h-screen bg-[#FDFCFB] pt-40 text-center font-display text-xl uppercase tracking-widest opacity-30">No rituals found.</div>;
 
     const featuredPost = filteredPosts[0] || posts[0];

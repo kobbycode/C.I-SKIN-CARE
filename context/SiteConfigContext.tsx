@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { AppSkeleton } from '../components/Skeletons';
 
 export interface NavLink {
     name: string;
@@ -321,14 +322,7 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     };
 
     if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#FDFCFB]">
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-2 border-[#E5D3B3] border-t-[#A68966] rounded-full animate-spin"></div>
-                    <div className="text-[10px] uppercase tracking-[0.4em] text-[#A68966] font-bold animate-pulse">Initializing Boutique</div>
-                </div>
-            </div>
-        );
+        return <AppSkeleton />;
     }
 
     return (

@@ -2,6 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { useReviews } from '../context/ReviewContext';
 import { useNotification } from '../context/NotificationContext';
+import { ReviewsSkeleton } from '../components/Skeletons';
 
 const Reviews: React.FC = () => {
   const { reviews, loading, addReview } = useReviews();
@@ -55,12 +56,7 @@ const Reviews: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="pt-48 pb-24 text-center min-h-[60vh] flex flex-col items-center justify-center">
-        <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin mb-4"></div>
-        <p className="text-[10px] uppercase tracking-[0.3em] font-bold text-primary">Gathering Ritual Testimonials</p>
-      </div>
-    );
+    return <ReviewsSkeleton />;
   }
 
   return (

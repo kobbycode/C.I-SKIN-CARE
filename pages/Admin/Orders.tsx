@@ -9,6 +9,7 @@ import { useUser } from '../../context/UserContext';
 import { useNotification } from '../../context/NotificationContext';
 import { doc, updateDoc, runTransaction, arrayUnion, deleteDoc } from 'firebase/firestore';
 import { Order } from '../../types';
+import { AdminSkeleton } from '../../components/Skeletons';
 
 const Orders: React.FC = () => {
     const { orders, updateOrderStatus, loading } = useOrders();
@@ -347,207 +348,118 @@ const Orders: React.FC = () => {
                     </header>
 
                     {/* Status Tabs Sub-nav */}
-                    <div className="flex gap-8 overflow-x-auto pb-4 mb-4 border-b border-stone-100 scrollbar-hide">
-                        {[
-                            'All Orders',
-                            'Pending',
-                            'Processing',
-                            'Shipped',
-                            'Delivered',
-                            'Cancelled',
-                            'Returns'
-                        ].map((status) => {
-                            const count = status === 'All Orders' ? orders.length :
-                                status === 'Returns' ? orders.filter(o => o.returnRequested).length :
-                                    orders.filter(o => o.status === status).length;
-                            const isActive = activeTab === status || activeTab.startsWith(status + ' (');
+                    {loading ? <AdminSkeleton /> : (
+                        <>
+                            <div className="flex gap-8 overflow-x-auto pb-4 mb-4 border-b border-stone-100 scrollbar-hide">
+                                {[
+                                    'All Orders',
+                                    'Pending',
+                                    'Processing',
+                                    'Shipped',
+                                    'Delivered',
+                                    'Cancelled',
+                                    'Returns'
+                                ].map((status) => {
+                                    const count = status === 'All Orders' ? orders.length :
+                                        status === 'Returns' ? orders.filter(o => o.returnRequested).length :
+                                            orders.filter(o => o.status === status).length;
+                                    const isActive = activeTab === status || activeTab.startsWith(status + ' (');
 
-                            return (
-                                <button
-                                    key={status}
-                                    onClick={() => {
-                                        setActiveTab(status === 'All Orders' ? status : `${status} (${count})`);
-                                        setSelectedOrderId(null);
-                                    }}
-                                    className={`flex items-center gap-2 pb-3 whitespace-nowrap transition-all relative ${isActive ? 'text-[#221C1D] font-bold' : 'text-stone-400 hover:text-stone-600 font-medium'}`}
-                                >
-                                    <span className="text-[10px] uppercase tracking-[0.2em]">{status}</span>
-                                    {count > 0 && (
-                                        <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-[#F2A600] text-[#221C1D]' : 'bg-stone-50 text-stone-400'}`}>
-                                            {count}
-                                        </span>
-                                    )}
-                                    {isActive && (
-                                        <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[#F2A600] rounded-full" />
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    {/* Order Stats */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
-                        {stats.map((stat, i) => (
-                            <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-hover hover:shadow-md">
-                                <div className="flex justify-between items-start mb-2">
-                                    <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest">{stat.label}</p>
-                                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${stat.trend.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                                        {stat.trend}
-                                    </span>
-                                </div>
-                                <h3 className="text-xl md:text-2xl font-bold text-[#221C1D] mb-1">{stat.value}</h3>
-                                <p className="text-[10px] text-stone-400">{stat.sub}</p>
-                            </div>
-                        ))}
-                    </div>
-
-                    {/* Search & Filter Bar */}
-                    <div className="bg-white border border-stone-100 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-4 flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-                        <div className="relative flex-1 w-full max-w-sm">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-stone-300 text-lg">search</span>
-                            <input
-                                type="text"
-                                placeholder="Search Name, ID, Phone..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-transparent rounded-lg text-xs focus:outline-none focus:border-[#F2A600] transition-colors"
-                            />
-                        </div>
-                        <div className="flex items-center gap-3 w-full md:w-auto">
-                            <div className="flex items-center gap-2 bg-stone-50 px-3 py-2 rounded-lg border border-stone-100 w-full md:w-auto overflow-hidden">
-                                <span className="text-[9px] font-bold text-stone-400 uppercase shrink-0">Range</span>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    className="bg-transparent text-[10px] focus:outline-none min-w-0"
-                                />
-                                <span className="text-stone-300 text-xs shrink-0">→</span>
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    className="bg-transparent text-[10px] focus:outline-none min-w-0"
-                                />
-                                {(startDate || endDate) && (
-                                    <button
-                                        onClick={() => { setStartDate(''); setEndDate(''); }}
-                                        className="ml-1 material-symbols-outlined text-xs text-stone-400 hover:text-red-500 shrink-0"
-                                    >
-                                        close
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Orders Table */}
-                    <div className="bg-white border border-stone-100 rounded-xl overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
-                        <div className="md:hidden divide-y divide-stone-50">
-                            {filteredOrders.length > 0 ? filteredOrders.map((o) => (
-                                <div key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`p-6 space-y-4 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-amber-50/50 border-l-4 border-amber-400' : 'hover:bg-stone-50'}`}>
-                                    <div className="flex justify-between items-start">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold text-stone-500 uppercase">
-                                                {o.customerName.split(' ').map(n => n[0]).join('')}
-                                            </div>
-                                            <div className="flex flex-col min-w-0">
-                                                <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
-                                                <div className="flex flex-col">
-                                                    <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{o.id.slice(-6).toUpperCase()}</span>
-                                                    {(o.customerPhone || o.deliveryContactPhone || o.deliveryPhone) && (
-                                                        <span className="text-[9px] text-stone-500 font-bold flex items-center gap-1">
-                                                            <span className="material-symbols-outlined text-[10px]">phone</span>
-                                                            {o.customerPhone || o.deliveryContactPhone || o.deliveryPhone}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <span className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
-                                            o.status === 'Shipped' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
-                                            }`}>
-                                            {o.status}
-                                        </span>
-                                    </div>
-                                    <div className="flex justify-between items-end pt-2">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] text-stone-400 font-bold uppercase tracking-widest leading-none mb-1">Date & Time</span>
-                                            <span className="text-xs text-stone-600 font-medium">{o.date}</span>
-                                            <span className="text-[9px] text-stone-400 uppercase">{o.time}</span>
-                                        </div>
-                                        <button className="text-[#F2A600] text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
-                                            Details <span className="material-symbols-outlined text-xs">chevron_right</span>
-                                        </button>
-                                    </div>
-                                </div>
-                            )) : (
-                                <div className="p-10 text-center text-stone-400 italic">No orders found.</div>
-                            )}
-                        </div>
-
-                        <div className="hidden md:block overflow-x-auto">
-                            <table className="w-full text-left">
-                                <thead>
-                                    <tr className="bg-stone-50/30">
-                                        <th className="px-4 md:px-6 py-4">
-                                            <div className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 rounded border-stone-300 text-[#F2A600] focus:ring-[#F2A600]"
-                                                    checked={filteredOrders.length > 0 && selectedIds.size === filteredOrders.length}
-                                                    onChange={(e) => {
-                                                        if (e.target.checked) {
-                                                            setSelectedIds(new Set(filteredOrders.map(o => o.id)));
-                                                        } else {
-                                                            setSelectedIds(new Set());
-                                                        }
-                                                    }}
-                                                />
-                                            </div>
-                                        </th>
-                                        <th className="px-4 md:px-6 py-4 text-left text-[10px] font-bold text-stone-400 uppercase tracking-widest">Order ID</th>
-                                        <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Customer</th>
-                                        <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Date</th>
-                                        <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Amount</th>
-                                        <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-stone-50">
-                                    {filteredOrders.map((o) => (
-                                        <tr
-                                            key={o.id}
-                                            onClick={() => setSelectedOrderId(o.id)}
-                                            className={`border-b border-stone-50 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-amber-50/50' : 'hover:bg-stone-50/50'}`}
+                                    return (
+                                        <button
+                                            key={status}
+                                            onClick={() => {
+                                                setActiveTab(status === 'All Orders' ? status : `${status} (${count})`);
+                                                setSelectedOrderId(null);
+                                            }}
+                                            className={`flex items-center gap-2 pb-3 whitespace-nowrap transition-all relative ${isActive ? 'text-[#221C1D] font-bold' : 'text-stone-400 hover:text-stone-600 font-medium'}`}
                                         >
-                                            <td className="px-4 md:px-6 py-5" onClick={(e) => e.stopPropagation()}>
-                                                <input
-                                                    type="checkbox"
-                                                    className="w-4 h-4 rounded border-stone-300 text-[#F2A600] focus:ring-[#F2A600]"
-                                                    checked={selectedIds.has(o.id)}
-                                                    onChange={(e) => {
-                                                        const newSelected = new Set(selectedIds);
-                                                        if (e.target.checked) {
-                                                            newSelected.add(o.id);
-                                                        } else {
-                                                            newSelected.delete(o.id);
-                                                        }
-                                                        setSelectedIds(newSelected);
-                                                    }}
-                                                />
-                                            </td>
-                                            <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D] whitespace-nowrap">{o.id.slice(-6).toUpperCase()}</td>
-                                            <td className="px-4 md:px-6 py-5">
+                                            <span className="text-[10px] uppercase tracking-[0.2em]">{status}</span>
+                                            {count > 0 && (
+                                                <span className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold ${isActive ? 'bg-[#F2A600] text-[#221C1D]' : 'bg-stone-50 text-stone-400'}`}>
+                                                    {count}
+                                                </span>
+                                            )}
+                                            {isActive && (
+                                                <div className="absolute bottom-[-1px] left-0 right-0 h-[2px] bg-[#F2A600] rounded-full" />
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+
+                            {/* Order Stats */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10">
+                                {stats.map((stat, i) => (
+                                    <div key={i} className="p-6 bg-white border border-stone-100 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-hover hover:shadow-md">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <p className="text-stone-400 text-[10px] font-bold uppercase tracking-widest">{stat.label}</p>
+                                            <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${stat.trend.startsWith('+') ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+                                                {stat.trend}
+                                            </span>
+                                        </div>
+                                        <h3 className="text-xl md:text-2xl font-bold text-[#221C1D] mb-1">{stat.value}</h3>
+                                        <p className="text-[10px] text-stone-400">{stat.sub}</p>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Search & Filter Bar */}
+                            <div className="bg-white border border-stone-100 rounded-xl shadow-[0_2px_15px_rgba(0,0,0,0.02)] p-4 flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
+                                <div className="relative flex-1 w-full max-w-sm">
+                                    <span className="absolute left-4 top-1/2 -translate-y-1/2 material-symbols-outlined text-stone-300 text-lg">search</span>
+                                    <input
+                                        type="text"
+                                        placeholder="Search Name, ID, Phone..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 bg-stone-50 border border-transparent rounded-lg text-xs focus:outline-none focus:border-[#F2A600] transition-colors"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3 w-full md:w-auto">
+                                    <div className="flex items-center gap-2 bg-stone-50 px-3 py-2 rounded-lg border border-stone-100 w-full md:w-auto overflow-hidden">
+                                        <span className="text-[9px] font-bold text-stone-400 uppercase shrink-0">Range</span>
+                                        <input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="bg-transparent text-[10px] focus:outline-none min-w-0"
+                                        />
+                                        <span className="text-stone-300 text-xs shrink-0">→</span>
+                                        <input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="bg-transparent text-[10px] focus:outline-none min-w-0"
+                                        />
+                                        {(startDate || endDate) && (
+                                            <button
+                                                onClick={() => { setStartDate(''); setEndDate(''); }}
+                                                className="ml-1 material-symbols-outlined text-xs text-stone-400 hover:text-red-500 shrink-0"
+                                            >
+                                                close
+                                            </button>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Orders Table */}
+                            <div className="bg-white border border-stone-100 rounded-xl overflow-hidden shadow-[0_2px_15px_rgba(0,0,0,0.02)]">
+                                <div className="md:hidden divide-y divide-stone-50">
+                                    {filteredOrders.length > 0 ? filteredOrders.map((o) => (
+                                        <div key={o.id} onClick={() => setSelectedOrderId(o.id)} className={`p-6 space-y-4 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-amber-50/50 border-l-4 border-amber-400' : 'hover:bg-stone-50'}`}>
+                                            <div className="flex justify-between items-start">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold text-stone-500 uppercase flex-shrink-0">
+                                                    <div className="w-10 h-10 rounded-full bg-stone-100 flex items-center justify-center text-xs font-bold text-stone-500 uppercase">
                                                         {o.customerName.split(' ').map(n => n[0]).join('')}
                                                     </div>
                                                     <div className="flex flex-col min-w-0">
                                                         <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
                                                         <div className="flex flex-col">
-                                                            <span className="text-[10px] text-stone-400 truncate">{o.customerEmail}</span>
+                                                            <span className="text-[10px] text-stone-400 font-medium uppercase tracking-wider">{o.id.slice(-6).toUpperCase()}</span>
                                                             {(o.customerPhone || o.deliveryContactPhone || o.deliveryPhone) && (
-                                                                <span className="text-[10px] text-stone-600 font-bold flex items-center gap-1 mt-0.5">
+                                                                <span className="text-[9px] text-stone-500 font-bold flex items-center gap-1">
                                                                     <span className="material-symbols-outlined text-[10px]">phone</span>
                                                                     {o.customerPhone || o.deliveryContactPhone || o.deliveryPhone}
                                                                 </span>
@@ -555,30 +467,123 @@ const Orders: React.FC = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </td>
-                                            <td className="px-4 md:px-6 py-5">
-                                                <div className="flex flex-col whitespace-nowrap">
-                                                    <span className="text-sm font-medium text-stone-600">{o.date}</span>
-                                                    <span className="text-[9px] text-stone-400 uppercase">{o.time}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">GH₵{o.total.toFixed(2)}</td>
-                                            <td className="px-4 md:px-6 py-5">
-                                                <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
+                                                <span className={`px-2.5 py-1 rounded-full text-[8px] font-bold uppercase tracking-widest ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
                                                     o.status === 'Shipped' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
                                                     }`}>
                                                     {o.status}
                                                 </span>
-                                            </td>
-                                        </tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="p-6 text-center border-t border-stone-50">
-                            <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Showing {filteredOrders.length} of {orders.length} orders</p>
-                        </div>
-                    </div>
+                                            </div>
+                                            <div className="flex justify-between items-end pt-2">
+                                                <div className="flex flex-col">
+                                                    <span className="text-[9px] text-stone-400 font-bold uppercase tracking-widest leading-none mb-1">Date & Time</span>
+                                                    <span className="text-xs text-stone-600 font-medium">{o.date}</span>
+                                                    <span className="text-[9px] text-stone-400 uppercase">{o.time}</span>
+                                                </div>
+                                                <button className="text-[#F2A600] text-[10px] font-bold uppercase tracking-widest flex items-center gap-1">
+                                                    Details <span className="material-symbols-outlined text-xs">chevron_right</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )) : (
+                                        <div className="p-10 text-center text-stone-400 italic">No orders found.</div>
+                                    )}
+                                </div>
+
+                                <div className="hidden md:block overflow-x-auto">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="bg-stone-50/30">
+                                                <th className="px-4 md:px-6 py-4">
+                                                    <div className="flex items-center">
+                                                        <input
+                                                            type="checkbox"
+                                                            className="w-4 h-4 rounded border-stone-300 text-[#F2A600] focus:ring-[#F2A600]"
+                                                            checked={filteredOrders.length > 0 && selectedIds.size === filteredOrders.length}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedIds(new Set(filteredOrders.map(o => o.id)));
+                                                                } else {
+                                                                    setSelectedIds(new Set());
+                                                                }
+                                                            }}
+                                                        />
+                                                    </div>
+                                                </th>
+                                                <th className="px-4 md:px-6 py-4 text-left text-[10px] font-bold text-stone-400 uppercase tracking-widest">Order ID</th>
+                                                <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Customer</th>
+                                                <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Date</th>
+                                                <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Amount</th>
+                                                <th className="px-4 md:px-6 py-4 text-[10px] font-bold text-stone-400 uppercase tracking-widest">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-stone-50">
+                                            {filteredOrders.map((o) => (
+                                                <tr
+                                                    key={o.id}
+                                                    onClick={() => setSelectedOrderId(o.id)}
+                                                    className={`border-b border-stone-50 transition-colors cursor-pointer ${selectedOrderId === o.id ? 'bg-amber-50/50' : 'hover:bg-stone-50/50'}`}
+                                                >
+                                                    <td className="px-4 md:px-6 py-5" onClick={(e) => e.stopPropagation()}>
+                                                        <input
+                                                            type="checkbox"
+                                                            className="w-4 h-4 rounded border-stone-300 text-[#F2A600] focus:ring-[#F2A600]"
+                                                            checked={selectedIds.has(o.id)}
+                                                            onChange={(e) => {
+                                                                const newSelected = new Set(selectedIds);
+                                                                if (e.target.checked) {
+                                                                    newSelected.add(o.id);
+                                                                } else {
+                                                                    newSelected.delete(o.id);
+                                                                }
+                                                                setSelectedIds(newSelected);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D] whitespace-nowrap">{o.id.slice(-6).toUpperCase()}</td>
+                                                    <td className="px-4 md:px-6 py-5">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center text-[10px] font-bold text-stone-500 uppercase flex-shrink-0">
+                                                                {o.customerName.split(' ').map(n => n[0]).join('')}
+                                                            </div>
+                                                            <div className="flex flex-col min-w-0">
+                                                                <span className="text-sm font-bold text-[#221C1D] truncate">{o.customerName}</span>
+                                                                <div className="flex flex-col">
+                                                                    <span className="text-[10px] text-stone-400 truncate">{o.customerEmail}</span>
+                                                                    {(o.customerPhone || o.deliveryContactPhone || o.deliveryPhone) && (
+                                                                        <span className="text-[10px] text-stone-600 font-bold flex items-center gap-1 mt-0.5">
+                                                                            <span className="material-symbols-outlined text-[10px]">phone</span>
+                                                                            {o.customerPhone || o.deliveryContactPhone || o.deliveryPhone}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 md:px-6 py-5">
+                                                        <div className="flex flex-col whitespace-nowrap">
+                                                            <span className="text-sm font-medium text-stone-600">{o.date}</span>
+                                                            <span className="text-[9px] text-stone-400 uppercase">{o.time}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-4 md:px-6 py-5 text-sm font-bold text-[#221C1D]">GH₵{o.total.toFixed(2)}</td>
+                                                    <td className="px-4 md:px-6 py-5">
+                                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${o.status === 'Delivered' ? 'bg-green-50 text-green-600' :
+                                                            o.status === 'Shipped' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'
+                                                            }`}>
+                                                            {o.status}
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div className="p-6 text-center border-t border-stone-50">
+                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Showing {filteredOrders.length} of {orders.length} orders</p>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Journey Timeline Side Pane - Responsive */}
@@ -811,53 +816,55 @@ const Orders: React.FC = () => {
             </div>
 
             {/* Bulk Action Bar */}
-            {selectedIds.size > 0 && (
-                <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
-                    <div className="bg-[#221C1D] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 border border-white/10">
-                        <div className="flex flex-col">
-                            <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Bulk Actions</span>
-                            <span className="text-xs font-bold">{selectedIds.size} Rituals Selected</span>
-                        </div>
-                        <div className="h-8 w-[1px] bg-white/10 hidden sm:block" />
-                        <div className="flex items-center gap-2">
-                            <button
-                                disabled={!!isProcessingAction}
-                                onClick={() => handleBulkStatusUpdate('Processing')}
-                                className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
-                            >
-                                Process
-                            </button>
-                            <button
-                                disabled={!!isProcessingAction}
-                                onClick={() => handleBulkStatusUpdate('Shipped')}
-                                className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
-                            >
-                                Dispatch
-                            </button>
-                            <button
-                                disabled={!!isProcessingAction}
-                                onClick={() => handleBulkStatusUpdate('Delivered')}
-                                className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
-                            >
-                                Deliver
-                            </button>
-                            <button
-                                disabled={!!isProcessingAction}
-                                onClick={handleBulkDelete}
-                                className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
-                            >
-                                Delete
-                            </button>
-                            <button
-                                onClick={() => setSelectedIds(new Set())}
-                                className="ml-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-stone-400"
-                            >
-                                <span className="material-symbols-outlined text-lg">close</span>
-                            </button>
+            {
+                selectedIds.size > 0 && (
+                    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <div className="bg-[#221C1D] text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-6 border border-white/10">
+                            <div className="flex flex-col">
+                                <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Bulk Actions</span>
+                                <span className="text-xs font-bold">{selectedIds.size} Rituals Selected</span>
+                            </div>
+                            <div className="h-8 w-[1px] bg-white/10 hidden sm:block" />
+                            <div className="flex items-center gap-2">
+                                <button
+                                    disabled={!!isProcessingAction}
+                                    onClick={() => handleBulkStatusUpdate('Processing')}
+                                    className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                                >
+                                    Process
+                                </button>
+                                <button
+                                    disabled={!!isProcessingAction}
+                                    onClick={() => handleBulkStatusUpdate('Shipped')}
+                                    className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                                >
+                                    Dispatch
+                                </button>
+                                <button
+                                    disabled={!!isProcessingAction}
+                                    onClick={() => handleBulkStatusUpdate('Delivered')}
+                                    className="px-3 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                                >
+                                    Deliver
+                                </button>
+                                <button
+                                    disabled={!!isProcessingAction}
+                                    onClick={handleBulkDelete}
+                                    className="px-3 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-500 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-colors disabled:opacity-50"
+                                >
+                                    Delete
+                                </button>
+                                <button
+                                    onClick={() => setSelectedIds(new Set())}
+                                    className="ml-2 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 text-stone-400"
+                                >
+                                    <span className="material-symbols-outlined text-lg">close</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
+                )
+            }
 
             <ConfirmModal
                 isOpen={isDeleteModalOpen}
@@ -872,7 +879,7 @@ const Orders: React.FC = () => {
                     setOrderToDelete(null);
                 }}
             />
-        </AdminLayout>
+        </AdminLayout >
     );
 };
 

@@ -6,7 +6,7 @@ import { useProducts } from '../context/ProductContext';
 import { useReviews } from '../context/ReviewContext';
 import { useNotification } from '../context/NotificationContext';
 import OptimizedImage from '../components/OptimizedImage';
-import { SkeletonLine } from '../components/Skeletons';
+import { ProductDetailSkeleton } from '../components/Skeletons';
 import { ProductVariant } from '../types';
 import { db } from '../firebaseConfig';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -87,19 +87,7 @@ const ProductDetail: React.FC = () => {
   }, [product]);
 
   if (loading) {
-    return (
-      <div className="pt-40 max-w-[1200px] mx-auto px-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-20">
-          <div className="aspect-square bg-stone-100 animate-pulse rounded-2xl" />
-          <div className="space-y-6">
-            <SkeletonLine width="60%" height="40px" />
-            <SkeletonLine width="30%" />
-            <SkeletonLine width="40%" height="30px" />
-            <SkeletonLine height="100px" />
-          </div>
-        </div>
-      </div>
-    );
+    return <ProductDetailSkeleton />;
   }
 
   if (!product || product.status !== 'Active') {

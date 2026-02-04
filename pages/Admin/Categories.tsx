@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import AdminLayout from '../../components/Admin/AdminLayout';
+import { AdminSkeleton } from '../../components/Skeletons';
 import { useCategories } from '../../context/CategoryContext';
 import { useProducts } from '../../context/ProductContext';
 import { useNotification } from '../../context/NotificationContext';
@@ -63,9 +64,7 @@ const Categories: React.FC = () => {
 
     if (loading) return (
         <AdminLayout>
-            <div className="flex items-center justify-center min-h-[50vh]">
-                <div className="w-8 h-8 border-2 border-[#F2A600] border-t-transparent rounded-full animate-spin" />
-            </div>
+            <AdminSkeleton />
         </AdminLayout>
     );
 
