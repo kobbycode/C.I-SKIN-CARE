@@ -43,7 +43,7 @@ const Header: React.FC = () => {
               className="h-8 md:h-10 w-auto rounded-full"
               src="/logo.jpg"
             />
-            <span className="hidden sm:block font-display text-sm md:text-xl font-medium tracking-[0.15em] text-secondary dark:text-primary whitespace-nowrap">C.I SKIN CARE</span>
+            <span className="font-display text-sm md:text-xl font-medium tracking-[0.15em] text-secondary dark:text-primary whitespace-nowrap">C.I SKIN CARE</span>
           </Link>
 
           {/* Desktop Nav */}
