@@ -38,8 +38,13 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
             const items: Product[] = [];
             snapshot.forEach(docSnap => {
-                // Ensure we always have a stable id field (some docs may not store `id` inside the document)
-                items.push({ id: docSnap.id, ...(docSnap.data() as Omit<Product, 'id'>) } as Product);
+                const data = docSnap.data() as Omit<Product, 'id'>;
+                // Ensure we always have a stable id field and default status to Active if missing
+                items.push({
+                    id: docSnap.id,
+                    ...data,
+                    status: data.status || 'Active'
+                } as Product);
             });
             setProducts(items);
             setLoading(false);
