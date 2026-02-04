@@ -99,9 +99,9 @@ const Home: React.FC = () => {
         <section className="py-24 bg-white dark:bg-stone-900 reveal">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="font-display text-3xl md:text-4xl mb-4 text-stone-800 dark:text-stone-100 uppercase tracking-luxury">The Collections</h2>
+              <h2 className="font-display text-3xl md:text-4xl mb-4 text-stone-800 dark:text-stone-100 uppercase tracking-luxury">Shop Categories</h2>
               <div className="w-20 h-1 bg-gold mx-auto mb-6"></div>
-              <p className="text-stone-500 dark:text-stone-400 max-w-xl mx-auto italic">Curated essentials for your daily ritual.</p>
+              <p className="text-stone-500 dark:text-stone-400 max-w-xl mx-auto italic">Explore our products by category.</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
@@ -234,7 +234,7 @@ const Home: React.FC = () => {
           />
         </div>
         <div className="relative max-w-4xl mx-auto px-4 text-center text-white">
-          <h2 className="font-display text-3xl md:text-4xl mb-6">Join the Inner Circle</h2>
+          <h2 className="font-display text-3xl md:text-4xl mb-6">Subscribe to our Newsletter</h2>
           <p className="text-stone-100 mb-10 opacity-80">
             Subscribe to receive exclusive beauty rituals, early access to new launches, and a 15% welcome gift on your first order.
           </p>
@@ -242,8 +242,8 @@ const Home: React.FC = () => {
           {isSubscribed ? (
             <div className="bg-white/10 backdrop-blur-md border border-white/20 p-8 rounded-xl animate-in fade-in zoom-in duration-500 max-w-lg mx-auto">
               <span className="material-symbols-outlined text-4xl mb-2">mark_email_read</span>
-              <h3 className="font-display text-2xl mb-2">Welcome to the Circle</h3>
-              <p className="text-sm opacity-80">Check your inbox for your exclusive welcome gift.</p>
+              <h3 className="font-display text-2xl mb-2">Welcome!</h3>
+              <p className="text-sm opacity-80">Check your inbox for your welcome gift.</p>
               <button
                 onClick={() => setIsSubscribed(false)}
                 className="mt-6 text-[10px] font-bold uppercase tracking-widest border-b border-white/40 pb-1 hover:text-gold hover:border-gold transition-all"

@@ -93,8 +93,8 @@ const ProductDetail: React.FC = () => {
   if (!product || product.status !== 'Active') {
     return (
       <div className="pt-40 pb-24 text-center">
-        <p className="font-display text-2xl mb-6">Mistery Ritual Not Found</p>
-        <p className="text-xs text-stone-500 mb-8 uppercase tracking-widest font-bold">The formula you seek is currently being refined in our alchemical laboratory.</p>
+        <p className="font-display text-2xl mb-6">Product Not Found</p>
+        <p className="text-xs text-stone-500 mb-8 uppercase tracking-widest font-bold">The product you are looking for does not exist or has been removed.</p>
         <Link to="/shop" className="text-xs font-bold uppercase tracking-widest text-primary border-b border-primary/20 pb-1">Return to Collection</Link>
       </div>
     );
@@ -231,7 +231,7 @@ const ProductDetail: React.FC = () => {
             <div className="mb-8 p-4 bg-green-50/50 dark:bg-green-950/20 rounded-xl border border-green-100/50 dark:border-green-900/30">
               <div className="flex items-center gap-2 mb-2">
                 <span className="material-symbols-outlined text-green-600 text-sm">confirmation_number</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Eligible Ritual Savings</span>
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">Eligible for Discount</span>
               </div>
               <p className="text-[9px] text-green-600/80 uppercase font-bold tracking-widest leading-loose">
                 Use code(s): {product.couponCodes.map((code, idx) => (
@@ -259,7 +259,7 @@ const ProductDetail: React.FC = () => {
                   ) : (
                     <form onSubmit={handleNotifySubmit} className="space-y-3">
                       <p className="text-[10px] text-stone-500 font-bold uppercase tracking-widest leading-relaxed">
-                        Join our priority waitlist to be rituals-ready upon replenishment.
+                        Join our waitlist to be notified when available.
                       </p>
                       <div className="flex gap-2">
                         <input
@@ -295,7 +295,7 @@ const ProductDetail: React.FC = () => {
           })()}
 
           <p className="text-stone-600 dark:text-stone-400 mb-8 leading-relaxed font-light">
-            {product.description} Engineered with our proprietary cellular complex, this formulation targets visible signs of aging while providing an instant, luminous glow that lasts all day.
+            {product.description} Formulated to improve your skin's health and appearance.
           </p>
 
           {/* Action Row */}
@@ -330,7 +330,7 @@ const ProductDetail: React.FC = () => {
                       : 'bg-primary text-white hover:brightness-110 shimmer-btn'
                       }`}
                   >
-                    {isOutOfStock ? 'Restock Imminent' : 'Add to Ritual Bag'}
+                    {isOutOfStock ? 'Coming Soon' : 'Add to Cart'}
                   </button>
 
                   <button
@@ -359,11 +359,11 @@ const ProductDetail: React.FC = () => {
             </details>
             <details className="group">
               <summary className="flex justify-between items-center cursor-pointer list-none">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D] dark:text-stone-300">The Alchemist's Blend</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#221C1D] dark:text-stone-300">Ingredients</span>
                 <span className="material-symbols-outlined text-stone-300 group-open:rotate-180 transition-transform">expand_more</span>
               </summary>
               <div className="pt-4 text-xs text-stone-500 dark:text-stone-400 font-light leading-loose uppercase tracking-widest">
-                Rosa Damascena Flower Water, Hyaluronic Acid, Squalane, Vitamin C (ascorbate), Botanical Extracts. Free from parabens, sulfates, and synthetic fragrances.
+                Safe, effective ingredients. Free from parabens and sulfates.
               </div>
             </details>
           </div>
@@ -374,14 +374,14 @@ const ProductDetail: React.FC = () => {
       <section id="reviews" className="mt-20 lg:mt-32 max-w-[1000px] mx-auto pt-16 lg:pt-24 border-t border-stone-100 dark:border-stone-900">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8 mb-16">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4 block underline">Community Evidence</span>
-            <h2 className="font-display text-3xl lg:text-4xl text-stone-900 dark:text-white">Customer Chronicles</h2>
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-primary mb-4 block underline">Reviews</span>
+            <h2 className="font-display text-3xl lg:text-4xl text-stone-900 dark:text-white">Customer Feedback</h2>
           </div>
           <button
             onClick={() => setShowReviewForm(!showReviewForm)}
             className="px-8 py-3 bg-luxury-brown text-white text-[10px] font-bold uppercase tracking-[0.2em] rounded-full hover:bg-black transition-all shadow-xl"
           >
-            Leave Your Evidence
+            Write a Review
           </button>
         </div>
 
@@ -446,7 +446,7 @@ const ProductDetail: React.FC = () => {
                   disabled={isSubmittingReview}
                   className="w-full py-4 bg-primary text-white font-bold uppercase tracking-widest text-[10px] rounded hover:brightness-110 transition-all shadow-lg"
                 >
-                  {isSubmittingReview ? 'Recording Narrative...' : 'Submit Evidence'}
+                  {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
                 </button>
               </div>
             )}
@@ -484,7 +484,7 @@ const ProductDetail: React.FC = () => {
 
       {/* Suggested Rituals */}
       <section className="mt-20 lg:mt-32 pt-16 lg:pt-24 border-t border-stone-100 dark:border-stone-900">
-        <h3 className="font-display text-2xl lg:text-3xl text-[#221C1D] dark:text-white mb-10 lg:mb-16 text-center">Complete Your Ritual</h3>
+        <h3 className="font-display text-2xl lg:text-3xl text-[#221C1D] dark:text-white mb-10 lg:mb-16 text-center">You May Also Like</h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-8">
           {products.filter(p => p.id !== id).slice(0, 4).map(p => (
             <Link to={`/product/${p.id}`} key={p.id} className="group flex flex-col items-center text-center">
@@ -492,7 +492,7 @@ const ProductDetail: React.FC = () => {
                 <img src={p.image} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
               </div>
               <h4 className="font-display text-xl mb-1">{p.name}</h4>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary/20 pb-1">Start Ritual</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-primary border-b border-primary/20 pb-1">View Product</p>
             </Link>
           ))}
         </div>

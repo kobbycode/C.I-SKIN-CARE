@@ -110,32 +110,32 @@ interface SiteConfigContextType {
 const defaultNavLinks: NavLink[] = [
     { name: 'Shop All', path: '/shop' },
     { name: 'Our Story', path: '/story' },
-    { name: 'Skin Journal', path: '/journal' },
+    { name: 'Skin Blog', path: '/journal' },
     { name: 'Skin Quiz', path: '/quiz' },
     { name: 'Contact', path: '/contact' },
 ];
 
 const defaultFooterSections: FooterSection[] = [
     {
-        title: 'The Collection',
+        title: 'Products',
         links: [
             { name: 'Shop All', path: '/shop' },
             { name: 'Cleansers', path: '/shop?q=Cleansers' },
             { name: 'Serums', path: '/shop?q=Serums' },
-            { name: 'Loyalty Ritual', path: '/loyalty' }
+            { name: 'Loyalty Program', path: '/loyalty' }
         ]
     },
     {
-        title: 'The Brand',
+        title: 'About Us',
         links: [
             { name: 'Our Story', path: '/story' },
-            { name: 'Skin Journal', path: '/journal' },
+            { name: 'Skin Blog', path: '/journal' },
             { name: 'Contact', path: '/contact' },
             { name: 'Skin Quiz', path: '/quiz' }
         ]
     },
     {
-        title: 'Concierge',
+        title: 'Customer Service',
         links: [
             { name: 'Shipping', path: '/faq' },
             { name: 'Returns', path: '/faq' },
@@ -156,7 +156,7 @@ const defaultSocialLinks: SocialLink[] = [
 
 const defaultContactInfo: ContactInfo = {
     address: "452 Fifth Avenue, Suite 1200\nNew York, NY 10018, USA",
-    email: "concierge@ciskincare.com",
+    email: "support@ciskincare.com",
     phone: "+1 (800) 555-SKIN"
 };
 
@@ -169,65 +169,65 @@ const defaultHomeSections: HomeSection[] = [
 
 const defaultHeroBanners: HeroBanner[] = [
     { title: 'The Science of Glow', sub: 'Spring Collection 2024', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAboFWaO4tGfvMQ6x8YVJhB4MsX9dAZvyVpImJ-E-HQ5E0T6G3kprf7DBc12UgFaVPuHeEOkebv_0CJBJ_wQ4VbOtkKjBYLJ_dF_vQOsq9jMlTOLcKsMyexRCotCfntLS2pyoB4LRlymwjKRwEg4dgR7SJCdOC_JztikGLdytoTpzKHG-0hClG3QDNBaSwD3QxxksB6ZJ4NhHGCpAdfx3Y2ICUr635Lbhmi0u3gMw2mEeFkH8-ZukAvPyJRQjCEZgE6nmgU6H2u__Y', status: 'Live' },
-    { title: 'Ritual of Restoration', sub: 'Nighttime Essentials', img: '/products/gluta-master-set.jpg', status: 'Scheduled' }
+    { title: 'Nighttime Essentials', sub: 'Restore Your Skin', img: '/products/gluta-master-set.jpg', status: 'Scheduled' }
 ];
 
 const defaultPhilosophy: Philosophy = {
-    title: "The Philosophy of C.I SKIN CARE",
-    content: "We believe that luxury should never compromise integrity. Our formulations are crafted with botanical extracts and clinical actives to deliver transformative results you can see and feel."
+    title: "About C.I SKIN CARE",
+    content: "We believe that high-quality skincare should be safe and effective. Our products are made with natural ingredients to give you real results you can see."
 };
 
 const defaultTestimonials: Testimonial[] = [
-    { author: 'Ama O.', quote: 'My skin has never felt more alive. The Radiance Serum is my holy grail. It\'s not just skincare, it\'s a daily ritual of self-love.', image: '/assets/customer-portrait.png' },
-    { author: 'Sophia R.', quote: 'A literal game changer for my morning routine. I have never seen such fast results.', image: '/assets/customer-portrait.png' }
+    { author: 'Ama O.', quote: 'My skin has never felt better. The Radiance Serum is my favorite. It makes my skin look so healthy.', image: '/assets/customer-portrait.png' },
+    { author: 'Sophia R.', quote: 'Definitely worth it. I saw results very quickly.', image: '/assets/customer-portrait.png' }
 ];
 
 const defaultRitualGuide: Ritual[] = [
     {
-        title: "The 5D Gluta Luminescence Ritual",
+        title: "The 5D Gluta Glow Routine",
         collection: "5D Gluta Miracle",
         image: "/products/5d-gluta-diamond-box.jpg",
         steps: [
-            { name: "Double Cleanse", desc: "Start with the SPA Exfoliating Gel to remove impurities and prep the canvas." },
-            { name: "The Miracle Base", desc: "Apply 3-4 drops of the 5D Gluta Serum to damp skin, pressing gently into the face." },
-            { name: "Seal the Glow", desc: "Layer with the 5D Gluta Moisturizer to lock in active whitening agents and hydration." }
+            { name: "Cleanse", desc: "Start with the Exfoliating Gel to clean your skin." },
+            { name: "Apply Serum", desc: "Use 3-4 drops of the 5D Gluta Serum on damp skin." },
+            { name: "Moisturize", desc: "Finish with the 5D Gluta Moisturizer to keep your skin hydrated." }
         ]
     },
     {
-        title: "The Bel Eclat Golden Hour",
+        title: "The Bel Eclat Routine",
         collection: "BEL ECLAT Tumeric",
         image: "/products/bel-eclat-hero.jpg",
         steps: [
-            { name: "Prep & Calm", desc: "Use the Tumeric Cleanser to soothe inflammation and even skin tone." },
-            { name: "Hydrate & Tint", desc: "Apply the Tumeric Face Cream for a natural, sun-kissed radiance." },
-            { name: "Protect", desc: "Finish with the Bel Eclat Body Lotion for full-body luminescence." }
+            { name: "Wash", desc: "Use the Tumeric Cleanser to soothe your skin." },
+            { name: "Hydrate", desc: "Apply the Tumeric Face Cream for a natural glow." },
+            { name: "Protect", desc: "Finish with the Bel Eclat Body Lotion." }
         ]
     }
 ];
 
 const defaultStory: StoryContent = {
     aboutTitle: "Beauty is Confidence",
-    aboutText: "Confidence emanates from practicing self-care that makes you feel and look good. At C.I Skin Care, our passion for quality, efficacy, and safety drives our product formulation in body care to give you the confidence you need to take on the world.",
-    mission: "To beautify and inspire our valued consumers and customers to feel confident in their own skin by using our products.",
-    vision: "To be the best customer oriented skincare company in Ghana and across Africa delivering safe, quality, and affordable products.",
-    visionSub: "We are committed to meeting and exceeding the expectations of all our customers by selling and distributing only the highest quality and safest skincare solutions.",
-    founderTitle: "Authenticity in Every Drop",
+    aboutText: "Confidence comes from taking care of yourself. At C.I Skin Care, we want to give you quality and safe body care products that help you feel ready to take on the world.",
+    mission: "To help our customers feel confident in their own skin by using our products.",
+    vision: "To be the best customer-focused skincare company in Ghana and Africa, offering safe and affordable products.",
+    visionSub: "We promise to meet your needs by selling only safe and high-quality skincare.",
+    founderTitle: "Authentic Quality",
     founderText: [
-        "When I started C.I Skin Care, my vision was simple: to create a brand that doesn't just sell products, but offers a sanctuary of confidence for every individual.",
-        "Every formulation we release is a result of years of research and a deep commitment to safety. We believe that luxury is not just a price point, but a promise of quality and a celebration of your natural beauty."
+        "When I started C.I Skin Care, my goal was simple: to create a brand that gives everyone confidence.",
+        "Every product we make is tested for safety. We believe that good skincare is a promise of quality."
     ],
     founderName: "Comfort I.",
     founderImage: "/assets/founder.png",
     coreValues: [
-        { title: 'Customer Oriented', desc: 'We prioritize customer satisfaction and their wellbeing above all else.', icon: 'person_heart' },
-        { title: 'Integrity', desc: 'We comply with skincare guidelines and are transparent in our operations.', icon: 'verified_user' },
-        { title: 'Quality', desc: 'We do not compromise and are consistent in our product quality from raw material to finish.', icon: 'high_quality' },
-        { title: 'Teamwork', desc: 'Our synergy is our strength. We encourage open communication and mutual respect.', icon: 'group' }
+        { title: 'Customer First', desc: 'We put our customers and their well-being first.', icon: 'person_heart' },
+        { title: 'Integrity', desc: 'We follow all skincare rules and are open about how we work.', icon: 'verified_user' },
+        { title: 'Quality', desc: 'We never compromise on the quality of our products.', icon: 'high_quality' },
+        { title: 'Teamwork', desc: 'We work together and respect each other.', icon: 'group' }
     ]
 };
 
 const defaultAnnouncementBar: AnnouncementBar = {
-    text: "Experience the Ritual - Free shipping on orders over GH₵500",
+    text: "Free shipping on orders over GH₵500",
     link: "/shop",
     active: true,
     backgroundColor: "#221C1D",

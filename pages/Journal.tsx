@@ -21,12 +21,12 @@ const Journal: React.FC = () => {
         <main className="min-h-screen bg-[#FDFCFB] dark:bg-background-dark pt-40 pb-24 transition-colors duration-300">
             {/* Header */}
             <header className="max-w-4xl mx-auto text-center px-6 mb-24">
-                <span className="text-[10px] uppercase tracking-[0.5em] text-[#A68966] mb-6 block font-black">The Skin Journal</span>
+                <span className="text-[10px] uppercase tracking-[0.5em] text-[#A68966] mb-6 block font-black">Skin Blog</span>
                 <h1 className="font-display text-5xl md:text-7xl text-[#221C1D] dark:text-white mb-8 leading-tight transition-colors">
-                    Rituals & Radiance
+                    Tips & Insights
                 </h1>
                 <p className="text-lg text-stone-500 dark:text-stone-400 font-light leading-relaxed max-w-2xl mx-auto transition-colors">
-                    Insights from our laboratory, expert skin education, and carefully curated rituals for the modern beauty enthusiast.
+                    Expert skincare advice and education for your daily routine.
                 </p>
             </header>
 
@@ -124,10 +124,10 @@ const Journal: React.FC = () => {
             <section className="max-w-5xl mx-auto px-6 mt-40">
                 <div className="bg-[#221C1D] rounded-[3rem] p-12 md:p-20 text-center text-white relative overflow-hidden shadow-2xl">
                     <div className="relative z-10">
-                        <span className="text-[10px] uppercase tracking-[0.5em] text-[#A68966] mb-8 block font-black">Le Cercle</span>
-                        <h3 className="font-display text-4xl md:text-5xl mb-8 italic">Join our inner circle <br /> of beauty enthusiasts.</h3>
+                        <span className="text-[10px] uppercase tracking-[0.5em] text-[#A68966] mb-8 block font-black">Community</span>
+                        <h3 className="font-display text-4xl md:text-5xl mb-8 italic">Join our community <br /> of beauty enthusiasts.</h3>
                         <p className="text-stone-400 font-light mb-12 max-w-lg mx-auto leading-relaxed">
-                            Receive exclusive formulation reveals, skincare masterclasses, and private event invitations directly in your inbox.
+                            Receive skincare tips and exclusive offers directly in your inbox.
                         </p>
                         <div className="max-w-sm mx-auto flex gap-4">
                             <input

@@ -141,9 +141,9 @@ const Shop: React.FC = () => {
   return (
     <main className="pt-32 pb-24 px-6 max-w-7xl mx-auto min-h-screen">
       <div className="text-center mb-16">
-        <h1 className="text-4xl lg:text-5xl font-display mb-4 text-secondary dark:text-primary tracking-luxury">The Apothecary</h1>
+        <h1 className="text-4xl lg:text-5xl font-display mb-4 text-secondary dark:text-primary tracking-luxury">Shop All</h1>
         <p className="text-xs uppercase tracking-[0.4em] text-primary font-bold">
-          {filteredProducts.length} Elegant Formulations Available
+          {filteredProducts.length} Products Available
         </p>
       </div>
 
@@ -257,7 +257,7 @@ const Shop: React.FC = () => {
                                 : 'bg-white/90 backdrop-blur-md text-secondary hover:bg-gold hover:text-white'
                                 }`}
                             >
-                              {isOutOfStock ? 'Sold Out' : 'Quick Add to Ritual'}
+                              {isOutOfStock ? 'Sold Out' : 'Quick Add'}
                             </button>
                           </div>
                         </div>
@@ -300,7 +300,7 @@ const Shop: React.FC = () => {
                 {!isPageLoading && displayLimit >= filteredProducts.length && filteredProducts.length > 0 && (
                   <div className="text-center opacity-30">
                     <div className="w-12 h-px bg-primary mx-auto mb-4"></div>
-                    <p className="text-[10px] uppercase tracking-[0.4em] font-bold">The Complete Ritual</p>
+                    <p className="text-[10px] uppercase tracking-[0.4em] font-bold">End of Results</p>
                   </div>
                 )}
               </div>
