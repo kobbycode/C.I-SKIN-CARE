@@ -28,6 +28,14 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
         // Subscribe to changes
         const unsubscribe = onSnapshot(productsRef, (snapshot) => {
+            // Fallback to mock data if Firestore is empty
+            if (snapshot.empty) {
+                console.warn("Firestore product collection is empty. Falling back to MOCK_PRODUCTS.");
+                setProducts(MOCK_PRODUCTS);
+                setLoading(false);
+                return;
+            }
+
             const items: Product[] = [];
             snapshot.forEach(docSnap => {
                 // Ensure we always have a stable id field (some docs may not store `id` inside the document)
