@@ -43,7 +43,7 @@ const Header: React.FC = () => {
               className="h-8 md:h-10 w-auto rounded-full"
               src="/logo.jpg"
             />
-            <span className="font-display text-sm md:text-xl font-medium tracking-[0.15em] text-secondary dark:text-primary whitespace-nowrap">C.I SKIN CARE</span>
+            <span className="hidden sm:block font-display text-sm md:text-xl font-medium tracking-[0.15em] text-secondary dark:text-primary whitespace-nowrap">C.I SKIN CARE</span>
           </Link>
 
           {/* Desktop Nav */}
@@ -64,7 +64,7 @@ const Header: React.FC = () => {
           <div className="flex items-center gap-4 md:gap-6">
             <Link
               to="/search"
-              className="material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors"
+              className="hidden lg:block material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors"
             >
               search
             </Link>
