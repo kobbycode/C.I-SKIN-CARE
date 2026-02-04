@@ -209,7 +209,7 @@ const Shop: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16 reveal">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16">
                 {visibleProducts.map((product) => {
                   const isOutOfStock = product.variants && product.variants.length > 0
                     ? product.variants.every(v => (v.stock ?? 0) <= 0)
