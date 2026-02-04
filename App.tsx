@@ -3,6 +3,7 @@ import React, { useState, createContext, useContext, useEffect, lazy, Suspense }
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { CartItem, Product, ProductVariant } from './types';
 import Header from './components/Header';
+import FloatingCart from './components/FloatingCart';
 import Footer from './components/Footer';
 import CartDrawer from './components/CartDrawer';
 import { SiteConfigProvider } from './context/SiteConfigContext';
@@ -102,6 +103,28 @@ import { WishlistProvider, useWishlist } from './context/WishlistContext';
 // ... (Imports remain the same, ensure WishlistProvider is imported)
 
 // Extract AppContent to handle state that depends on other providers
+const ScrollReveal: React.FC = () => {
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('active');
+          }
+        });
+      },
+      { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+    );
+
+    const elements = document.querySelectorAll('.reveal');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, []); // Run on mount, but we might need to re-run or use a more dynamic approach if content changes
+
+  return null;
+};
+
 const AppContent: React.FC = () => {
   // Cart and DarkMode state remain here
   const [cart, setCart] = useState<CartItem[]>(() => {
@@ -185,6 +208,7 @@ const AppContent: React.FC = () => {
     }}>
       <BrowserRouter>
         <ScrollToTop />
+        <ScrollReveal />
         <Suspense fallback={<PageLoader />}>
           <MainLayout />
         </Suspense>
@@ -279,6 +303,7 @@ const MainLayout: React.FC = () => {
         </Routes>
       </div>
       {!isAdminPage && <Footer />}
+      {!isAdminPage && <FloatingCart />}
       <CartDrawer />
     </div>
   );

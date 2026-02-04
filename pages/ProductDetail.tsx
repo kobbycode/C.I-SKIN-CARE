@@ -339,7 +339,7 @@ const ProductDetail: React.FC = () => {
                     disabled={isOutOfStock}
                     className={`flex-1 font-bold uppercase tracking-[0.2em] text-[10px] h-14 shadow-lg transition-all rounded ${isOutOfStock
                       ? 'bg-stone-100 dark:bg-stone-900 text-stone-400 cursor-not-allowed shadow-none border border-stone-200 dark:border-stone-800'
-                      : 'bg-primary text-white hover:brightness-110'
+                      : 'bg-primary text-white hover:brightness-110 shimmer-btn'
                       }`}
                   >
                     {isOutOfStock ? 'Restock Imminent' : 'Add to Ritual Bag'}

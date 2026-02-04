@@ -193,7 +193,7 @@ const CartDrawer: React.FC = () => {
           <button
             onClick={handleCheckout}
             disabled={cart.length === 0 || hasOutOfStockItems}
-            className={`w-full py-4 rounded font-bold uppercase tracking-widest text-xs shadow-lg transition-all flex items-center justify-center gap-2 ${hasOutOfStockItems
+            className={`w-full py-4 rounded font-bold uppercase tracking-widest text-xs shadow-lg transition-all flex items-center justify-center gap-2 shimmer-btn ${hasOutOfStockItems
               ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
               : 'bg-gold-gradient text-white hover:brightness-110'
               }`}

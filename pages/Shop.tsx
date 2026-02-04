@@ -141,9 +141,7 @@ const Shop: React.FC = () => {
   return (
     <main className="pt-32 pb-24 px-6 max-w-7xl mx-auto min-h-screen">
       <div className="text-center mb-16">
-        <h1 className="font-display text-5xl md:text-6xl text-secondary dark:text-primary mb-4">
-          {query ? `Results for "${query}"` : 'Shop All Products'}
-        </h1>
+        <h1 className="text-4xl lg:text-5xl font-display mb-4 text-secondary dark:text-primary tracking-luxury">The Apothecary</h1>
         <p className="text-xs uppercase tracking-[0.4em] text-primary font-bold">
           {filteredProducts.length} Elegant Formulations Available
         </p>
@@ -211,7 +209,7 @@ const Shop: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16">
+              <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-x-8 gap-y-16 reveal">
                 {visibleProducts.map((product) => {
                   const isOutOfStock = product.variants && product.variants.length > 0
                     ? product.variants.every(v => (v.stock ?? 0) <= 0)
@@ -254,7 +252,7 @@ const Shop: React.FC = () => {
                             <button
                               onClick={() => !isOutOfStock && addToCart(product)}
                               disabled={isOutOfStock}
-                              className={`w-full py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-2xl rounded-lg ${isOutOfStock
+                              className={`w-full py-3 text-[10px] font-bold uppercase tracking-widest transition-all shadow-2xl rounded-lg shimmer-btn ${isOutOfStock
                                 ? 'bg-stone-200 text-stone-500 cursor-not-allowed'
                                 : 'bg-white/90 backdrop-blur-md text-secondary hover:bg-gold hover:text-white'
                                 }`}

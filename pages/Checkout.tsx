@@ -944,7 +944,10 @@ const Checkout: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className="bg-gold-gradient text-white py-5 px-10 rounded font-bold uppercase tracking-[0.3em] text-xs shadow-2xl hover:brightness-110 hover:shadow-gold-500/50 transition-all active:scale-[0.98] flex items-center justify-center gap-3 disabled:opacity-50 w-full sm:w-auto order-1 sm:order-2"
+                    className={`w-full py-6 rounded-xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl transition-all flex items-center justify-center gap-3 shimmer-btn ${isProcessing
+                      ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                      : 'bg-gold-gradient text-white hover:brightness-110 hover:-translate-y-1'
+                      } w-full sm:w-auto order-1 sm:order-2`}
                   >
                     {isProcessing ? (
                       <>

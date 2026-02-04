@@ -42,8 +42,61 @@
     border-radius: 10px;
 }
 
+/* Luxury Shimmer Effect */
+@keyframes shimmer {
+  0% { transform: translateX(-100%) skewX(-15deg); }
+  100% { transform: translateX(200%) skewX(-15deg); }
+}
+
+.shimmer-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-btn::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  transition: none;
+}
+
+.shimmer-btn:hover::after {
+  animation: shimmer 0.8s ease-in-out;
+}
+
+/* Scroll Reveal Classes */
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Luxury Letter Spacing */
+.tracking-luxury {
+  letter-spacing: 0.25em;
+}
+
+.tracking-luxury-wide {
+  letter-spacing: 0.4em;
+}
+
 body {
-    transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  overflow-x: hidden;
 }
 
 .hero-zoom:hover img {

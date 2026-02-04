@@ -83,10 +83,10 @@ const Home: React.FC = () => {
               Experience the intersection of nature and science with our dermatologist-approved formulations for radiant, youthful skin.
             </p>
             <div className="flex space-x-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
-              <Link to="/shop" className="bg-white text-primary px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-gold hover:text-white transition-all duration-300 hover:scale-105 active:scale-95">
+              <Link to="/shop" className="bg-white text-primary px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-gold hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shimmer-btn">
                 Shop Now
               </Link>
-              <Link to="/shop" className="border border-white text-white px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-white/10 transition-all duration-300">
+              <Link to="/shop" className="border border-white text-white px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-white/10 transition-all duration-300 shimmer-btn">
                 Explore Collections
               </Link>
             </div>
@@ -96,10 +96,10 @@ const Home: React.FC = () => {
 
       {/* The Collections Section */}
       {isSectionActive('Featured Products Grid') && (
-        <section className="py-24 bg-white dark:bg-stone-900">
+        <section className="py-24 bg-white dark:bg-stone-900 reveal">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
-              <h2 className="font-display text-3xl md:text-4xl mb-4 text-stone-800 dark:text-stone-100">The Collections</h2>
+              <h2 className="font-display text-3xl md:text-4xl mb-4 text-stone-800 dark:text-stone-100 uppercase tracking-luxury">The Collections</h2>
               <div className="w-20 h-1 bg-gold mx-auto mb-6"></div>
               <p className="text-stone-500 dark:text-stone-400 max-w-xl mx-auto italic">Curated essentials for your daily ritual.</p>
             </div>
@@ -138,7 +138,7 @@ const Home: React.FC = () => {
 
       {/* Philosophy Section */}
       {isSectionActive('Philosophy Quote') && (
-        <section className="py-24 bg-background-light dark:bg-background-dark">
+        <section className="py-24 bg-background-light dark:bg-background-dark reveal">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-col lg:flex-row items-center gap-16">
               <div className="lg:w-1/2">
@@ -149,7 +149,7 @@ const Home: React.FC = () => {
                 />
               </div>
               <div className="lg:w-1/2">
-                <h2 className="font-display text-3xl md:text-4xl mb-8 leading-tight">
+                <h2 className="font-display text-3xl md:text-4xl mb-8 leading-tight tracking-luxury">
                   {siteConfig.philosophy?.title || "The Philosophy of"} <br />
                   <span className="gold-gradient italic">C.I SKIN CARE</span>
                 </h2>
@@ -186,7 +186,7 @@ const Home: React.FC = () => {
 
       {/* Testimonial Section */}
       {siteConfig.testimonials && siteConfig.testimonials.length > 0 && (
-        <section className="py-24 bg-stone-100 dark:bg-stone-800/50 overflow-hidden">
+        <section className="py-24 bg-stone-100 dark:bg-stone-800/50 overflow-hidden reveal">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <span className="material-icons-outlined text-gold text-5xl mb-6">format_quote</span>
             <div className="relative min-h-[300px]">
@@ -225,7 +225,7 @@ const Home: React.FC = () => {
       )}
 
       {/* Newsletter Section */}
-      <section className="py-24 relative overflow-hidden bg-primary dark:bg-stone-900">
+      <section className="py-24 relative overflow-hidden bg-primary dark:bg-stone-900 reveal">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <img
             alt="Logo Watermark"

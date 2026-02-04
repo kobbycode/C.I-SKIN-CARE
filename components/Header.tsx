@@ -26,7 +26,7 @@ const Header: React.FC = () => {
 
   return (
     <>
-      <nav className="fixed w-full z-50 bg-background-light/90 dark:bg-background-dark/90 backdrop-blur-md border-b border-stone-200 dark:border-stone-800 transition-colors">
+      <nav className="fixed w-full z-50 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-xl border-b border-primary/10 transition-colors">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-5 flex justify-between items-center">
 
           {/* Mobile Menu Toggle - Force hidden on desktop */}
