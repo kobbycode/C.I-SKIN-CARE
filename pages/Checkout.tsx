@@ -224,7 +224,9 @@ const Checkout: React.FC = () => {
       couponCode: appliedCoupon?.code,
       discount: discountAmount,
       customerPhone: formData.phone,
-      deliveryPhone: formData.phone
+      deliveryPhone: formData.phone,
+      deliveryLandmark: formData.landmark,
+      deliveryInstructions: formData.deliveryInstructions
     };
 
     // Increment coupon usage if applied
@@ -365,7 +367,9 @@ const Checkout: React.FC = () => {
           discount: discountAmount || 0,
           userId: currentUser?.id,
           customerPhone: formData.phone,
-          deliveryPhone: formData.phone
+          deliveryPhone: formData.phone,
+          deliveryLandmark: formData.landmark,
+          deliveryInstructions: formData.deliveryInstructions
         };
 
         // Sanitize order object to remove undefined values (Firestore rejects undefined)

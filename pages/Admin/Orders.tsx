@@ -651,9 +651,23 @@ const Orders: React.FC = () => {
                                 <div className="grid grid-cols-1 gap-6">
                                     <div>
                                         <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Shipping Address</p>
-                                        <p className="text-[10px] text-stone-600 leading-relaxed italic">
-                                            {selectedOrder.shippingAddress}
-                                        </p>
+                                        <div className="space-y-2">
+                                            <p className="text-[10px] text-stone-600 leading-relaxed italic">
+                                                {selectedOrder.shippingAddress}
+                                            </p>
+                                            {selectedOrder.deliveryLandmark && (
+                                                <div className="flex items-start gap-1.5 text-[9px] text-[#F2A600] font-bold">
+                                                    <span className="material-symbols-outlined text-[12px] shrink-0">location_on</span>
+                                                    <span>Landmark: {selectedOrder.deliveryLandmark}</span>
+                                                </div>
+                                            )}
+                                            {selectedOrder.deliveryInstructions && (
+                                                <div className="flex items-start gap-1.5 text-[9px] text-stone-500 font-medium bg-stone-50 p-2 rounded-lg border border-stone-100">
+                                                    <span className="material-symbols-outlined text-[12px] shrink-0">info</span>
+                                                    <span>Notes: {selectedOrder.deliveryInstructions}</span>
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                     <div>
                                         <p className="text-[8px] font-bold text-stone-400 uppercase mb-1.5">Contact</p>
