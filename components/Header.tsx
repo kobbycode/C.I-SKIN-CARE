@@ -64,12 +64,12 @@ const Header: React.FC = () => {
           <div className="flex items-center gap-4 md:gap-6">
             <Link
               to="/search"
-              className="hidden lg:block material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors"
+              className="!hidden lg:!block material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors"
             >
               search
             </Link>
             <NotificationBell />
-            <Link to="/profile" className="hidden lg:block material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors">
+            <Link to="/profile" className="!hidden lg:!block material-symbols-outlined text-secondary dark:text-primary text-[22px] font-light hover:text-accent transition-colors">
               person
             </Link>
             <button
