@@ -1,6 +1,5 @@
 
 import React, { useState, createContext, useContext, useEffect, lazy, Suspense } from 'react';
-import { AppSkeleton } from './components/Skeletons';
 import { BrowserRouter, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { CartItem, Product, ProductVariant } from './types';
 import Header from './components/Header';
@@ -69,7 +68,11 @@ const AdminUsers = lazyWithRetry(() => import('./pages/Admin/Users'));
 const Analytics = lazyWithRetry(() => import('./pages/Admin/Analytics'));
 
 // Component for Suspense fallback
-const PageLoader = () => <AppSkeleton />;
+const PageLoader = () => (
+  <div className="min-h-[50vh] flex items-center justify-center">
+    <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+  </div>
+);
 
 // Context for global state
 interface AppContextType {
