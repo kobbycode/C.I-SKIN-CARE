@@ -16,14 +16,13 @@ const Home: React.FC = () => {
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
   const [activeHeroIndex, setActiveHeroIndex] = useState(0);
 
-  // Filter products for the hero carousel - prioritizing those with status 'Active'
   const heroProducts = useMemo(() => {
     const active = products.filter(p => p.status === 'Active' || !p.status);
     // Always provide something to cycle through. If no products yet (or loading), use mocks.
     if (active.length === 0) {
-      return MOCK_PRODUCTS.slice(0, 5);
+      return MOCK_PRODUCTS;
     }
-    return active.slice(0, 5);
+    return active;
   }, [products]);
 
   useEffect(() => {
