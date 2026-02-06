@@ -1,15 +1,40 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import UserGallery from '../components/UserGallery';
 import { useSiteConfig } from '../context/SiteConfigContext';
+import { useProducts } from '../context/ProductContext';
 import OptimizedImage from '../components/OptimizedImage';
+import { motion, AnimatePresence } from 'framer-motion';
+import { MOCK_PRODUCTS } from '../constants';
 
 const Home: React.FC = () => {
   const { siteConfig } = useSiteConfig();
+  const { products, loading } = useProducts();
   const [email, setEmail] = React.useState('');
   const [isSubscribing, setIsSubscribing] = React.useState(false);
   const [isSubscribed, setIsSubscribed] = React.useState(false);
   const [activeTestimonial, setActiveTestimonial] = React.useState(0);
+  const [activeHeroIndex, setActiveHeroIndex] = useState(0);
+
+  // Filter products for the hero carousel - prioritizing those with status 'Active'
+  const heroProducts = useMemo(() => {
+    const active = products.filter(p => p.status === 'Active' || !p.status);
+    // Always provide something to cycle through. If no products yet (or loading), use mocks.
+    if (active.length === 0) {
+      return MOCK_PRODUCTS.slice(0, 5);
+    }
+    return active.slice(0, 5);
+  }, [products]);
+
+  useEffect(() => {
+    if (heroProducts.length <= 1) return;
+
+    const interval = setInterval(() => {
+      setActiveHeroIndex(prev => (prev + 1) % heroProducts.length);
+    }, 6000); // Change hero slide every 6 seconds
+
+    return () => clearInterval(interval);
+  }, [heroProducts.length]);
 
   React.useEffect(() => {
     if (!siteConfig.testimonials || siteConfig.testimonials.length <= 1) return;
@@ -20,10 +45,6 @@ const Home: React.FC = () => {
 
     return () => clearInterval(interval);
   }, [siteConfig.testimonials]);
-
-  const activeHero = useMemo(() => {
-    return siteConfig.heroBanners.find(h => h.status === 'Live') || siteConfig.heroBanners[0];
-  }, [siteConfig.heroBanners]);
 
   const dynamicSeasonSub = React.useMemo(() => {
     const m = new Date().getMonth();
@@ -40,11 +61,6 @@ const Home: React.FC = () => {
   }, []);
 
   const isSectionActive = (name: string) => {
-    // Mapping section names from CMSSettings to Home components
-    // 'Featured Products Grid' -> Collections
-    // 'Philosophy Quote' -> Philosophy
-    // 'Instagram Feed' -> UserGallery (Community Gallery)
-    // 'Typography Block' -> Testimonials (Approximation as it's text heavy)
     const section = siteConfig.homeSections.find(s => s.name === name);
     return section ? section.active : true;
   };
@@ -60,38 +76,96 @@ const Home: React.FC = () => {
     }, 1500);
   };
 
+  const nextHero = () => {
+    if (heroProducts.length === 0) return;
+    setActiveHeroIndex(prev => (prev + 1) % heroProducts.length);
+  };
+  const prevHero = () => {
+    if (heroProducts.length === 0) return;
+    setActiveHeroIndex(prev => (prev - 1 + heroProducts.length) % heroProducts.length);
+  };
+
   return (
     <div className="overflow-x-hidden bg-background-light dark:bg-background-dark">
-      {/* Hero Section */}
-      <header className="relative h-[80vh] lg:h-screen overflow-hidden">
-        <div className="absolute inset-0">
-          <OptimizedImage
-            src={activeHero?.img || "https://lh3.googleusercontent.com/aida-public/AB6AXuAboFWaO4tGfvMQ6x8YVJhB4MsX9dAZvyVpImJ-E-HQ5E0T6G3kprf7DBc12UgFaVPuHeEOkebv_0CJBJ_wQ4VbOtkKjBYLJ_dF_vQOsq9jMlTOLcKsMyexRCotCfntLS2pyoB4LRlymwjKRwEg4dgR7SJCdOC_JztikGLdytoTpzKHG-0hClG3QDNBaSwD3QxxksB6ZJ4NhHGCpAdfx3Y2ICUr635Lbhmi0u3gMw2mEeFkH8-ZukAvPyJRQjCEZgE6nmgU6H2u__Y"}
-            alt={activeHero?.title || "Beautiful glowing skin"}
-            className="w-full h-full"
-            loading="eager" // Hero image should load fast
-          />
-          <div className="absolute inset-0 bg-black/35"></div>
-        </div>
-        <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-center items-start px-4 sm:px-6 lg:px-8 pt-32 lg:pt-20">
-          <div className="max-w-2xl text-white">
-            <h2 className="font-display text-sm md:text-lg tracking-widest mb-4 opacity-90 uppercase animate-in fade-in slide-in-from-left duration-1000">{dynamicSeasonSub}</h2>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-display mb-6 md:mb-8 leading-tight animate-in fade-in slide-in-from-left duration-1000 delay-200">
-              {activeHero?.title}
-            </h1>
-            <p className="text-base md:text-xl mb-8 md:mb-10 font-light max-w-lg leading-relaxed opacity-90 animate-in fade-in slide-in-from-left duration-1000 delay-300">
-              Experience the intersection of nature and science with our dermatologist-approved formulations for radiant, youthful skin.
-            </p>
-            <div className="flex space-x-4 animate-in fade-in slide-in-from-bottom-4 duration-1000 delay-500">
-              <Link to="/shop" className="bg-white text-primary px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-gold hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shimmer-btn">
-                Shop Now
-              </Link>
-              <Link to="/shop" className="border border-white text-white px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-white/10 transition-all duration-300 shimmer-btn">
-                Explore Collections
-              </Link>
+      {/* Hero Section - Product Carousel */}
+      <header className="relative h-[85vh] lg:h-screen overflow-hidden group bg-stone-900">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={heroProducts[activeHeroIndex]?.id || 'initial'}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2 }}
+            className="absolute inset-0"
+          >
+            <div className="absolute inset-0 bg-stone-900 flex items-center justify-center">
+              <OptimizedImage
+                src={heroProducts[activeHeroIndex]?.image || "https://lh3.googleusercontent.com/aida-public/AB6AXuAboFWaO4tGfvMQ6x8YVJhB4MsX9dAZvyVpImJ-E-HQ5E0T6G3kprf7DBc12UgFaVPuHeEOkebv_0CJBJ_wQ4VbOtkKjBYLJ_dF_vQOsq9jMlTOLcKsMyexRCotCfntLS2pyoB4LRlymwjKRwEg4dgR7SJCdOC_JztikGLdytoTpzKHG-0hClG3QDNBaSwD3QxxksB6ZJ4NhHGCpAdfx3Y2ICUr635Lbhmi0u3gMw2mEeFkH8-ZukAvPyJRQjCEZgE6nmgU6H2u__Y"}
+                alt={heroProducts[activeHeroIndex]?.name || "Luxury Skincare"}
+                className="w-full h-full object-contain"
+                loading="eager"
+              />
+              <div className="absolute inset-0 bg-black/40"></div>
             </div>
-          </div>
-        </div>
+
+            <div className="relative max-w-7xl mx-auto h-full flex flex-col justify-end items-start px-4 sm:px-6 lg:px-8 pb-20 lg:pb-32">
+              <div className="max-w-2xl text-white">
+                <motion.p
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.8 }}
+                  className="text-[9px] uppercase tracking-[0.6em] font-black text-white/50 mb-8 italic"
+                >
+                  {heroProducts[activeHeroIndex]?.name}
+                </motion.p>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.8 }}
+                  className="flex space-x-4"
+                >
+                  <Link to={heroProducts[activeHeroIndex] ? `/product/${heroProducts[activeHeroIndex].id}` : "/shop"} className="bg-white text-primary px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-gold hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shimmer-btn">
+                    View Product
+                  </Link>
+                  <Link to="/shop" className="border border-white text-white px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-white/10 transition-all duration-300 shimmer-btn">
+                    Shop Collection
+                  </Link>
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        </AnimatePresence>
+
+        {/* Carousel Navigation Controls */}
+        {heroProducts.length > 1 && (
+          <>
+            <button
+              onClick={prevHero}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/30 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white/20 z-20"
+              aria-label="Previous slide"
+            >
+              <span className="material-icons-outlined">chevron_left</span>
+            </button>
+            <button
+              onClick={nextHero}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full border border-white/30 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300 hover:bg-white/20 z-20"
+              aria-label="Next slide"
+            >
+              <span className="material-icons-outlined">chevron_right</span>
+            </button>
+
+            <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex space-x-3 z-20">
+              {heroProducts.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => setActiveHeroIndex(i)}
+                  className={`h-1 transition-all duration-500 rounded-full ${i === activeHeroIndex ? 'w-12 bg-gold' : 'w-4 bg-white/40 hover:bg-white/60'}`}
+                  aria-label={`Go to slide ${i + 1}`}
+                />
+              ))}
+            </div>
+          </>
+        )}
       </header>
 
       {/* The Collections Section */}

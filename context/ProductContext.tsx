@@ -27,27 +27,35 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
 
         // Subscribe to changes
-        const unsubscribe = onSnapshot(productsRef, (snapshot) => {
-            // Fallback to mock data if Firestore is empty
-            if (snapshot.empty) {
-                console.warn("Firestore product collection is empty. Falling back to MOCK_PRODUCTS.");
+        const unsubscribe = onSnapshot(productsRef, {
+            next: (snapshot) => {
+                // Fallback to mock data if Firestore is empty
+                if (snapshot.empty) {
+                    console.warn("Firestore product collection is empty. Falling back to MOCK_PRODUCTS.");
+                    setProducts(MOCK_PRODUCTS);
+                    setLoading(false);
+                    return;
+                }
+
+                const items: Product[] = [];
+                snapshot.forEach(docSnap => {
+                    const data = docSnap.data() as Omit<Product, 'id'>;
+                    // Ensure we always have a stable id field and default status to Active if missing
+                    items.push({
+                        id: docSnap.id,
+                        ...data,
+                        status: data.status || 'Active'
+                    } as Product);
+                });
+                setProducts(items);
+                setLoading(false);
+            },
+            error: (error) => {
+                console.error("Firestore onSnapshot error:", error);
+                console.warn("Falling back to MOCK_PRODUCTS due to error.");
                 setProducts(MOCK_PRODUCTS);
                 setLoading(false);
-                return;
             }
-
-            const items: Product[] = [];
-            snapshot.forEach(docSnap => {
-                const data = docSnap.data() as Omit<Product, 'id'>;
-                // Ensure we always have a stable id field and default status to Active if missing
-                items.push({
-                    id: docSnap.id,
-                    ...data,
-                    status: data.status || 'Active'
-                } as Product);
-            });
-            setProducts(items);
-            setLoading(false);
         });
 
         return () => unsubscribe();

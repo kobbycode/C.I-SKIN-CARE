@@ -21,15 +21,21 @@ export const OrderProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
 
 
-        const unsubscribe = onSnapshot(ordersRef, (snapshot) => {
-            const items: Order[] = [];
-            snapshot.forEach(doc => items.push(doc.data() as Order));
-            setOrders(items.sort((a, b) => {
-                const dateA = new Date(`${a.date} ${a.time}`).getTime();
-                const dateB = new Date(`${b.date} ${b.time}`).getTime();
-                return dateB - dateA;
-            }));
-            setLoading(false);
+        const unsubscribe = onSnapshot(ordersRef, {
+            next: (snapshot) => {
+                const items: Order[] = [];
+                snapshot.forEach(doc => items.push(doc.data() as Order));
+                setOrders(items.sort((a, b) => {
+                    const dateA = new Date(`${a.date} ${a.time}`).getTime();
+                    const dateB = new Date(`${b.date} ${b.time}`).getTime();
+                    return dateB - dateA;
+                }));
+                setLoading(false);
+            },
+            error: (error) => {
+                console.error("Order onSnapshot error:", error);
+                setLoading(false);
+            }
         });
 
         return () => unsubscribe();

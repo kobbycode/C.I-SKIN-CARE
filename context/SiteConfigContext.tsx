@@ -259,37 +259,48 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     useEffect(() => {
         const configRef = doc(db, 'settings', 'siteConfig');
 
-        const unsubscribe = onSnapshot(configRef, (docSnap) => {
-            if (docSnap.exists()) {
-                const data = docSnap.data();
-                // Merge with defaults to ensure completeness of schema
-                setSiteConfig({
-                    ...defaultSiteConfig,
-                    ...data,
-                    // Deeper merge for nested objects if necessary, but SiteConfig is mostly arrays/objects
-                    contactInfo: { ...defaultSiteConfig.contactInfo, ...data.contactInfo },
-                    philosophy: { ...defaultSiteConfig.philosophy, ...data.philosophy },
-                    story: { ...defaultSiteConfig.story, ...data.story },
-                    announcementBar: { ...defaultSiteConfig.announcementBar, ...data.announcementBar },
-                } as SiteConfig);
-                setLoading(false);
-            } else {
-                // Migration: Check local storage or use defaults
-                let initialConfig = defaultSiteConfig;
-                try {
-                    const localData = localStorage.getItem('siteConfig_v2');
-                    if (localData) {
-                        initialConfig = { ...defaultSiteConfig, ...JSON.parse(localData) };
-                    }
-                } catch (e) {
-                    console.error("Local storage error", e);
-                }
-
-                // Initialize Firestore
-                setDoc(configRef, initialConfig).then(() => {
-                    setSiteConfig(initialConfig);
+        const unsubscribe = onSnapshot(configRef, {
+            next: (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    // Merge with defaults to ensure completeness of schema
+                    setSiteConfig({
+                        ...defaultSiteConfig,
+                        ...data,
+                        // Deeper merge for nested objects if necessary, but SiteConfig is mostly arrays/objects
+                        contactInfo: { ...defaultSiteConfig.contactInfo, ...data.contactInfo },
+                        philosophy: { ...defaultSiteConfig.philosophy, ...data.philosophy },
+                        story: { ...defaultSiteConfig.story, ...data.story },
+                        announcementBar: { ...defaultSiteConfig.announcementBar, ...data.announcementBar },
+                    } as SiteConfig);
                     setLoading(false);
-                });
+                } else {
+                    // Migration: Check local storage or use defaults
+                    let initialConfig = defaultSiteConfig;
+                    try {
+                        const localData = localStorage.getItem('siteConfig_v2');
+                        if (localData) {
+                            initialConfig = { ...defaultSiteConfig, ...JSON.parse(localData) };
+                        }
+                    } catch (e) {
+                        console.error("Local storage error", e);
+                    }
+
+                    // Initialize Firestore
+                    setDoc(configRef, initialConfig).then(() => {
+                        setSiteConfig(initialConfig);
+                        setLoading(false);
+                    }).catch(err => {
+                        console.error("Failed to initialize site config doc", err);
+                        setSiteConfig(initialConfig);
+                        setLoading(false);
+                    });
+                }
+            },
+            error: (error) => {
+                console.error("SiteConfig onSnapshot error:", error);
+                setSiteConfig(defaultSiteConfig);
+                setLoading(false);
             }
         });
 

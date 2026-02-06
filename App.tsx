@@ -100,10 +100,11 @@ export const useApp = () => {
 
 import { WishlistProvider, useWishlist } from './context/WishlistContext';
 
-// ... (Imports remain the same, ensure WishlistProvider is imported)
 
 // Extract AppContent to handle state that depends on other providers
 const ScrollReveal: React.FC = () => {
+  const { pathname } = useLocation();
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -116,11 +117,23 @@ const ScrollReveal: React.FC = () => {
       { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
     );
 
-    const elements = document.querySelectorAll('.reveal');
-    elements.forEach((el) => observer.observe(el));
+    const observe = () => {
+      const elements = document.querySelectorAll('.reveal:not(.active)');
+      elements.forEach((el) => observer.observe(el));
+    };
 
-    return () => observer.disconnect();
-  }, []); // Run on mount, but we might need to re-run or use a more dynamic approach if content changes
+    // Initial scan
+    observe();
+
+    // Re-scan when DOM changes (handles lazy loading)
+    const mutationObserver = new MutationObserver(observe);
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [pathname]);
 
   return null;
 };

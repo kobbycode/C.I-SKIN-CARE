@@ -24,13 +24,19 @@ const Coupons: React.FC = () => {
     });
 
     useEffect(() => {
-        const unsubscribe = onSnapshot(collection(db, 'coupons'), (snap) => {
-            const data: Coupon[] = [];
-            snap.forEach(doc => {
-                data.push({ ...doc.data(), id: doc.id } as Coupon);
-            });
-            setCoupons(data);
-            setLoading(false);
+        const unsubscribe = onSnapshot(collection(db, 'coupons'), {
+            next: (snap) => {
+                const data: Coupon[] = [];
+                snap.forEach(doc => {
+                    data.push({ ...doc.data(), id: doc.id } as Coupon);
+                });
+                setCoupons(data);
+                setLoading(false);
+            },
+            error: (error) => {
+                console.error("Coupons onSnapshot error:", error);
+                setLoading(false);
+            }
         });
         return () => unsubscribe();
     }, []);

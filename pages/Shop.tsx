@@ -6,6 +6,7 @@ import { useProducts } from '../context/ProductContext';
 import { useCategories } from '../context/CategoryContext';
 import OptimizedImage from '../components/OptimizedImage';
 import { ShopSkeleton } from '../components/Skeletons';
+import { MOCK_PRODUCTS } from '../constants';
 
 const Shop: React.FC = () => {
   const { addToCart } = useApp();
@@ -20,7 +21,8 @@ const Shop: React.FC = () => {
     }
   }, [productsLoading, categoriesLoading]);
 
-  const loading = !hasLoadedOnce || productsLoading || categoriesLoading;
+  // If we have products, even if mock ones, we don't want to show skeletons forever
+  const loading = !hasLoadedOnce && (productsLoading || categoriesLoading) && products.length === 0;
   const [searchParams] = useSearchParams();
 
   // Filtering States
@@ -60,22 +62,30 @@ const Shop: React.FC = () => {
     return ['All', ...Array.from(items).sort()];
   }, [products]);
 
+  const allProducts = useMemo(() => {
+    const active = products.filter(p => p.status === 'Active');
+    // If no active products in Firestore, fallback to mock
+    if (active.length === 0 && !productsLoading) {
+      return MOCK_PRODUCTS;
+    }
+    return active;
+  }, [products, productsLoading]);
+
   const filteredProducts = useMemo(() => {
-    return products.filter(p => {
+    return allProducts.filter(p => {
       const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
       const matchesSkinType = activeSkinType === 'All' || p.skinTypes?.includes(activeSkinType);
       const matchesConcern = activeConcern === 'All' || p.concerns?.includes(activeConcern);
       const matchesBrand = activeBrand === 'All' || p.brand === activeBrand;
-      const isVisible = p.status === 'Active';
 
       const matchesSearch = !query ||
         p.name.toLowerCase().includes(query) ||
         p.description.toLowerCase().includes(query) ||
         p.tags.some(t => t.toLowerCase().includes(query));
 
-      return isVisible && matchesCategory && matchesSkinType && matchesConcern && matchesBrand && matchesSearch;
+      return matchesCategory && matchesSkinType && matchesConcern && matchesBrand && matchesSearch;
     });
-  }, [activeCategory, activeSkinType, activeConcern, activeBrand, query, products]);
+  }, [activeCategory, activeSkinType, activeConcern, activeBrand, query, allProducts]);
 
   const visibleProducts = useMemo(() => {
     return filteredProducts.slice(0, displayLimit);

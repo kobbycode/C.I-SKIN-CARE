@@ -28,13 +28,25 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     useEffect(() => {
         const categoriesRef = collection(db, 'categories');
 
-        const unsubscribe = onSnapshot(categoriesRef, (snapshot) => {
-            const items: Category[] = [];
-            snapshot.forEach(doc => {
-                items.push(doc.data() as Category);
-            });
-            setCategories(items.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
-            setLoading(false);
+        const unsubscribe = onSnapshot(categoriesRef, {
+            next: (snapshot) => {
+                const items: Category[] = [];
+                snapshot.forEach(doc => {
+                    items.push(doc.data() as Category);
+                });
+
+                if (items.length === 0) {
+                    setCategories(SEED_CATEGORIES as Category[]);
+                } else {
+                    setCategories(items.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0)));
+                }
+                setLoading(false);
+            },
+            error: (error) => {
+                console.error("Category onSnapshot error:", error);
+                setCategories(SEED_CATEGORIES as Category[]);
+                setLoading(false);
+            }
         });
         return () => unsubscribe();
     }, []);

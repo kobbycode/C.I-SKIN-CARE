@@ -32,11 +32,17 @@ export const JournalProvider: React.FC<{ children: React.ReactNode }> = ({ child
     useEffect(() => {
         const postsRef = collection(db, 'journal');
 
-        const unsubscribe = onSnapshot(postsRef, (snapshot) => {
-            const items: JournalPost[] = [];
-            snapshot.forEach(doc => items.push(doc.data() as JournalPost));
-            setPosts(items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-            setLoading(false);
+        const unsubscribe = onSnapshot(postsRef, {
+            next: (snapshot) => {
+                const items: JournalPost[] = [];
+                snapshot.forEach(doc => items.push(doc.data() as JournalPost));
+                setPosts(items.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+                setLoading(false);
+            },
+            error: (error) => {
+                console.error("Journal onSnapshot error:", error);
+                setLoading(false);
+            }
         });
 
         return () => unsubscribe();

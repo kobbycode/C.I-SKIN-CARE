@@ -26,13 +26,19 @@ export const ReviewProvider: React.FC<{ children: React.ReactNode }> = ({ childr
 
 
         // Subscribe to all changes (for Admin)
-        const unsubscribe = onSnapshot(reviewsRef, (snapshot) => {
-            const items: Review[] = [];
-            snapshot.forEach(doc => {
-                items.push(doc.data() as Review);
-            });
-            setReviews(items);
-            setLoading(false);
+        const unsubscribe = onSnapshot(reviewsRef, {
+            next: (snapshot) => {
+                const items: Review[] = [];
+                snapshot.forEach(doc => {
+                    items.push(doc.data() as Review);
+                });
+                setReviews(items);
+                setLoading(false);
+            },
+            error: (error) => {
+                console.error("Review onSnapshot error:", error);
+                setLoading(false);
+            }
         });
 
         return () => unsubscribe();

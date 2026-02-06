@@ -29,11 +29,17 @@ export const FAQProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     useEffect(() => {
         const faqsRef = collection(db, 'faqs');
 
-        const unsubscribe = onSnapshot(faqsRef, (snapshot) => {
-            const items: FAQ[] = [];
-            snapshot.forEach(doc => items.push(doc.data() as FAQ));
-            setFaqs(items);
-            setLoading(false);
+        const unsubscribe = onSnapshot(faqsRef, {
+            next: (snapshot) => {
+                const items: FAQ[] = [];
+                snapshot.forEach(doc => items.push(doc.data() as FAQ));
+                setFaqs(items);
+                setLoading(false);
+            },
+            error: (error) => {
+                console.error("FAQ onSnapshot error:", error);
+                setLoading(false);
+            }
         });
 
         return () => unsubscribe();
