@@ -122,12 +122,16 @@ const Home: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3, duration: 0.8 }}
-                  className="flex space-x-4"
+                  className="grid grid-cols-2 md:flex items-center gap-3 md:gap-4 w-full md:w-auto"
                 >
-                  <Link to={heroProducts[activeHeroIndex] ? `/product/${heroProducts[activeHeroIndex].id}` : "/shop"} className="bg-white text-primary px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-gold hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shimmer-btn">
+                  <Link to={heroProducts[activeHeroIndex] ? `/product/${heroProducts[activeHeroIndex].id}` : "/shop"} className="bg-white text-primary px-4 md:px-6 py-3.5 md:py-4 text-[10px] md:text-sm font-semibold tracking-widest uppercase hover:bg-gold hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shimmer-btn whitespace-nowrap flex items-center justify-center">
                     View Product
                   </Link>
-                  <Link to="/shop" className="border border-white text-white px-8 py-4 text-sm font-semibold tracking-widest uppercase hover:bg-white/10 transition-all duration-300 shimmer-btn">
+                  <a href="tel:0597435752" className="bg-gold text-white px-4 md:px-6 py-3.5 md:py-4 text-[10px] md:text-sm font-semibold tracking-widest uppercase hover:bg-black transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 shimmer-btn shadow-lg whitespace-nowrap">
+                    <span className="material-icons-outlined text-xs md:text-sm">call</span>
+                    Call to Order
+                  </a>
+                  <Link to="/shop" className="col-span-2 md:col-span-1 border border-white text-white px-4 md:px-6 py-3.5 md:py-4 text-[10px] md:text-sm font-semibold tracking-widest uppercase hover:bg-white/10 transition-all duration-300 shimmer-btn whitespace-nowrap flex items-center justify-center">
                     Shop Collection
                   </Link>
                 </motion.div>
