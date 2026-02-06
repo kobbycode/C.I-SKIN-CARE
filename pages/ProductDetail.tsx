@@ -283,7 +283,7 @@ const ProductDetail: React.FC = () => {
                 </div>
               );
             }
-            if (currentStock <= 10) {
+            if (currentStock < 5) {
               return (
                 <div className="mb-8 flex items-center gap-2 text-amber-600 bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg border border-amber-100 dark:border-amber-900/30">
                   <span className="material-symbols-outlined text-lg">priority_high</span>

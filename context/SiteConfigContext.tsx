@@ -259,8 +259,17 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
     useEffect(() => {
         const configRef = doc(db, 'settings', 'siteConfig');
 
+        const safetyTimeout = setTimeout(() => {
+            if (loading) {
+                console.warn("Firestore SiteConfig timed out. Using defaults.");
+                setSiteConfig(defaultSiteConfig);
+                setLoading(false);
+            }
+        }, 5000);
+
         const unsubscribe = onSnapshot(configRef, {
             next: (docSnap) => {
+                clearTimeout(safetyTimeout);
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     // Merge with defaults to ensure completeness of schema
@@ -304,7 +313,10 @@ export const SiteConfigProvider: React.FC<{ children: React.ReactNode }> = ({ ch
             }
         });
 
-        return () => unsubscribe();
+        return () => {
+            clearTimeout(safetyTimeout);
+            unsubscribe();
+        };
     }, []);
 
     const updateSiteConfig = async (newConfig: Partial<SiteConfig>) => {

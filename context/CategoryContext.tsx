@@ -28,8 +28,17 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     useEffect(() => {
         const categoriesRef = collection(db, 'categories');
 
+        const safetyTimeout = setTimeout(() => {
+            if (loading) {
+                console.warn("Firestore Categories timed out. Using SEED_CATEGORIES.");
+                setCategories(SEED_CATEGORIES as Category[]);
+                setLoading(false);
+            }
+        }, 5000);
+
         const unsubscribe = onSnapshot(categoriesRef, {
             next: (snapshot) => {
+                clearTimeout(safetyTimeout);
                 const items: Category[] = [];
                 snapshot.forEach(doc => {
                     items.push(doc.data() as Category);
@@ -43,12 +52,16 @@ export const CategoryProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 setLoading(false);
             },
             error: (error) => {
+                clearTimeout(safetyTimeout);
                 console.error("Category onSnapshot error:", error);
                 setCategories(SEED_CATEGORIES as Category[]);
                 setLoading(false);
             }
         });
-        return () => unsubscribe();
+        return () => {
+            clearTimeout(safetyTimeout);
+            unsubscribe();
+        };
     }, []);
 
     const addCategory = async (category: Omit<Category, 'id'>) => {

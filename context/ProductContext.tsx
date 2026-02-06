@@ -22,17 +22,11 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
     useEffect(() => {
         const productsRef = collection(db, 'products');
 
-
-
-
-
         // Subscribe to changes
         const unsubscribe = onSnapshot(productsRef, {
             next: (snapshot) => {
-                // Fallback to mock data if Firestore is empty
                 if (snapshot.empty) {
-                    console.warn("Firestore product collection is empty. Falling back to MOCK_PRODUCTS.");
-                    setProducts(MOCK_PRODUCTS);
+                    setProducts([]);
                     setLoading(false);
                     return;
                 }
@@ -52,13 +46,13 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
             },
             error: (error) => {
                 console.error("Firestore onSnapshot error:", error);
-                console.warn("Falling back to MOCK_PRODUCTS due to error.");
-                setProducts(MOCK_PRODUCTS);
                 setLoading(false);
             }
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribe();
+        };
     }, []);
 
     const addProduct = async (product: Omit<Product, 'id'>) => {

@@ -126,7 +126,7 @@ const Home: React.FC = () => {
                   <Link to={heroProducts[activeHeroIndex] ? `/product/${heroProducts[activeHeroIndex].id}` : "/shop"} className="bg-white text-primary px-4 md:px-6 py-3.5 md:py-4 text-[10px] md:text-sm font-semibold tracking-widest uppercase hover:bg-gold hover:text-white transition-all duration-300 hover:scale-105 active:scale-95 shimmer-btn whitespace-nowrap flex items-center justify-center">
                     View Product
                   </Link>
-                  <a href="tel:0597435752" className="bg-gold text-white px-4 md:px-6 py-3.5 md:py-4 text-[10px] md:text-sm font-semibold tracking-widest uppercase hover:bg-black transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 shimmer-btn shadow-lg whitespace-nowrap">
+                  <a href="tel:0244737093" className="bg-gold text-white px-4 md:px-6 py-3.5 md:py-4 text-[10px] md:text-sm font-semibold tracking-widest uppercase hover:bg-black transition-all duration-300 flex items-center justify-center gap-2 hover:scale-105 active:scale-95 shimmer-btn shadow-lg whitespace-nowrap">
                     <span className="material-icons-outlined text-xs md:text-sm">call</span>
                     Call to Order
                   </a>

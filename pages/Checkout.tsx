@@ -669,9 +669,10 @@ const Checkout: React.FC = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button
                       type="button"
-                      onClick={() => setSelectedPayment('mtn_momo')}
-                      className={`p-4 rounded-lg border transition-all text-left ${selectedPayment === 'mtn_momo' ? 'border-accent bg-accent/5' : 'border-primary/10 hover:bg-primary/5'}`}
+                      disabled
+                      className="p-4 rounded-lg border border-primary/10 opacity-50 cursor-not-allowed text-left relative overflow-hidden"
                     >
+                      <div className="absolute top-0 right-0 bg-stone-800 text-white text-[7px] px-2 py-0.5 font-bold uppercase tracking-tighter">Coming Soon</div>
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <img
@@ -688,9 +689,10 @@ const Checkout: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedPayment('telecel_cash')}
-                      className={`p-4 rounded-lg border transition-all text-left ${selectedPayment === 'telecel_cash' ? 'border-accent bg-accent/5' : 'border-primary/10 hover:bg-primary/5'}`}
+                      disabled
+                      className="p-4 rounded-lg border border-primary/10 opacity-50 cursor-not-allowed text-left relative overflow-hidden"
                     >
+                      <div className="absolute top-0 right-0 bg-stone-800 text-white text-[7px] px-2 py-0.5 font-bold uppercase tracking-tighter">Coming Soon</div>
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <img
@@ -707,9 +709,10 @@ const Checkout: React.FC = () => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedPayment('airteltigo_money')}
-                      className={`p-4 rounded-lg border transition-all text-left ${selectedPayment === 'airteltigo_money' ? 'border-accent bg-accent/5' : 'border-primary/10 hover:bg-primary/5'}`}
+                      disabled
+                      className="p-4 rounded-lg border border-primary/10 opacity-50 cursor-not-allowed text-left relative overflow-hidden"
                     >
+                      <div className="absolute top-0 right-0 bg-stone-800 text-white text-[7px] px-2 py-0.5 font-bold uppercase tracking-tighter">Coming Soon</div>
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
                           <img
@@ -727,7 +730,10 @@ const Checkout: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setSelectedPayment('pay_on_delivery')}
-                      className={`p-4 rounded-lg border transition-all text-left ${selectedPayment === 'pay_on_delivery' ? 'border-accent bg-accent/5' : 'border-primary/10 hover:bg-primary/5'}`}
+                      className={`p-4 rounded-lg border text-left relative overflow-hidden transition-all ${selectedPayment === 'pay_on_delivery'
+                        ? 'border-accent bg-accent/5 ring-1 ring-accent'
+                        : 'border-primary/10 hover:border-primary/30'
+                        }`}
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3">
@@ -944,19 +950,22 @@ const Checkout: React.FC = () => {
                   <button
                     type="submit"
                     disabled={isProcessing}
-                    className={`w-full py-6 rounded-xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl transition-all flex items-center justify-center gap-3 shimmer-btn ${isProcessing
-                      ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
-                      : 'bg-gold-gradient text-white hover:brightness-110 hover:-translate-y-1'
-                      } w-full sm:w-auto order-1 sm:order-2`}
+                    className={`w-full py-6 rounded-xl font-black uppercase tracking-[0.3em] text-[10px] shadow-2xl transition-all flex items-center justify-center gap-3 w-full sm:w-auto order-1 sm:order-2 ${isProcessing
+                        ? 'bg-stone-100 text-stone-400 cursor-not-allowed'
+                        : 'bg-stone-900 text-white hover:bg-stone-800 hover:scale-[1.02]'
+                      }`}
                   >
                     {isProcessing ? (
                       <>
-                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                        <div className="w-4 h-4 border-2 border-stone-400 border-t-stone-800 rounded-full animate-spin"></div>
                         Processing...
                       </>
                     ) : (
                       <>
-                        {selectedPayment === 'pay_on_delivery' ? 'Place Order (Pay on Delivery)' : `Pay GH₵${total.toFixed(2)}`}
+                        <span className="material-icons text-[14px]">
+                          {selectedPayment === 'pay_on_delivery' ? 'check_circle' : 'lock'}
+                        </span>
+                        {selectedPayment === 'pay_on_delivery' ? 'Complete Order' : 'Proceed to Payment'}
                       </>
                     )}
                   </button>

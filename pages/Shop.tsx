@@ -226,8 +226,8 @@ const Shop: React.FC = () => {
                     : (product.stock ?? 0) <= 0;
 
                   const isLowStock = !isOutOfStock && (product.variants && product.variants.length > 0
-                    ? product.variants.some(v => (v.stock ?? 0) > 0 && (v.stock ?? 0) <= 10)
-                    : (product.stock ?? 0) > 0 && (product.stock ?? 0) <= 10);
+                    ? product.variants.some(v => (v.stock ?? 0) > 0 && (v.stock ?? 0) < 5)
+                    : (product.stock ?? 0) > 0 && (product.stock ?? 0) < 5);
 
                   return (
                     <div key={product.id} className="group flex flex-col animate-in fade-in slide-in-from-bottom-4 duration-700 fill-mode-both">
